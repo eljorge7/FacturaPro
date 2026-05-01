@@ -1,19 +1,15 @@
-FROM node:20-alpine
+FROM node:20-bookworm-slim
 
-# Install Chromium for Puppeteer (PDF generation)
-RUN apk add --no-cache \
-      chromium \
-      nss \
-      freetype \
-      harfbuzz \
-      ca-certificates \
-      ttf-freefont \
-      nodejs \
-      npm
+# Install Chromium for Puppeteer and OpenSSL for Prisma
+RUN apt-get update && apt-get install -y \
+    chromium \
+    openssl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set environment variable for Puppeteer to use the installed Chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 WORKDIR /app
 
