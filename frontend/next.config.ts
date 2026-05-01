@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:3005/:path*',
+        destination: `${process.env.BACKEND_INTERNAL_URL || 'http://localhost:3005'}/:path*`,
       },
     ];
   },
