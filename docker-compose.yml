@@ -31,6 +31,8 @@ services:
       DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-facturapro}?schema=public
       JWT_SECRET: ${JWT_SECRET:-super-secret-jwt-key}
       NODE_ENV: production
+    env_file:
+      - ./backend/.env
     volumes:
       # Persist uploads (XMLs, PDFs, Employee Docs)
       - facturapro-uploads:/app/uploads
