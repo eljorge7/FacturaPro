@@ -1,0 +1,1 @@
+{"version":3,"file":"cfdi.module.js","sourceRoot":"","sources":["../../../src/cfdi/cfdi.module.ts"],"names":[],"mappings":";;;;;;;;;AAAA,2CAAwC;AACxC,iFAA4E;AAC5E,mDAA+C;AAMxC,IAAM,UAAU,GAAhB,MAAM,UAAU;CAAG,CAAA;AAAb,gCAAU;qBAAV,UAAU;IAJtB,IAAA,eAAM,EAAC;QACN,SAAS,EAAE,CAAC,2CAAmB,EAAE,wBAAU,CAAC;QAC5C,OAAO,EAAE,CAAC,2CAAmB,EAAE,wBAAU,CAAC;KAC3C,CAAC;GACW,UAAU,CAAG"}

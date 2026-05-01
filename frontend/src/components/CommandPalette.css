@@ -1,0 +1,44 @@
+[cmdk-root] {
+  width: 100%;
+  background: white;
+  border-radius: 12px;
+}
+
+[cmdk-input] {
+  font-family: inherit;
+  border: none;
+  width: 100%;
+  outline: none;
+  background: transparent;
+}
+
+[cmdk-list] {
+  min-height: 100px;
+  max-height: 400px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  transition: 100ms ease;
+  transition-property: height;
+}
+
+[cmdk-group-heading] {
+  user-select: none;
+}
+
+[cmdk-empty] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Custom internal scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 20px;
+}

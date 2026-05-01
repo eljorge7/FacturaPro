@@ -1,0 +1,1007 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------------------------------
+// ENTIDADES CORE (Jerarquía SaaS)
+// ----------------------------------------------------
+
+model Tenant {
+  id        String  @id @default(uuid())
+  name      String  @unique // Razón Social Legal
+  tradeName String? // Nombre Comercial Público
+  phone     String? // Celular Verificado
+  domain    String? @unique
+
+  // Integración SaaS
+  subscriptionTier    String    @default("TRIAL") // TRIAL, EMPRENDEDOR, PYME, CORPORATIVO, CUSTOM
+  availableStamps     Int       @default(50) // Cuenta regresiva de timbres disponibles
+  subscriptionEndsAt  DateTime? // Expira de plan o trial
+  hasExpenseControl   Boolean   @default(false)
+  hasApiAccess        Boolean   @default(false)
+  hasPosAccess        Boolean   @default(false)
+  hasInventoryControl Boolean   @default(false)
+  
+  // Reloj de la Agencia / Reseller
+  agencyId            String?
+  agency              AccountantAgency? @relation(fields: [agencyId], references: [id])
+  memberships         WorkspaceMember[] // Accesos M2M a esta empresa
+
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  taxProfiles TaxProfile[] // Múltiples razones sociales bajo el mismo Tenant
+  products    Product[]
+  customers   Customer[]
+  invoices    Invoice[]
+  quotes      Quote[]
+  apiKeys     ApiKey[] // Para acceso M2M de RentControl / OmniChat
+
+  suppliers            Supplier[]
+  expenseCategories    ExpenseCategory[]
+  expenses             Expense[]
+  purchaseOrders       PurchaseOrder[]
+  cashShifts           CashShift[]
+  users                User[]
+  subscriptionRequests SubscriptionRequest[]
+  inventoryMovements   InventoryMovement[]
+  agencyTasks          AgencyTask[]
+  invoiceSeries        InvoiceSeries[]
+  bankAccounts         BankAccount[]
+  employees            EmployeeProfile[]
+  departments          Department[]
+  roles                TenantRole[]
+  payrollRuns          PayrollRun[]
+  
+  warehouses           Warehouse[]
+  transferOrders       TransferOrder[]
+  stockTakes           StockTake[]
+}
+
+// ----------------------------------------------------
+// ENTIDADES DE SAAS & SUSCRIPCIONES
+// ----------------------------------------------------
+
+model AccountantAgency {
+  id               String   @id @default(uuid())
+  name             String   // Razón Social o Nombre del Despacho
+  billingEmail     String   // Correo oficial para cobros
+  stripeCustomerId String?  // Cobro agrupado
+
+  subscriptionTier String   @default("STARTER") // STARTER (50), PRO (100), ENTERPRISE
+  maxTenants       Int      @default(50)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenants   Tenant[]        // Empresas bajo su paraguas
+  members   AgencyMember[]  // Staff y socios de la Agencia
+  tasks     AgencyTask[]    // Kanban de tareas
+}
+
+model AgencyMember {
+  id        String   @id @default(uuid())
+  agencyId  String
+  userId    String
+  role      String   @default("STAFF") // OWNER, MANAGER, STAFF
+
+  agency    AccountantAgency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  
+  @@unique([agencyId, userId])
+}
+
+model SubscriptionRequest {
+  id        String  @id @default(uuid())
+  tenantId  String
+  tenant    Tenant  @relation(fields: [tenantId], references: [id])
+  tier      String
+  amount    Float
+  reference String  @unique
+  isAnnual  Boolean
+  phone     String?
+  status    String  @default("PENDING") // PENDING, APPROVED, REJECTED
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AgencyTask {
+  id          String   @id @default(uuid())
+  agencyId    String
+  agency      AccountantAgency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  status      String   @default("TODO") // TODO, IN_PROGRESS, REVIEW, DONE
+  dueDate     DateTime?
+  
+  assignedToId String?
+  assignedTo   User?   @relation("TaskAssignee", fields: [assignedToId], references: [id])
+
+  tenantId    String? 
+  tenant      Tenant? @relation(fields: [tenantId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ----------------------------------------------------
+// USUARIOS Y SEGURIDAD
+// ----------------------------------------------------
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  avatar       String?   @db.Text
+  birthDate    DateTime?
+  role         String    @default("OWNER") // OWNER, ADMIN, CUSTOM
+  
+  customRoleId String?
+  customRole   TenantRole? @relation(fields: [customRoleId], references: [id])
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  warehouseId  String?
+  warehouse    Warehouse? @relation("UserWarehouse", fields: [warehouseId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  openedShifts CashShift[] @relation("ShiftOpener")
+  closedShifts CashShift[] @relation("ShiftCloser")
+  
+  agencyMemberships WorkspaceMember[] // Multi-acceso a bóvedas alternas (Por nivel de Tenant)
+  agencyRoles       AgencyMember[]    // Rol de nivel corporativo en despachos
+  assignedTasks     AgencyTask[]      @relation("TaskAssignee")
+  stockTakes        StockTake[]       @relation("AssignedStockTakes")
+  
+  employeeProfile   EmployeeProfile?
+}
+
+model WorkspaceMember {
+  id        String   @id @default(uuid())
+  userId    String
+  tenantId  String
+  role      String   @default("ACCOUNTANT")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, tenantId])
+}
+
+// ----------------------------------------------------
+// IDENTIDAD Y FISCALIDAD
+// ----------------------------------------------------
+
+model TaxProfile {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  rfc         String // Registro Federal de Contribuyentes (México) o EIN
+  legalName   String // Razón Social
+  taxRegime   String // Régimen Fiscal (ej. 601, 612)
+  zipCode     String // CP Expedición
+  cerBase64   String? // Certificado (.cer)
+  keyBase64   String? // Llave Privada (.key)
+  keyPassword String? // Contraseña de la llave Privada
+
+  fielCerBase64   String? // Certificado FIEL (.cer) para Bóveda SAT
+  fielKeyBase64   String? // Llave Privada FIEL (.key)
+  fielPassword    String? // Contraseña de FIEL
+
+  billingEmail String?
+  billingPhone String?
+  logoUrl      String? // Logo para impresiones PDF
+  logoWidth    Int     @default(120) // Zoom del Logo en Pixeles
+  pdfTemplate  String  @default("modern") // Preferencia visual de 6
+  brandColor   String  @default("#10b981") // Color Hex institucional
+  brandFont    String  @default("Helvetica") // Fuente (Helvetica, Times-Roman, Courier)
+  baseCurrency String  @default("MXN") // Moneda Base Organizacional
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invoices Invoice[]
+  quotes   Quote[]
+  satRequests SatDownloadRequest[]
+  invoiceSeries InvoiceSeries[]
+}
+
+model InvoiceSeries {
+  id           String @id @default(uuid())
+  tenantId     String
+  tenant       Tenant @relation(fields: [tenantId], references: [id])
+  
+  taxProfileId String
+  taxProfile   TaxProfile @relation(fields: [taxProfileId], references: [id])
+
+  name         String  // Ej. "Facturas Principales"
+  prefix       String  // Ej. "F", "INV="
+  nextFolio    Int     @default(1)
+  isDefault    Boolean @default(false)
+  type         String  @default("INVOICE") // "INVOICE", "QUOTE"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ----------------------------------------------------
+// CATÁLOGO DE PRODUCTOS / SERVICIOS
+// ----------------------------------------------------
+
+model Product {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  sku            String?
+  barcode        String? // Para escáneres láser
+  name           String
+  description    String?
+  price          Float
+  costPrice      Float? // Precio de compra
+  type           String  @default("PRODUCT") // PRODUCT, SERVICE, KIT, CONSUMABLE
+  stock          Float   @default(0)
+  minStock       Float   @default(0)
+  maxStock       Float?
+  trackInventory Boolean @default(true)
+  hasSerials     Boolean @default(false)
+  supplierSku    String?
+  locationShelf  String? // Ubicación física en Almacén Ej. Pasillo 3, Anaquel B
+  imageUrl       String? // Para fotos de productos
+  currency       String  @default("MXN")
+
+  satProductCode String? // Clave ProdServ SAT (ej. 81111509)
+  satUnitCode    String? // Clave Unidad SAT (ej. E48, H87)
+
+  taxIncluded Boolean @default(false)
+  taxRate     Float   @default(0.16) // IVA
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invoiceItems  InvoiceItem[]
+  quoteItems    QuoteItem[]
+  kitComponents ProductComponent[]  @relation("ParentKit")
+  partOfKits    ProductComponent[]  @relation("KitComponent")
+  movements     InventoryMovement[]
+  serialNumbers SerialNumber[]
+  purchaseItems PurchaseItem[]
+  
+  warehouseStocks WarehouseStock[]
+  transferItems   TransferItem[]
+  stockTakeItems  StockTakeItem[]
+}
+
+model ProductComponent {
+  id             String  @id @default(uuid())
+  parentKitId    String
+  parentKit      Product @relation("ParentKit", fields: [parentKitId], references: [id], onDelete: Cascade)
+  childProductId String
+  childProduct   Product @relation("KitComponent", fields: [childProductId], references: [id], onDelete: Cascade)
+  quantity       Float
+}
+
+// ----------------------------------------------------
+// CLIENTES (Receptores)
+// ----------------------------------------------------
+
+model Customer {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  legalName String // Nombre o Razón Social
+  rfc       String // RFC
+  taxRegime String? // Régimen Fiscal del receptor
+  zipCode   String? // CP
+  email     String?
+  phone     String?
+
+  street String?
+  city   String?
+  state  String?
+
+  tdsEnabled    Boolean @default(false)
+  portalEnabled Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invoices Invoice[]
+  quotes   Quote[]
+}
+
+// ----------------------------------------------------
+// MÓDULOS DE VENTA (Cotizaciones y Facturas)
+// ----------------------------------------------------
+
+model Quote {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  taxProfileId String
+  taxProfile   TaxProfile @relation(fields: [taxProfileId], references: [id])
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  quoteNumber    String    @unique
+  date           DateTime  @default(now())
+  expirationDate DateTime?
+
+  subtotal Float
+  taxTotal Float
+  total    Float
+
+  currency String @default("MXN")
+
+  notes  String?
+  status String  @default("DRAFT") // DRAFT, SENT, ACCEPTED, DECLINED, INVOICED
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items    QuoteItem[]
+  invoices Invoice[] // Relación: 1 cotización puede generar 1 o varias facturas
+}
+
+model QuoteItem {
+  id      String @id @default(uuid())
+  quoteId String
+  quote   Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+
+  description String
+  quantity    Int
+  unitPrice   Float
+  discount    Float  @default(0)
+  taxRate     Float  @default(0.16)
+  total       Float
+}
+
+model Invoice {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  taxProfileId String
+  taxProfile   TaxProfile @relation(fields: [taxProfileId], references: [id])
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  quoteId String? // Opcional: si vino de una cotización
+  quote   Quote?  @relation(fields: [quoteId], references: [id])
+
+  invoiceNumber String    @unique
+  date          DateTime  @default(now())
+  dueDate       DateTime?
+
+  satUuid       String? @unique // Folio Fiscal SAT
+  paymentMethod String? // PUE, PPD
+  paymentForm   String? // 01 Efectivo, 03 Transferencia
+  cfdiUse       String? // G03, P01
+
+  subtotal Float
+  taxTotal Float
+  total    Float
+
+  currency     String @default("MXN")
+  exchangeRate Float  @default(1.0) // Tipo de Cambio contra MXN si currency = USD
+
+  // POS Metadata
+  cashShiftId  String?
+  cashShift    CashShift? @relation(fields: [cashShiftId], references: [id])
+  customFields Json? // Ejemplo: { tecnico: "Hugo", placas: "HDF-123" }
+
+  status String @default("DRAFT") // DRAFT, TIMBRADA, PAID, CANCELADA
+
+  xmlContent String? // Bóveda del documento original
+  pdfUrl     String? // Para reportes o vistas
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items    InvoiceItem[]
+  payments Payment[]
+}
+
+model Payment {
+  id        String  @id @default(uuid())
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  amount        Float
+  paymentDate   DateTime @default(now())
+  paymentMethod String   @default("03") // e.g., 03 = Transfer, 01 = Cash
+  reference     String?
+  notes         String?
+
+  createdAt DateTime @default(now())
+  
+  bankTransaction BankTransaction?
+}
+
+// ----------------------------------------------------
+// PROCUREMENT (ÓRDENES DE COMPRA Y SERIES)
+// ----------------------------------------------------
+
+model PurchaseOrder {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  supplierId String
+  supplier   Supplier @relation(fields: [supplierId], references: [id])
+
+  orderDate    DateTime  @default(now())
+  expectedDate DateTime?
+  status       String    @default("PENDING") // PENDING, RECEIVED, CANCELLED
+  invoiceRef   String? // Factura del proveedor aportada al recibir
+
+  total         Float  @default(0)
+  amountPaid    Float  @default(0)
+  paymentStatus String @default("UNPAID") // UNPAID, PARTIAL, PAID
+
+  currency     String @default("MXN")
+  exchangeRate Float  @default(1.0)
+
+  items            PurchaseItem[]
+  supplierPayments SupplierPayment[]
+  serialNumbers    SerialNumber[] // Todas las series recibidas en esta orden
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SupplierPayment {
+  id              String        @id @default(uuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+
+  amount        Float
+  paymentDate   DateTime @default(now())
+  paymentMethod String   @default("03") // Ej: 03 = Transfer, 01 = Cash
+  reference     String?
+  notes         String?
+
+  createdAt DateTime @default(now())
+  
+  bankTransaction BankTransaction?
+}
+
+model PurchaseItem {
+  id              String        @id @default(uuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  quantity         Int
+  receivedQuantity Int   @default(0)
+  unitCost         Float // Costo de compra
+  total            Float
+}
+
+model SerialNumber {
+  id     String @id @default(uuid())
+  serial String
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  purchaseOrderId String?
+  purchaseOrder   PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
+
+  status        String    @default("AVAILABLE") // AVAILABLE, SOLD, RETURNED, DEFECTIVE
+  soldAt        DateTime?
+  invoiceItemId String? // Ref opcional si se registra la factura/venta donde salió
+
+  createdAt DateTime @default(now())
+
+  @@unique([productId, serial]) // La serie no puede repetirse dentro del mismo producto
+}
+
+model InvoiceItem {
+  id        String  @id @default(uuid())
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+
+  description String
+  quantity    Int
+  unitPrice   Float
+  discount    Float  @default(0)
+  taxRate     Float  @default(0.16)
+  total       Float
+}
+
+// ----------------------------------------------------
+// SEGURIDAD M2M (Machine to Machine)
+// ----------------------------------------------------
+
+model ApiKey {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  keyHash  String  @unique // Hash de la llave proporcionada a RentControl/OmniChat
+  name     String // "RentControl Sync", "OmniChat Bot"
+  isActive Boolean @default(true)
+
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+}
+
+// ----------------------------------------------------
+// EGRESOS Y PROVEEDORES (Buzón Inteligente)
+// ----------------------------------------------------
+
+model Supplier {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  legalName String
+  rfc       String?
+  email     String?
+  phone     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  expenses       Expense[]
+  purchaseOrders PurchaseOrder[]
+}
+
+model ExpenseCategory {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  name  String
+  color String @default("#6366F1") // Hex para renderizar en UI
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  expenses Expense[]
+}
+
+model Expense {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  supplierId String?
+  supplier   Supplier? @relation(fields: [supplierId], references: [id])
+
+  categoryId String?
+  category   ExpenseCategory? @relation(fields: [categoryId], references: [id])
+
+  amount   Float
+  taxTotal Float @default(0) // IVA pagado
+  total    Float
+
+  currency     String @default("MXN")
+  exchangeRate Float  @default(1.0)
+
+  date         DateTime @default(now())
+  isDeductible Boolean  @default(false)
+  satUuid      String?  @unique
+  description  String?
+
+  xmlContent String? // Bóveda del XML del proveedor
+
+  status String @default("PAID")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ----------------------------------------------------
+// ENTIDADES DE REGISTRO E IDENTIDAD
+// ----------------------------------------------------
+
+model OtpVerification {
+  id        String   @id @default(uuid())
+  phone     String   @unique
+  code      String
+  data      Json // JSON conteniendo nombre, email, password, legalName, tradeName
+  expiresAt DateTime
+}
+
+// ----------------------------------------------------
+// AUDITORIA DE INVENTARIO (KARDEX)
+// ----------------------------------------------------
+
+model InventoryMovement {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  type      String // IN, OUT, ADJUSTMENT, SALE, RETURN
+  quantity  Float // Can be positive or negative depending on semantic or absolute value.
+  reference String? // Ej. "Ajuste Manual", "Ticket #1203"
+  userId    String? // Reference to User if tracked, using generic string or relation
+
+  createdAt DateTime @default(now())
+}
+
+// ----------------------------------------------------
+// ERP: CAJAS Y TURNOS DE PUNTOS DE VENTA
+// ----------------------------------------------------
+
+model CashShift {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  openedAt   DateTime  @default(now())
+  closedAt   DateTime?
+  openedById String
+  openedBy   User      @relation("ShiftOpener", fields: [openedById], references: [id])
+  closedById String?
+  closedBy   User?     @relation("ShiftCloser", fields: [closedById], references: [id])
+
+  startingCash Float
+  status       String @default("OPEN") // OPEN, CLOSED
+
+  invoices  Invoice[]
+  movements CashMovement[]
+}
+
+model CashMovement {
+  id          String    @id @default(uuid())
+  cashShiftId String
+  cashShift   CashShift @relation(fields: [cashShiftId], references: [id], onDelete: Cascade)
+
+  type      String // IN, OUT
+  amount    Float
+  reason    String
+  createdAt DateTime @default(now())
+}
+
+// ----------------------------------------------------
+// BÓVEDA SAT - DESCARGAS MASIVAS
+// ----------------------------------------------------
+
+model SatDownloadRequest {
+  id          String   @id @default(uuid())
+  tenantId    String
+  taxProfileId String
+  taxProfile  TaxProfile @relation(fields: [taxProfileId], references: [id])
+
+  idSolicitud String   @unique
+  requestType String   @default("issued") // issued or received
+  periodStart DateTime
+  periodEnd   DateTime
+  
+  status      String   @default("PENDING") // PENDING, ACCEPTED, REJECTED, SUCCESS
+  message     String?
+  packageIds  String?  // Ej. "id1,id2"
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ----------------------------------------------------
+// ANTI-FRAUDE (EFOS Art. 69-B SAT)
+// ----------------------------------------------------
+
+model EfosRecord {
+  id               String   @id @default(uuid())
+  rfc              String   @unique
+  nombre           String?  // Razón social del EFO
+  situacion        String?  // Presunto, Definitivo, Desvirtuado
+  fechaPublicacion DateTime?
+  
+  updatedAt        DateTime @updatedAt
+}
+
+// ----------------------------------------------------
+// ERP: FLUJO DE CAJA (CASHFLOW & BANKS)
+// ----------------------------------------------------
+
+model BankAccount {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  name        String   // "BBVA Principal"
+  currency    String   @default("MXN")
+  accountNum  String?
+  balance     Float    @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  transactions BankTransaction[]
+}
+
+model BankTransaction {
+  id              String   @id @default(uuid())
+  bankAccountId   String
+  bankAccount     BankAccount @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+
+  date            DateTime
+  amount          Float
+  description     String   // Raw text from bank CSV
+  reference       String?
+
+  reconciled      Boolean  @default(false)
+  type            String   // IN (deposit), OUT (withdrawal)
+
+  // Link to FacturaPro Payments
+  paymentId       String?  @unique
+  payment         Payment? @relation(fields: [paymentId], references: [id])
+  
+  supplierPaymentId String? @unique
+  supplierPayment   SupplierPayment? @relation(fields: [supplierPaymentId], references: [id])
+
+  createdAt       DateTime @default(now())
+}
+
+// ----------------------------------------------------
+// SISTEMA MULTI-BODEGA Y TRASPASOS (WMS)
+// ----------------------------------------------------
+
+model Warehouse {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  
+  name      String   // "Bodega Central", "Sucursal Norte"
+  address   String?
+  isDefault Boolean  @default(false)
+
+  stocks    WarehouseStock[]
+  transfersFrom TransferOrder[] @relation("FromWarehouse")
+  transfersTo   TransferOrder[] @relation("ToWarehouse")
+  users         User[]          @relation("UserWarehouse")
+  stockTakes    StockTake[]     @relation("WarehouseStockTakes")
+}
+
+model WarehouseStock {
+  id          String   @id @default(uuid())
+  warehouseId String
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  stock       Float     @default(0)
+
+  @@unique([warehouseId, productId])
+}
+
+model TransferOrder {
+  id              String   @id @default(uuid())
+  tenantId        String
+  tenant          Tenant   @relation(fields: [tenantId], references: [id])
+  
+  fromWarehouseId String
+  fromWarehouse   Warehouse @relation("FromWarehouse", fields: [fromWarehouseId], references: [id])
+  
+  toWarehouseId   String
+  toWarehouse     Warehouse @relation("ToWarehouse", fields: [toWarehouseId], references: [id])
+  
+  status          String    @default("DRAFT") // DRAFT, IN_TRANSIT, RECEIVED, DISCREPANCY
+  reference       String?
+  issueDate       DateTime  @default(now())
+  receivedDate    DateTime?
+  
+  items           TransferItem[]
+}
+
+model TransferItem {
+  id              String @id @default(uuid())
+  transferOrderId String
+  transferOrder   TransferOrder @relation(fields: [transferOrderId], references: [id], onDelete: Cascade)
+  
+  productId       String
+  product         Product @relation(fields: [productId], references: [id])
+  
+  quantity        Float // Cantidad Enviada
+  receivedQty     Float @default(0) // Cantidad Recibida (Confirmada por destino)
+}
+
+// ----------------------------------------------------
+// AUDITORÍA Y CONTEO CÍCLICO
+// ----------------------------------------------------
+
+model StockTake {
+  id            String   @id @default(uuid())
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id])
+  
+  warehouseId   String
+  warehouse     Warehouse @relation("WarehouseStockTakes", fields: [warehouseId], references: [id])
+  
+  status        String   @default("IN_PROGRESS") // IN_PROGRESS, REVIEW, COMPLETED
+  
+  auditorId     String?
+  auditor       User?    @relation("AssignedStockTakes", fields: [auditorId], references: [id])
+  
+  createdAt     DateTime @default(now())
+  completedAt   DateTime?
+  
+  items         StockTakeItem[]
+}
+
+model StockTakeItem {
+  id            String @id @default(uuid())
+  stockTakeId   String
+  stockTake     StockTake @relation(fields: [stockTakeId], references: [id], onDelete: Cascade)
+  
+  productId     String
+  product       Product @relation(fields: [productId], references: [id])
+  
+  expectedQty   Float  // Cantidad teórica al momento de generar la auditoría
+  countedQty    Float? // Cantidad ingresada por el auditor (a ciegas)
+  discrepancy   Float? // Diferencia (countedQty - expectedQty)
+  applied       Boolean @default(false)
+}
+
+// ----------------------------------------------------
+// NÓMINAS Y CAPITAL HUMANO
+// ----------------------------------------------------
+
+model Department {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  name        String
+  description String?
+  
+  employees   EmployeeProfile[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([tenantId, name])
+}
+
+model EmployeeProfile {
+  id             String @id @default(uuid())
+  tenantId       String
+  tenant         Tenant @relation(fields: [tenantId], references: [id])
+  
+  documents      EmployeeDocument[]
+  payslips       Payslip[]
+  
+  // Enlace Opcional al Acceso del Sistema (Si usan el ERP)
+  userId         String? @unique 
+  user           User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Datos Personales
+  firstName      String
+  lastName       String
+  phone          String?
+  email          String?
+  
+  // Información Corporativa y de Gafete
+  employeeNumber String? // Número de Empleado interno
+  department     String? // Texto libre anterior (Deprecado)
+  departmentId   String? 
+  departmentRef  Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  jobTitle       String? // Ej. Cajero Principal, Mecánico A
+  employeeType   String  @default("DIRECT") // DIRECT vs CONTRACTOR
+  
+  // Cimientos de Nómina (Timbrado CFDI 4.0 Futuro)
+  rfc            String? 
+  curp           String?
+  nss            String? 
+  baseSalary     Float?  @default(0) // Salario Diario Base / Mensual
+  
+  // Archivo Corporativo Médico y de Uniforme
+  avatarUrl        String? @db.Text
+  shirtSize        String?
+  pantsSize        String?
+  shoeSize         String?
+  bloodType        String?
+  emergencyContact String?
+  
+  hireDate       DateTime?
+  isActive       Boolean @default(true)
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model EmployeeDocument {
+  id               String          @id @default(uuid())
+  employeeId       String
+  employee         EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  name             String          // Ej. "Contrato Juan 2020" o "INE"
+  fileUrl          String          @db.Text
+  uploadedAt       DateTime        @default(now())
+}
+
+model PayrollRun {
+  id          String    @id @default(uuid())
+  tenantId    String
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+  periodStart DateTime
+  periodEnd   DateTime
+  paymentDate DateTime?
+  status      String    @default("DRAFT") // DRAFT, PAID
+  totalAmount Float     @default(0)
+  
+  payslips    Payslip[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Payslip {
+  id               String          @id @default(uuid())
+  payrollRunId     String
+  payrollRun       PayrollRun      @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+  
+  employeeId       String
+  employee         EmployeeProfile @relation(fields: [employeeId], references: [id])
+  
+  baseSalary       Float           @default(0)
+  bonuses          Float           @default(0)
+  deductions       Float           @default(0)
+  netPay           Float           @default(0)
+  
+  status           String          @default("DRAFT") // DRAFT, PAID
+  auditSignature   String?         // Firma hash encriptada para probar que no se alteró post-pago
+  
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+// ----------------------------------------------------
+// RBAC (CONTROL DE ACCESO BASADO EN ROLES)
+// ----------------------------------------------------
+
+model TenantRole {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  
+  name        String   // Ej. "Vendedor Jr.", "Jefe de Taller"
+  description String?
+  
+  permissions String   @db.Text // JSON string: '["view_sales", "create_audit"]'
+  isSystem    Boolean  @default(false)
+  
+  users       User[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+

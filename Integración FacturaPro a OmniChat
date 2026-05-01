@@ -1,0 +1,80 @@
+# Matriz de Ecosistema & Módulos Finales de FacturaPro
+
+Este documento es el **plan de arquitectura maestro** para cerrar la brecha entre los 3 sistemas (RentControl, OmniChat y FacturaPro) asegurando congruencia total de datos, así como el mapa de ruta para los módulos pendientes internos de FacturaPro.
+
+> [!IMPORTANT]
+> **Aprobación Requerida:** Por favor, lee cuidadosamente el apartado de **Ecosistema (Integración OmniChat & FacturaPro)**. Esta es la visión arquitectónica de cómo los sistemas "hablarán" entre sí sin mezclarse peligrosamente. Si estás de acuerdo, confírmalo para empezar la ejecución.
+
+---
+
+## 1. Módulos Internos Pendientes (FacturaPro)
+
+Para que FacturaPro pueda operar de manera autónoma y esté listo para recibir peticiones de OmniChat/RentControl, debemos finalizar su núcleo administrativo.
+
+### A. Serie y Folios
+Actualmente las facturas y cotizaciones tienen folios autogenerados aleatorios.
+- **Backend:** Añadiremos la parametrización de `prefix` (Ej: `F-`, `COT-`) y `currentFolio` en el `TaxProfile`.
+- **Frontend:** Añadiremos la sección "Series y Folios" dentro de `Ajustes`.
+
+### B. Usuarios y Roles
+Manejar el equipo de venta interno u operarios del sistema.
+- **Frontend:** Vista en `Ajustes > Equipo` para listar y crear `Users` asociados a este `Tenant`.
+- **Roles:** Soporte para roles `ADMIN` (Control total), `OWNER` (Propietario / Billing), y `VIEWER` (Ej. Auxiliar contable que solo puede descargar PDFs y ver dashboard).
+
+### C. Proveedores (Apartado de Gastos)
+Como mencionaste, ya extraemos el nombre del proveedor del XML, pero debemos crear su catálogo.
+- **Flujo:** Al subir un XML al buzón, FacturaPro extraerá el RFC del emisor. Si el `Supplier` no existe, lo crea automáticamente.
+- **Frontend:** Módulo `Ajustes > Proveedores` o dentro de `Gastos > Proveedores`, donde habrá un listado de proveedores y una gráfica del gasto acumulado por cada uno (Ej. "Este año gastaste $50,000 en TotalPlay").
+
+### D. Integración API (Generación de Llaves)
+Para autorizar a OmniChat y RentControl a usar FacturaPro "a control remoto".
+- **Frontend:** Pestaña `Ajustes > Desarrolladores / API`.
+- Botón "Generar Llave API". Esto creará un registro `ApiKey` vinculado al `Tenant`.
+
+---
+
+## 2. El Ecosistema Global (Análisis de Trazabilidad)
+
+Cómo fluirá la información para que "no se te escape nada":
+
+> [!TIP]
+> **Filosofía de Separación Responsable:** 
+> **FacturaPro** es la caja registradora ciega (Solo hace matemáticas, impuestos y timbrado).
+> **RentControl** es el gestor inmobiliario (Sabe qué casas existen y quién vive ahí).
+> **OmniChat** es el agente de ventas/atención al cliente (Habla, persuade y atiende).
+
+### RentControl ↔ FacturaPro (Suscripciones Fijas)
+1. Llega el día 1 del mes. RentControl detecta que el inquilino "Nelson" debe renta.
+2. RentControl utiliza su `ApiKey` para hacer una petición silenciosa a la API de FacturaPro (`POST /invoices`).
+3. FacturaPro emite la factura (CFDI) al inquilino.
+4. El sistema de notificación de RentControl obtiene el PDF desde FacturaPro y se lo envía a Nelson automáticamente por correo/WhatsApp.
+
+### OmniChat ↔ FacturaPro (El Caso de Uso que mencionaste)
+1. Un Agente de Ventas está chateando con un prospecto por WhatsApp usando la interfaz de **OmniChat**.
+2. El cliente dice "Sí, pásame cotización de tal cámara de seguridad".
+3. Dentro de OmniChat, el agente presiona un botón **"Generar Cotización"**.
+4. OmniChat usa la `ApiKey` de la empresa para inyectar una orden hacia el backend de FacturaPro (`POST /quotes`).
+5. FacturaPro genera el PDF hermoso de la cotización y devuelve el archivo/enlace a OmniChat.
+6. OmniChat manda ese archivo directamente al hilo de WhatsApp del cliente.
+7. El cliente manda mensaje: "Va, autorizada. Manda Factura."
+8. El agente (en OmniChat) presiona el botón "Timbrar y Facturar". OmniChat avisa a FacturaPro (`POST /quotes/{id}/convert-to-invoice`).
+9. El contador, sentado en su computadora mirando FacturaPro, ve aparecer de la nada el ingreso reflejado en su Dashboard con la transacción timbrada sin haber movido un dedo.
+
+> [!CAUTION]
+> Para lograr que OmniChat y FacturaPro se conecten mágicamente, **la API de FacturaPro debe estar completamente securizada**. Solo los sistemas que presenten en sus 'Headers' la llave correcta (`x-api-key`) podrán insertar ventas fantasma, y todo quedará atado al `Tenant` correcto.
+
+---
+
+## Plan de Acción (Fases de Ejecución Inmediata)
+
+Mi sugerencia para comenzar sin romper nada es ir de adentro hacia afuera:
+
+1. **Fase 1 (Ajustes Internos):** Montar el módulo de Ajustes con las 3 ramas prometidas: Series/Folios, Usuarios y Llaves API.
+2. **Fase 2 (Proveedores):** Construir la pantalla de Gastos por Proveedor (UI de Suppliers y su impacto) en FacturaPro, ya que es el cierre del pilar financiero.
+3. **Fase 3 (El Puente API):** Preparar la ruta Backend en FacturaPro (`/api/external/invoices` protegida por `ApiKey`) para que empiece a escuchar peticiones de fuera.
+4. **Fase 4 (OmniChat Integrado):** Brincar a OmniChat e implementarle la habilidad UI de invocar a FacturaPro durante un chat.
+
+## Open Questions
+
+1. **Catálogo de Productos en OmniChat:** Si un vendedor está en OmniChat y va a cotizar un artículo... ¿OmniChat debería jalar la lista de artículos registrados en FacturaPro para que el vendedor seleccione uno de una lista, o prefieres que el vendedor tenga flexibilidad para escribir el monto y concepto manualmente como texto libre en el chat?
+2. ¿Estás de acuerdo con el diagrama mental y quieres arrancar con la **Fase 1 (Ajustes, Roles, Series y API Keys)**?

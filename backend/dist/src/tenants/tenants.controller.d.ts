@@ -1,0 +1,131 @@
+import { TenantsService } from './tenants.service';
+import { CreateTenantDto } from './dto/create-tenant.dto';
+import { UpdateTenantDto } from './dto/update-tenant.dto';
+export declare class TenantsController {
+    private readonly tenantsService;
+    constructor(tenantsService: TenantsService);
+    create(createTenantDto: CreateTenantDto): Promise<{
+        id: string;
+        name: string;
+        tradeName: string | null;
+        phone: string | null;
+        domain: string | null;
+        subscriptionTier: string;
+        availableStamps: number;
+        subscriptionEndsAt: Date | null;
+        hasExpenseControl: boolean;
+        hasApiAccess: boolean;
+        hasPosAccess: boolean;
+        hasInventoryControl: boolean;
+        agencyId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    findAll(): Promise<{
+        id: string;
+        name: string;
+        tradeName: string | null;
+        phone: string | null;
+        domain: string | null;
+        subscriptionTier: string;
+        availableStamps: number;
+        subscriptionEndsAt: Date | null;
+        hasExpenseControl: boolean;
+        hasApiAccess: boolean;
+        hasPosAccess: boolean;
+        hasInventoryControl: boolean;
+        agencyId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>;
+    findAllUpgradeRequests(): Promise<any>;
+    approveUpgrade(reqId: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    findOne(id: string): Promise<{
+        taxProfiles: {
+            id: string;
+            tenantId: string;
+            rfc: string;
+            legalName: string;
+            taxRegime: string;
+            zipCode: string;
+            cerBase64: string | null;
+            keyBase64: string | null;
+            keyPassword: string | null;
+            fielCerBase64: string | null;
+            fielKeyBase64: string | null;
+            fielPassword: string | null;
+            billingEmail: string | null;
+            billingPhone: string | null;
+            logoUrl: string | null;
+            logoWidth: number;
+            pdfTemplate: string;
+            brandColor: string;
+            brandFont: string;
+            baseCurrency: string;
+            createdAt: Date;
+            updatedAt: Date;
+        }[];
+    } & {
+        id: string;
+        name: string;
+        tradeName: string | null;
+        phone: string | null;
+        domain: string | null;
+        subscriptionTier: string;
+        availableStamps: number;
+        subscriptionEndsAt: Date | null;
+        hasExpenseControl: boolean;
+        hasApiAccess: boolean;
+        hasPosAccess: boolean;
+        hasInventoryControl: boolean;
+        agencyId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    update(id: string, updateTenantDto: UpdateTenantDto): Promise<{
+        id: string;
+        name: string;
+        tradeName: string | null;
+        phone: string | null;
+        domain: string | null;
+        subscriptionTier: string;
+        availableStamps: number;
+        subscriptionEndsAt: Date | null;
+        hasExpenseControl: boolean;
+        hasApiAccess: boolean;
+        hasPosAccess: boolean;
+        hasInventoryControl: boolean;
+        agencyId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    requestUpgrade(id: string, payload: {
+        tier: string;
+        isAnnual: boolean;
+        phone: string;
+    }): Promise<{
+        success: boolean;
+        refNumber: string;
+        message: string;
+    }>;
+    remove(id: string): Promise<{
+        id: string;
+        name: string;
+        tradeName: string | null;
+        phone: string | null;
+        domain: string | null;
+        subscriptionTier: string;
+        availableStamps: number;
+        subscriptionEndsAt: Date | null;
+        hasExpenseControl: boolean;
+        hasApiAccess: boolean;
+        hasPosAccess: boolean;
+        hasInventoryControl: boolean;
+        agencyId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+}
