@@ -1,5 +1,5 @@
 import { Controller, Post, Body, Patch, Param, Headers, UnauthorizedException, Get, Res } from '@nestjs/common';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
 
