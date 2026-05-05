@@ -35,5 +35,5 @@ RUN mkdir -p uploads && chown -R node:node uploads
 # Expose backend port
 EXPOSE 4000
 
-# Start script
-CMD ["sh", "-c", "npx prisma migrate deploy && npm run start:prod"]
+# Start script (using db push since we don't use migrations folder)
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss && npm run start:prod"]
