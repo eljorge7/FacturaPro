@@ -18,7 +18,7 @@ export default function WarehousePage() {
     const loadPendingOrders = async () => {
         setLoading(true);
         try {
-            const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
             const res = await fetch(`${baseUrl}/purchases`, {
                 headers: { 'x-tenant-id': localStorage.getItem('tenantId') || 'demo-tenant' }
             });
@@ -62,7 +62,7 @@ export default function WarehousePage() {
 
         setIsSaving(true);
         try {
-            const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
             const res = await fetch(`${baseUrl}/purchases/${selectedOrder.id}/receive`, {
                 method: 'PATCH',
                 headers: { 
@@ -218,7 +218,7 @@ export default function WarehousePage() {
                                                         <div className="flex items-center gap-4">
                                                             <div className="w-16 h-16 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center overflow-hidden shrink-0">
                                                                 {p.imageUrl ? 
-                                                                    <img src={`${typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005'}${p.imageUrl}`} className="w-full h-full object-cover relative z-10" /> 
+                                                                    <img src={`${process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api"}${p.imageUrl}`} className="w-full h-full object-cover relative z-10" /> 
                                                                 : 
                                                                     <Package className="w-6 h-6 text-slate-600" />
                                                                 }

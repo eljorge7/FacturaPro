@@ -1,4 +1,4 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3005';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api");
 const getHeaders = (tenantId?: string): Record<string, string> => {
   const headers: Record<string, string> = {};
   if (tenantId) headers['x-tenant-id'] = tenantId;

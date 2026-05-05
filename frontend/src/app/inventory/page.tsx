@@ -6,7 +6,7 @@ export default function InventoryPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('http://localhost:3005/inventory/movements', {
+        fetch((process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api') + '/inventory/movements', {
             headers: { 'x-tenant-id': localStorage.getItem('tenantId') || 'demo-tenant' }
         })
         .then(res => res.json())

@@ -32,7 +32,7 @@ export default function OnboardingWizard({ tenantId, initialLegalName }: { tenan
   const handleComplete = async () => {
     setLoading(true);
     try {
-      const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api");
       const token = localStorage.getItem('token');
       
       const payload = new FormData();

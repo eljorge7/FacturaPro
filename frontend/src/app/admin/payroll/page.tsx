@@ -22,7 +22,7 @@ export default function PayrollDashboard() {
     if (token && activeTenantId) loadRuns();
   }, [token, activeTenantId]);
 
-  const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
 
   const loadRuns = async () => {
     setLoading(true);

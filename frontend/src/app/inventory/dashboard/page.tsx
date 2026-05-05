@@ -15,7 +15,7 @@ export default function InventoryDashboard() {
         
         // Fetch products and recent movements
         Promise.all([
-            fetch('http://localhost:3005/products', { headers: { 'x-tenant-id': tenantId } }).then(r => r.json())
+            fetch((process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api') + '/products', { headers: { 'x-tenant-id': tenantId } }).then(r => r.json())
             // Para simplificar el Dashboard en esta etapa y evitar N+1, asumiremos un endpoint agregado a futuro para slowmovers
             // Por ahora estimaremos la regla 80/20 y capitalización.
         ])

@@ -13,7 +13,7 @@ export default function PortalPage() {
 
   useEffect(() => {
      if (!id) return;
-     const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+     const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
      
      fetch(`${baseUrl}/portal/invoices/${id}`)
         .then(async (res) => {
@@ -59,7 +59,7 @@ export default function PortalPage() {
   const isPaid = (invoice.total - paymentTotal) <= 0.01;
   const balance = invoice.total - paymentTotal;
 
-  const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col items-center py-12 px-4 sm:px-6" style={{fontFamily: brandFont}}>

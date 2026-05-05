@@ -482,7 +482,7 @@ export default function PosPage() {
                       >
                          <div className="w-full aspect-video bg-slate-50 rounded-xl mb-3 flex items-center justify-center relative overflow-hidden group-hover:bg-blue-50/50 transition-colors">
                             {p.imageUrl ? (
-                               <img src={`http://${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}:3005${p.imageUrl}`} alt={p.name} className="w-full h-full object-cover" />
+                               <img src={`${process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api'}${p.imageUrl}`} alt={p.name} className="w-full h-full object-cover" />
                             ) : (
                                <Box className="w-8 h-8 text-slate-300 group-hover:text-blue-300" />
                             )}

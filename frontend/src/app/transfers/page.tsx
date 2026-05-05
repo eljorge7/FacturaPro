@@ -30,7 +30,7 @@ export default function TransfersPage() {
     const loadData = async () => {
         setLoading(true);
         try {
-            const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
             const headers = { 
                 'x-tenant-id': activeTenantId || 'demo-tenant',
                 'Authorization': `Bearer ${token}` 
@@ -56,7 +56,7 @@ export default function TransfersPage() {
         
         setIsSaving(true);
         try {
-            const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
             const res = await fetch(`${baseUrl}/transfers`, {
                 method: 'POST',
                 headers: { 
@@ -103,7 +103,7 @@ export default function TransfersPage() {
         const itemsRecv = Object.keys(receiveForm).map(id => ({ itemId: id, receivedQty: Number(receiveForm[id].receivedQty) }));
 
         try {
-            const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
             const res = await fetch(`${baseUrl}/transfers/${selectedOrder.id}/receive`, {
                 method: 'PATCH',
                 headers: { 
@@ -126,7 +126,7 @@ export default function TransfersPage() {
         
         setIsSaving(true);
         try {
-            const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
             const res = await fetch(`${baseUrl}/transfers/${selectedOrder.id}/resolve-discrepancy`, {
                 method: 'PATCH',
                 headers: { 

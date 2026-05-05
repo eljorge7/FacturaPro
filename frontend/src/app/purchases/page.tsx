@@ -13,8 +13,8 @@ export default function PurchasesPage() {
     const loadOrders = () => {
         setLoading(true);
         Promise.all([
-            fetch('http://localhost:3005/purchases', { headers: { 'x-tenant-id': localStorage.getItem('tenantId') || 'demo-tenant' } }).then(r => r.json()),
-            fetch('http://localhost:3005/products', { headers: { 'x-tenant-id': localStorage.getItem('tenantId') || 'demo-tenant' } }).then(r => r.json())
+            fetch((process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api') + '/purchases', { headers: { 'x-tenant-id': localStorage.getItem('tenantId') || 'demo-tenant' } }).then(r => r.json()),
+            fetch((process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api') + '/products', { headers: { 'x-tenant-id': localStorage.getItem('tenantId') || 'demo-tenant' } }).then(r => r.json())
         ])
         .then(([purchasesData, productsData]) => {
             setOrders(purchasesData);

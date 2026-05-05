@@ -31,7 +31,7 @@ export default function AgencyDashboard() {
 
   const fetchData = async () => {
     if (!token) return;
-    const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
     try {
       const res = await fetch(`${baseUrl}/auth/memberships`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -54,7 +54,7 @@ export default function AgencyDashboard() {
   };
 
   const handleSwitchTenant = async (targetId: string) => {
-    const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
     try {
       const res = await fetch(`${baseUrl}/auth/switch-tenant`, {
         method: 'POST',
@@ -72,7 +72,7 @@ export default function AgencyDashboard() {
     if (!confirm("¿Generar facturas Borrador de Igualas para todos los clientes del Despacho?")) return;
     
     setIsAutoBilling(true);
-    const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
     try {
       const res = await fetch(`${baseUrl}/auth/agency/auto-bill`, {
         method: 'POST',

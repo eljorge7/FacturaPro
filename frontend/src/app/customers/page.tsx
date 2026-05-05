@@ -57,7 +57,7 @@ export default function CustomersPage() {
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`¿Eliminar al cliente ${name}? Se perderá la relación si no tiene facturas activas.`)) return;
     try {
-      const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
       const res = await fetch(`${baseUrl}/customers/${id}`, { method: "DELETE" });
       
       if (!res.ok) {
@@ -76,7 +76,7 @@ export default function CustomersPage() {
 
   const fetchCustomers = async () => {
     try {
-      const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
       const res = await fetch(`${baseUrl}/customers`, { cache: 'no-store' });
       const data = await res.json();
       setCustomers(data);
@@ -101,7 +101,7 @@ export default function CustomersPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
 
       const payload: any = {
         tenantId: activeTenantId,
@@ -174,7 +174,7 @@ export default function CustomersPage() {
         if (!confirm(`¿Estás seguro de querer intentar eliminar ${selectedIds.length} clientes?`)) return;
         
         setIsLoading(true);
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         let successCount = 0;
         let failCount = 0;
         

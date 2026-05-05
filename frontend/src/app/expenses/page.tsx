@@ -30,7 +30,7 @@ export default function ExpensesPage() {
   const fetchData = async () => {
     try {
       // Usamos el endpoint de stats solo para obtener el hasExpenseControl 
-      const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
       const resStats = await fetch(`${baseUrl}/invoices/stats`);
       const dataStats = await resStats.json();
       

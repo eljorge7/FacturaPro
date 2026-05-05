@@ -29,7 +29,7 @@ export default function StockTakesPage() {
 
     const loadData = async () => {
         setLoading(true);
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         const headers = { 'x-tenant-id': activeTenantId, 'Authorization': `Bearer ${token}` };
         
         try {
@@ -48,7 +48,7 @@ export default function StockTakesPage() {
 
     const handleCreateAudit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         const res = await fetch(`${baseUrl}/stock-takes`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-tenant-id': activeTenantId, 'Authorization': `Bearer ${token}` },
@@ -67,7 +67,7 @@ export default function StockTakesPage() {
     };
 
     const openAuditExecution = async (id: string) => {
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         const res = await fetch(`${baseUrl}/stock-takes/${id}`, {
             headers: { 'x-tenant-id': activeTenantId, 'Authorization': `Bearer ${token}` }
         });
@@ -89,7 +89,7 @@ export default function StockTakesPage() {
 
     const submitCount = async () => {
         if (!confirm('¿Seguro que deseas enviar el conteo? Ya no podrás modificarlo después.')) return;
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         
         const counts = auditItems.filter((i: any) => i.countedQty !== '').map(i => ({ itemId: i.itemId, countedQty: Number(i.countedQty) }));
         
@@ -107,7 +107,7 @@ export default function StockTakesPage() {
 
     const applyAdjustments = async () => {
         if (!confirm('¿Seguro que deseas APLICAR las desviaciones al inventario? Las diferencias generarán Mermas y Entradas automáticas.')) return;
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         const res = await fetch(`${baseUrl}/stock-takes/${selectedAudit.id}/apply`, {
             method: 'PATCH',
             headers: { 'x-tenant-id': activeTenantId, 'Authorization': `Bearer ${token}` }

@@ -52,7 +52,7 @@ export default function SettingsPage() {
   const fetchProfile = async () => {
     try {
       setIsLoading(true);
-      const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
       const res = await fetch(`${baseUrl}/tax-profiles/mine`, {
          headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -93,7 +93,7 @@ export default function SettingsPage() {
 
   const fetchSeries = async () => {
     try {
-      const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
       const res = await fetch(`${baseUrl}/tax-profiles/series`, {
          headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -102,7 +102,7 @@ export default function SettingsPage() {
   };
 
   const fetchApiKeys = async () => {
-      const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
       const keysRes = await fetch(`${baseUrl}/api-keys/mine`, { headers: { 'Authorization': `Bearer ${token}` } });
       if (keysRes.ok) {
         setApiKeys(await keysRes.json());
@@ -110,7 +110,7 @@ export default function SettingsPage() {
   };
 
   const fetchEmployees = async () => {
-      const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
       const usersRes = await fetch(`${baseUrl}/users`, { headers: { 'Authorization': `Bearer ${token}` } });
       if (usersRes.ok) {
         setEmployees(await usersRes.json());
@@ -122,7 +122,7 @@ export default function SettingsPage() {
      setIsGeneratingKey(true);
      setNewRawKey(null);
      try {
-       const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
        const res = await fetch(`${baseUrl}/api-keys/generate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -153,7 +153,7 @@ export default function SettingsPage() {
   const handleCreateUser = async () => {
       setIsSaving(true);
       try {
-         const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+         const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
          const res = await fetch(`${baseUrl}/users`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -179,7 +179,7 @@ export default function SettingsPage() {
      if(role === 'OWNER') return alert('No se puede eliminar al dueño.');
      if(confirm('¿Eliminar permanente a este usuario?')) {
         try {
-           const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+           const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
            await fetch(`${baseUrl}/users/${id}`, {
               method: 'DELETE',
               headers: { 'Authorization': `Bearer ${token}` }
@@ -192,7 +192,7 @@ export default function SettingsPage() {
   const handleSaveSeries = async () => {
      setIsSaving(true);
      try {
-       const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
        const method = editingSeriesId ? 'PATCH' : 'POST';
        const url = editingSeriesId ? `${baseUrl}/tax-profiles/series/${editingSeriesId}` : `${baseUrl}/tax-profiles/series`;
        
@@ -214,7 +214,7 @@ export default function SettingsPage() {
   const handleDeleteSeries = async (id: string) => {
      if(!confirm("¿Eliminar configuración de serie?")) return;
      try {
-       const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
        await fetch(`${baseUrl}/tax-profiles/series/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }});
        fetchSeries();
      } catch(e){}
@@ -252,7 +252,7 @@ export default function SettingsPage() {
       setFormData({...formData, pdfTemplate: templateName});
       setIsSaving(true);
       try {
-         const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+         const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
          const payload: any = { pdfTemplate: templateName };
          const res = await fetch(`${baseUrl}/tax-profiles/${profile.id}`, {
             method: 'PATCH',
@@ -277,7 +277,7 @@ export default function SettingsPage() {
    const handleSave = async () => {
       setIsSaving(true);
       try {
-         const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+         const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
          
          const payload: any = { ...formData, logoWidth: Number(formData.logoWidth) };
          if (logoPreview && logoPreview.startsWith('data:image')) {

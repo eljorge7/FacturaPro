@@ -11,7 +11,7 @@ export default function ARReportsPage() {
 
     useEffect(() => {
         setLoading(true);
-        fetch('http://localhost:3005/invoices/ar-report', {
+        fetch((process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api') + '/invoices/ar-report', {
             headers: { 'x-tenant-id': localStorage.getItem('tenantId') || 'demo-tenant' }
         })
         .then(res => res.json())

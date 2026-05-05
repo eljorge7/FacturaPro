@@ -52,7 +52,7 @@ export default function ProductsPage() {
 
   useEffect(() => {
     if (satProductCode && satProductCode.length >= 2) {
-      const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
       const delayDebounceFn = setTimeout(() => {
         fetch(`${baseUrl}/sat-catalogs/products?q=${satProductCode}`)
           .then(res => res.json())
@@ -119,7 +119,7 @@ export default function ProductsPage() {
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`¿Eliminar el artículo ${name} del catálogo?`)) return;
     try {
-      const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
       const res = await fetch(`${baseUrl}/products/${id}`, { method: "DELETE" });
       
       if (!res.ok) {
@@ -138,7 +138,7 @@ export default function ProductsPage() {
 
   const fetchProducts = async () => {
     try {
-      const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
       const res = await fetch(`${baseUrl}/products`, { cache: 'no-store' });
       const data = await res.json();
       setProducts(data);
@@ -170,7 +170,7 @@ export default function ProductsPage() {
 
   const fetchMovements = async (pid: string) => {
     try {
-      const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
       const res = await fetch(`${baseUrl}/products/${pid}/movements`);
       if(res.ok) setMovements(await res.json());
     } catch(e) { console.error(e); }
@@ -178,7 +178,7 @@ export default function ProductsPage() {
 
   const handleAdjustment = async () => {
     if (!adjQty || parseFloat(adjQty) <= 0) return alert('Ingresa una cantidad válida');
-    const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
     await fetch(`${baseUrl}/products/${selectedProduct.id}/movements`, {
        method: 'POST',
        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -200,7 +200,7 @@ export default function ProductsPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
 
       const payload = {
         tenantId: activeTenantId,
@@ -281,7 +281,7 @@ export default function ProductsPage() {
         if (!confirm(`¿Estás seguro de querer intentar eliminar ${selectedIds.length} artículos?`)) return;
         
         setIsLoading(true);
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         let successCount = 0;
         let failCount = 0;
         
@@ -370,7 +370,7 @@ export default function ProductsPage() {
                        <td className="py-4 px-2">
                           <span className="text-[#2563eb] hover:underline font-medium flex items-center gap-2 focus:outline-none">
                              <div className="bg-slate-100 p-1 rounded-md text-slate-400">
-                                {p.imageUrl ? <img src={`${typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005'}${p.imageUrl}`} className="w-4 h-4 object-cover rounded-md" /> : <ImageIcon className="w-4 h-4"/>}
+                                {p.imageUrl ? <img src={`${process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api"}${p.imageUrl}`} className="w-4 h-4 object-cover rounded-md" /> : <ImageIcon className="w-4 h-4"/>}
                              </div>
                              {p.type === 'KIT' && <span className="bg-indigo-100 text-indigo-700 font-bold px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider align-middle">KIT</span>}
                              {p.name}
@@ -419,7 +419,7 @@ export default function ProductsPage() {
            <div className="flex-1 flex justify-between items-center px-4">
               <div className="flex items-center gap-3">
                  <div className="bg-slate-100 text-slate-400 w-8 h-8 rounded border border-slate-200 flex items-center justify-center shadow-sm">
-                    {selectedProduct.imageUrl ? <img src={`${typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005'}${selectedProduct.imageUrl}`} className="w-full h-full object-cover rounded" /> : <ImageIcon className="w-4 h-4" />}
+                    {selectedProduct.imageUrl ? <img src={`${process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api"}${selectedProduct.imageUrl}`} className="w-full h-full object-cover rounded" /> : <ImageIcon className="w-4 h-4" />}
                  </div>
                  <h2 className="text-xl font-medium text-slate-800">
                     {selectedProduct.type === 'KIT' && <span className="bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded text-[10px] uppercase tracking-wider mr-2 align-middle">KIT</span>}
@@ -563,7 +563,7 @@ export default function ProductsPage() {
                     <div className="pt-4">
                        <label className="border border-slate-200 bg-white rounded-xl overflow-hidden flex flex-col justify-center items-center h-48 w-48 mx-auto group cursor-pointer relative shadow-sm">
                           {selectedProduct.imageUrl ? (
-                             <img src={`${typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005'}${selectedProduct.imageUrl}`} className="w-full h-full object-cover" />
+                             <img src={`${process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api"}${selectedProduct.imageUrl}`} className="w-full h-full object-cover" />
                           ) : (
                              <Package className="w-16 h-16 text-slate-200 group-hover:scale-110 transition-transform" />
                           )}
@@ -579,7 +579,7 @@ export default function ProductsPage() {
                                if(!file) return;
                                const fd = new FormData();
                                fd.append('file', file);
-                               const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+                               const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
                                
                                const res = await fetch(`${baseUrl}/products/upload-image`, {
                                   method: 'POST',
@@ -699,7 +699,7 @@ export default function ProductsPage() {
               <div className="flex flex-col items-center mb-6">
                  <div className="w-24 h-24 rounded-2xl bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden relative group">
                     {imageUrl ? (
-                       <img src={`${typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005'}${imageUrl}`} className="w-full h-full object-cover" alt="preview" />
+                       <img src={`${process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api"}${imageUrl}`} className="w-full h-full object-cover" alt="preview" />
                     ) : (
                        <span className="text-slate-400 text-xs font-medium text-center px-2">📷 <br/>Agregar<br/>Foto</span>
                     )}
@@ -712,7 +712,7 @@ export default function ProductsPage() {
                          if(!file) return;
                          const fd = new FormData();
                          fd.append('file', file);
-                         const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+                         const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
                          const res = await fetch(`${baseUrl}/products/upload-image`, {
                             method: 'POST',
                             headers: { 'Authorization': `Bearer ${token}` },

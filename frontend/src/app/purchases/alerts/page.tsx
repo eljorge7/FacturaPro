@@ -21,9 +21,9 @@ export default function AlertsPage() {
         const tenantId = localStorage.getItem('tenantId') || 'demo-tenant';
         
         Promise.all([
-            fetch('http://localhost:3005/products', { headers: { 'x-tenant-id': tenantId } }).then(r => r.json()),
-            fetch('http://localhost:3005/suppliers', { headers: { 'x-tenant-id': tenantId } }).then(r => r.json()),
-            fetch('http://localhost:3005/purchases', { headers: { 'x-tenant-id': tenantId } }).then(r => r.json())
+            fetch((process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api') + '/products', { headers: { 'x-tenant-id': tenantId } }).then(r => r.json()),
+            fetch((process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api') + '/suppliers', { headers: { 'x-tenant-id': tenantId } }).then(r => r.json()),
+            fetch((process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api') + '/purchases', { headers: { 'x-tenant-id': tenantId } }).then(r => r.json())
         ])
         .then(([productsData, suppliersData, purchasesData]) => {
             const incomingMap: any = {};
@@ -106,7 +106,7 @@ export default function AlertsPage() {
             // Generate one PO per supplier group sequentially
             for (const supplierId of Object.keys(itemsBySupplier)) {
                  const items = itemsBySupplier[supplierId];
-                 await fetch('http://localhost:3005/purchases', {
+                 await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api') + '/purchases', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'x-tenant-id': tenantId },
                     body: JSON.stringify({
@@ -156,7 +156,7 @@ export default function AlertsPage() {
 
         setLoadingMovements({...loadingMovements, [productId]: true});
         try {
-            const res = await fetch(`http://localhost:3005/products/${productId}/movements`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api'}/products/${productId}/movements`, {
                 headers: { 'x-tenant-id': localStorage.getItem('tenantId') || 'demo-tenant' }
             });
             const data = await res.json();

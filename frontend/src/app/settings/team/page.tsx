@@ -43,7 +43,7 @@ export default function TeamSettings() {
 
     const loadData = async () => {
         setLoading(true);
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         const headers = { 'x-tenant-id': activeTenantId, 'Authorization': `Bearer ${token}` };
         try {
             const [eRes, wRes, rRes, dRes, pRes] = await Promise.all([
@@ -64,7 +64,7 @@ export default function TeamSettings() {
 
     const handleCreateOrUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         const payload = { ...newEmp, createSystemAccess: isEditingId ? undefined : giveAccess };
         
         if (payload.role && payload.role.startsWith('CUSTOM_')) {
@@ -95,7 +95,7 @@ export default function TeamSettings() {
 
     const handleCreateDepartment = async (e: React.FormEvent) => {
         e.preventDefault();
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         const res = await fetch(`${baseUrl}/departments`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-tenant-id': activeTenantId, 'Authorization': `Bearer ${token}` },
@@ -110,7 +110,7 @@ export default function TeamSettings() {
     };
 
     const handleUpdateDepartment = async (id: string, name: string) => {
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         const res = await fetch(`${baseUrl}/departments/${id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json', 'x-tenant-id': activeTenantId, 'Authorization': `Bearer ${token}` },
@@ -121,7 +121,7 @@ export default function TeamSettings() {
     };
 
     const handleDeleteDepartment = async (id: string) => {
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         const res = await fetch(`${baseUrl}/departments/${id}`, {
             method: 'DELETE',
             headers: { 'x-tenant-id': activeTenantId, 'Authorization': `Bearer ${token}` }
@@ -159,7 +159,7 @@ export default function TeamSettings() {
     };
 
     const uploadPhoto = async (empId: string, file: File) => {
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         const formData = new FormData();
         formData.append('file', file);
         
@@ -182,7 +182,7 @@ export default function TeamSettings() {
         const docName = prompt("Nombre del documento (Ej. Contrato, INE)", file.name);
         if (!docName) return;
 
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         const formData = new FormData();
         formData.append('file', file);
         formData.append('name', docName);
@@ -209,7 +209,7 @@ export default function TeamSettings() {
 
     const handleDelete = async (id: string, name: string) => {
         if (!confirm(`¿Dar de baja a ${name}? Con esto dejará de acceder al sistema inmediatamente.`)) return;
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         await fetch(`${baseUrl}/employees/${id}`, {
             method: 'DELETE',
             headers: { 'x-tenant-id': activeTenantId, 'Authorization': `Bearer ${token}` }
@@ -227,7 +227,7 @@ export default function TeamSettings() {
         }, 300);
     };
 
-    const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
 
     // ==========================================
     // ISOLATED PRINT VIEW ENGINE (DUAL SIDED)

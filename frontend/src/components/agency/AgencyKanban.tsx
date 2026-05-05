@@ -20,7 +20,7 @@ export default function AgencyKanban({ token, memberships, staff }: any) {
 
   const fetchTasks = async () => {
     if (!token) return;
-    const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api");
     try {
       const res = await fetch(`${baseUrl}/auth/agency/tasks`, { headers: { 'Authorization': `Bearer ${token}` }});
       const data = await res.json();
@@ -31,7 +31,7 @@ export default function AgencyKanban({ token, memberships, staff }: any) {
 
   const createTask = async () => {
     if (!title) return;
-    const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api");
     try {
       const res = await fetch(`${baseUrl}/auth/agency/tasks`, {
         method: 'POST',
@@ -52,7 +52,7 @@ export default function AgencyKanban({ token, memberships, staff }: any) {
     // Optimistic UI Update
     setTasks(tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
     
-    const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api");
     try {
       await fetch(`${baseUrl}/auth/agency/tasks/${taskId}`, {
         method: 'PATCH',

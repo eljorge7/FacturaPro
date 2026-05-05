@@ -26,7 +26,7 @@ export default function PurchaseDetailsPage({ params }: { params: Promise<{ id: 
 
     const loadOrder = () => {
         setLoading(true);
-        fetch('http://localhost:3005/purchases', { headers: { 'x-tenant-id': localStorage.getItem('tenantId') || 'demo-tenant' } })
+        fetch((process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api') + '/purchases', { headers: { 'x-tenant-id': localStorage.getItem('tenantId') || 'demo-tenant' } })
         .then(res => res.json())
         .then(data => {
             const found = data.find((o: any) => o.id === id);
@@ -60,7 +60,7 @@ export default function PurchaseDetailsPage({ params }: { params: Promise<{ id: 
         }
 
         try {
-            const res = await fetch(`http://localhost:3005/purchases/${id}/receive`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api'}/purchases/${id}/receive`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -87,7 +87,7 @@ export default function PurchaseDetailsPage({ params }: { params: Promise<{ id: 
     const handleDelete = async () => {
         if (!confirm('¿Está seguro de eliminar esta orden?')) return;
         try {
-            const res = await fetch(`http://localhost:3005/purchases/${id}`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api'}/purchases/${id}`, {
                 method: 'DELETE',
                 headers: { 'x-tenant-id': localStorage.getItem('tenantId') || 'demo-tenant' }
             });
@@ -104,7 +104,7 @@ export default function PurchaseDetailsPage({ params }: { params: Promise<{ id: 
             return;
         }
         try {
-            const res = await fetch(`http://localhost:3005/purchases/${id}/payment`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api'}/purchases/${id}/payment`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',

@@ -60,7 +60,7 @@ export default function NewInvoicePage() {
 
   const fetchCatalogs = async () => {
     try {
-      const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
       const [custRes, prodRes] = await Promise.all([
         fetch(`${baseUrl}/customers`),
         fetch(`${baseUrl}/products`)
@@ -160,7 +160,7 @@ export default function NewInvoicePage() {
     setIsCatalogModalOpen(false);
     setSaving(true);
     try {
-      const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
       
       // Opción: Guardar al catálogo primero los manuales
       let mappedItems = [...items];
@@ -252,7 +252,7 @@ export default function NewInvoicePage() {
   const handleCreateCustomer = async () => {
       try {
          setSaving(true);
-          const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+          const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
          
          const basePayload = { ...newCustomerData, tenantId: activeTenantId };
          const cleanPayload: any = {};

@@ -29,7 +29,7 @@ export default function RolesSettings() {
 
     const loadRoles = async () => {
         setLoading(true);
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         try {
             const res = await fetch(`${baseUrl}/roles`, { headers: { 'x-tenant-id': activeTenantId, 'Authorization': `Bearer ${token}` } });
             if (res.ok) setRoles(await res.json());
@@ -47,7 +47,7 @@ export default function RolesSettings() {
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         const res = await fetch(`${baseUrl}/roles`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-tenant-id': activeTenantId, 'Authorization': `Bearer ${token}` },
@@ -65,7 +65,7 @@ export default function RolesSettings() {
         if (count > 0) return alert('No puedes eliminar un rol si hay empleados activos usándolo. Quítalo de su gafete primero.');
         if (!confirm(`¿Eliminar matriz de permisos de "${name}"?`)) return;
         
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         await fetch(`${baseUrl}/roles/${id}`, {
             method: 'DELETE',
             headers: { 'x-tenant-id': activeTenantId, 'Authorization': `Bearer ${token}` }

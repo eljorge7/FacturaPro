@@ -27,7 +27,7 @@ export default function QuotesPage() {
 
   const fetchQuotes = async () => {
     try {
-      const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
       const res = await fetch(`${baseUrl}/quotes`);
       const data = await res.json();
       setQuotes(data);
@@ -59,7 +59,7 @@ export default function QuotesPage() {
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
     try {
-      const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
       await fetch(`${baseUrl}/quotes/${id}/status`, {
          method: "PATCH",
          headers: { 'Content-Type': 'application/json' },
@@ -93,7 +93,7 @@ export default function QuotesPage() {
      if (action === 'Eliminar') {
         if (!confirm(`¿Estás seguro de que quieres eliminar ${selectedIds.length} elemento(s)?`)) return;
         try {
-           const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+           const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
            await Promise.all(selectedIds.map(id => 
               fetch(`${baseUrl}/quotes/${id}`, { method: 'DELETE' })
            ));
@@ -114,7 +114,7 @@ export default function QuotesPage() {
 
   const handleDownload = async (id: string, quoteNum: string) => {
      try {
-       const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
        const res = await fetch(`${baseUrl}/quotes/${id}/pdf`, { method: 'GET' });
        if (!res.ok) throw new Error("Error al consultar el documento fiscal.");
        
@@ -407,7 +407,7 @@ export default function QuotesPage() {
                        </div>
                        <div className="text-right">
                           {selectedQuote.taxProfile?.logoUrl ? (
-                             <img src={`http://localhost:3005${selectedQuote.taxProfile.logoUrl}`} alt="Logo" style={{ width: `${selectedQuote.taxProfile.logoWidth || 120}px` }} className="ml-auto mb-4 object-contain" />
+                             <img src={`${process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api'}${selectedQuote.taxProfile.logoUrl}`} alt="Logo" style={{ width: `${selectedQuote.taxProfile.logoWidth || 120}px` }} className="ml-auto mb-4 object-contain" />
                           ) : (
                              <h2 className="text-4xl font-black text-[#10b981] tracking-tighter mb-4 flex items-center justify-end gap-2">
                                 <div className="grid grid-cols-3 gap-1 w-8 h-8 opacity-80">

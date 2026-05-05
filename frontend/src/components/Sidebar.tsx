@@ -48,7 +48,7 @@ export function Sidebar() {
   
   useEffect(() => {
      if (!user || !token) return;
-     const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+     const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api");
      
      // Fetch Tier and Stats
      if (!tier) {
@@ -181,7 +181,7 @@ export function Sidebar() {
                  {/* Mi Cuenta Principal */}
                  <button 
                     onClick={() => {
-                       const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+                       const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api");
                        fetch(`${baseUrl}/auth/switch-tenant`, {
                           method: 'POST',
                           headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -201,7 +201,7 @@ export function Sidebar() {
                     <button 
                        key={m.id}
                        onClick={() => {
-                          const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+                          const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api");
                           fetch(`${baseUrl}/auth/switch-tenant`, {
                              method: 'POST',
                              headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },

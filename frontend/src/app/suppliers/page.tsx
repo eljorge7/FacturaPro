@@ -59,7 +59,7 @@ export default function SuppliersPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const res = await fetch('http://localhost:3005/suppliers', {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api') + '/suppliers', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

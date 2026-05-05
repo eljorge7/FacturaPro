@@ -37,7 +37,7 @@ export default function ImportPage() {
         phone: row['phone'] || row['Teléfono'] || null
       })).filter(x => x.legalName && x.rfc); // Basic validation
 
-      const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
       const res = await fetch(`${baseUrl}/customers/bulk`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

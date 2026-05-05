@@ -23,7 +23,7 @@ export default function WarehousesSettings() {
 
     const loadData = async () => {
         setLoading(true);
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         const headers = { 
             'x-tenant-id': activeTenantId || 'demo-tenant',
             'Authorization': `Bearer ${token}` 
@@ -48,7 +48,7 @@ export default function WarehousesSettings() {
         e.preventDefault();
         if(!newWarehouse.name) return;
 
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         const res = await fetch(`${baseUrl}/warehouses`, {
             method: 'POST',
             headers: { 
@@ -67,7 +67,7 @@ export default function WarehousesSettings() {
 
     const handleDeleteWarehouse = async (id: string, name: string) => {
         if (!confirm(`¿Eliminar la sucursal ${name}? Esta acción no se puede deshacer.`)) return;
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         try {
             const res = await fetch(`${baseUrl}/warehouses/${id}`, {
                 method: 'DELETE',
@@ -92,7 +92,7 @@ export default function WarehousesSettings() {
 
     const handleUpdateWarehouse = async () => {
         if (!editName) return;
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         await fetch(`${baseUrl}/warehouses/${editingId}`, {
             method: 'PATCH',
             headers: { 
@@ -107,7 +107,7 @@ export default function WarehousesSettings() {
     };
 
     const handleUserWarehouseChange = async (userId: string, warehouseId: string) => {
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         await fetch(`${baseUrl}/users/${userId}`, {
             method: 'PATCH',
             headers: { 
@@ -121,7 +121,7 @@ export default function WarehousesSettings() {
     };
 
     const handleSetDefault = async (id: string) => {
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         await fetch(`${baseUrl}/warehouses/${id}/default`, {
             method: 'PATCH',
             headers: { 

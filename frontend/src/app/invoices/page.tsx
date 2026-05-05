@@ -38,7 +38,7 @@ export default function InvoicesPage() {
 
   const fetchInvoices = async () => {
     try {
-      const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
       const res = await fetch(`${baseUrl}/invoices`);
       const data = await res.json();
       setInvoices(data);
@@ -89,7 +89,7 @@ export default function InvoicesPage() {
       if(!selectedInvoice) return;
       setIsSubmittingPayment(true);
       try {
-          const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+          const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
           const res = await fetch(`${baseUrl}/invoices/${selectedInvoice.id}/payments`, {
              method: 'POST',
              headers: { 'Content-Type': 'application/json' },
@@ -132,7 +132,7 @@ export default function InvoicesPage() {
     }
     setIsCanceling(true);
     try {
-      const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
       const res = await fetch(`${baseUrl}/invoices/${selectedInvoice.id}/cancel`, { 
          method: "POST",
          headers: { 'Content-Type': 'application/json' },
@@ -162,7 +162,7 @@ export default function InvoicesPage() {
   const handleStamp = async (id: string) => {
     if (!confirm('Â¿Deseas mandar a timbrar este comprobante? Esto consumirÃ¡ 1 saldo de tus Timbres Disponibles.')) return;
     try {
-       const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
        const res = await fetch(`${baseUrl}/invoices/${id}/stamp`, { method: "PATCH" });
        if (!res.ok) {
           const errorData = await res.json().catch(() => null);
@@ -183,7 +183,7 @@ export default function InvoicesPage() {
      if (!phone) return;
      
      try {
-       const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
        const res = await fetch(`${baseUrl}/invoices/${id}/send-whatsapp`, { 
            method: "POST",
            headers: { 'Content-Type': 'application/json' },
@@ -221,7 +221,7 @@ export default function InvoicesPage() {
      if (action === 'Eliminar') {
         if (!confirm(`Â¿EstÃ¡s seguro de que quieres eliminar ${selectedIds.length} elemento(s)?`)) return;
         try {
-           const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+           const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
            await Promise.all(selectedIds.map(id => 
               fetch(`${baseUrl}/invoices/${id}`, { method: 'DELETE' })
            ));
@@ -242,7 +242,7 @@ export default function InvoicesPage() {
 
   const handleDownload = async (id: string, invoiceNum: string) => {
      try {
-       const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
        const res = await fetch(`${baseUrl}/invoices/${id}/pdf`, { method: 'GET' });
        if (!res.ok) throw new Error("Error al consultar el documento fiscal.");
        
@@ -548,7 +548,7 @@ export default function InvoicesPage() {
                        <div className="bg-slate-900 text-white p-8 flex justify-between items-center mb-12 -mx-10 -mt-2">
                           <div className="flex items-center gap-6">
                              {selectedInvoice.taxProfile?.logoUrl ? (
-                                <div className="bg-white p-2 rounded-md"><img src={`http://localhost:3005${selectedInvoice.taxProfile.logoUrl}`} style={{ width: `${selectedInvoice.taxProfile.logoWidth || 120}px` }} className="object-contain" alt="Logo Previa" /></div>
+                                <div className="bg-white p-2 rounded-md"><img src={`${process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api'}${selectedInvoice.taxProfile.logoUrl}`} style={{ width: `${selectedInvoice.taxProfile.logoWidth || 120}px` }} className="object-contain" alt="Logo Previa" /></div>
                              ) : (
                                 <div className="font-black text-2xl tracking-tighter text-white" style={{ width: `${selectedInvoice.taxProfile?.logoWidth || 120}px` }}>{selectedInvoice.taxProfile?.legalName || 'SIN NOMBRE'}</div>
                              )}
@@ -562,7 +562,7 @@ export default function InvoicesPage() {
                        <div className="p-8 border-b-2 border-green-600 mb-8 bg-[#f1f5f9] -mx-10 -mt-2">
                           <div className="flex justify-between items-end pb-4 border-b border-slate-300">
                              {selectedInvoice.taxProfile?.logoUrl ? (
-                                <img src={`http://localhost:3005${selectedInvoice.taxProfile.logoUrl}`} style={{ width: `${selectedInvoice.taxProfile.logoWidth || 120}px` }} className="object-contain grayscale" alt="Logo Previa" />
+                                <img src={`${process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api'}${selectedInvoice.taxProfile.logoUrl}`} style={{ width: `${selectedInvoice.taxProfile.logoWidth || 120}px` }} className="object-contain grayscale" alt="Logo Previa" />
                              ) : (
                                 <div className="font-mono text-xl font-bold text-slate-800" style={{ width: `${selectedInvoice.taxProfile?.logoWidth || 120}px` }}>{selectedInvoice.taxProfile?.legalName || 'SIN NOMBRE'}</div>
                              )}
@@ -578,7 +578,7 @@ export default function InvoicesPage() {
                           </div>
                           <div className="text-right">
                              {selectedInvoice.taxProfile?.logoUrl ? (
-                                <img src={`http://localhost:3005${selectedInvoice.taxProfile.logoUrl}`} alt="Logo" style={{ width: `${selectedInvoice.taxProfile.logoWidth || 120}px` }} className="ml-auto mb-4 object-contain" />
+                                <img src={`${process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api'}${selectedInvoice.taxProfile.logoUrl}`} alt="Logo" style={{ width: `${selectedInvoice.taxProfile.logoWidth || 120}px` }} className="ml-auto mb-4 object-contain" />
                              ) : (
                                 <h2 className="text-4xl font-black text-[#10b981] tracking-tighter mb-4 flex items-center justify-end gap-2">
                                    <div className="grid grid-cols-3 gap-1 w-8 h-8 opacity-80">

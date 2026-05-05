@@ -19,7 +19,7 @@ export default function UpgradePage() {
   const fetchStatus = async () => {
     try {
       setIsLoading(true);
-      const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
       
       const res = await fetch(`${baseUrl}/tax-profiles/mine`, {
          headers: { 'Authorization': `Bearer ${token}` }
@@ -49,7 +49,7 @@ export default function UpgradePage() {
   const handleCheckout = async (tier: string, amount: number, isAnnual: boolean) => {
     setIsProcessing(true);
     try {
-       const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
        const res = await fetch(`${baseUrl}/subscription-requests/checkout`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },

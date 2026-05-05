@@ -16,7 +16,7 @@ export default function ProfileSettingsPage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         const res = await fetch(`${baseUrl}/tenants`);
         const tenants = await res.json();
         
@@ -44,7 +44,7 @@ export default function ProfileSettingsPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-       const baseUrl = typeof window !== 'undefined' ? `http://${window.location.hostname}:3005` : 'http://localhost:3005';
+       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
        // Primero actualizamos o creamos el Tenant
        let currentTenantId = tenantId;
        if (!currentTenantId) {

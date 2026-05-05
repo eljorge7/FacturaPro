@@ -15,8 +15,8 @@ export default function NewPurchasePage() {
     useEffect(() => {
         const tenantId = localStorage.getItem('tenantId') || 'demo-tenant';
         Promise.all([
-            fetch('http://localhost:3005/suppliers', { headers: { 'x-tenant-id': tenantId } }).then(res => res.json()),
-            fetch('http://localhost:3005/products', { headers: { 'x-tenant-id': tenantId } }).then(res => res.json())
+            fetch((process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api') + '/suppliers', { headers: { 'x-tenant-id': tenantId } }).then(res => res.json()),
+            fetch((process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api') + '/products', { headers: { 'x-tenant-id': tenantId } }).then(res => res.json())
         ]).then(([sups, prods]) => {
             setSuppliers(sups);
             setProducts(prods);
@@ -27,7 +27,7 @@ export default function NewPurchasePage() {
         e.preventDefault();
         setLoading(true);
         try {
-            const res = await fetch('http://localhost:3005/purchases', {
+            const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api') + '/purchases', {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
