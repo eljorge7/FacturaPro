@@ -71,7 +71,7 @@ export class TenantsService {
     });
     
     try {
-       const omniUrl = process.env.OMNICHAT_API_URL || 'http://127.0.0.1:3002';
+       const omniUrl = process.env.OMNICHAT_API_URL || 'https://omnichat.radiotecpro.com/api';
        const msg = `🚀 ¡Hola ${user?.name || tenant.name}! Has solicitado escalar tu agencia a FacturaPro *${payload.tier}*.\n\n`
                  + `*Total a pagar:* $${cost} MXN\n`
                  + `*Referencia Única:* ${refNumber}\n\n`
@@ -135,7 +135,7 @@ export class TenantsService {
     // Send WhatsApp notification
     if (req.phone) {
        try {
-         const omniUrl = process.env.OMNICHAT_API_URL || 'http://127.0.0.1:3002';
+         const omniUrl = process.env.OMNICHAT_API_URL || 'https://omnichat.radiotecpro.com/api';
          let formattedPhone = req.phone.replace(/\D/g, ''); 
          if (formattedPhone.length === 10) formattedPhone = `521${formattedPhone}`;
          const msg = `👑 ¡Felicidades! Se ha validado tu pago (Ref: ${req.reference}) exitosamente.\n\nTu agencia *${req.tenant.name}* ha sido escalada oficialmente al Módulo *${req.tier}* en FacturaPro con ${stamps} timbres libres.\n🚀 ¡Feliz Lunes de Facturación!`;

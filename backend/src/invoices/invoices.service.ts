@@ -510,7 +510,7 @@ export class InvoicesService {
     const msg = `🧾 *NUEVA FACTURA DISPONIBLE*\n\nHola. Te informamos que *${emitterName}* ha emitido un nuevo comprobante fiscal a tu nombre.\n\n*Folio:* ${invoice.invoiceNumber}\n*Monto Total:* $${amountStr} MXN\n*Estado:* ${invoice.status === 'PAID' ? '✅ Pagada' : '⏳ Pendiente'}\n\n📄 *Descargar PDF/XML:*\n${pdfUrl}\n\n_Este es un sistema automático de FacturaPro SaaS. Por favor no respondas a este mensaje._`;
 
     try {
-        const omniUrl = process.env.OMNICHAT_API_URL || 'http://127.0.0.1:3002';
+        const omniUrl = process.env.OMNICHAT_API_URL || 'https://omnichat.radiotecpro.com/api';
         await fetch(`${omniUrl}/api/v1/messages/send`, {
             method: 'POST',
             headers: {
