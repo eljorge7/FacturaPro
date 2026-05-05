@@ -25,6 +25,7 @@ services:
     ports:
       - "4050:4000"
     environment:
+      PORT: 4000
       # Prisma connection string to the local DB container
       DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-facturapro}?schema=public
       JWT_SECRET: ${JWT_SECRET:-super-secret-jwt-key}
