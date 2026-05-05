@@ -32,18 +32,25 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@nestjs/core");
 const app_module_1 = require("./app.module");
 const common_1 = require("@nestjs/common");
 const path_1 = require("path");
 const express = __importStar(require("express"));
+const helmet_1 = __importDefault(require("helmet"));
+const cookieParser = __importStar(require("cookie-parser"));
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
+    app.use((0, helmet_1.default)());
+    app.use(cookieParser());
     app.use(express.json({ limit: '10mb' }));
     app.use(express.urlencoded({ limit: '10mb', extended: true }));
     app.enableCors({
-        origin: '*',
+        origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
     });
     app.useStaticAssets((0, path_1.join)(process.cwd(), 'public'));
     app.useGlobalPipes(new common_1.ValidationPipe({

@@ -47,11 +47,29 @@ let AuthController = class AuthController {
     verifyOtp(body) {
         return this.authService.verifyOtp(body);
     }
-    login(body) {
-        return this.authService.login(body);
+    async login(body, res) {
+        const result = await this.authService.login(body);
+        if (result && result.access_token) {
+            res.cookie('access_token', result.access_token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: 15 * 60 * 1000
+            });
+        }
+        return result;
     }
-    sso(body) {
-        return this.authService.sso(body);
+    async sso(body, res) {
+        const result = await this.authService.sso(body);
+        if (result && result.access_token) {
+            res.cookie('access_token', result.access_token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: 15 * 60 * 1000
+            });
+        }
+        return result;
     }
     async getMemberships(auth) {
         if (!auth)
@@ -177,16 +195,18 @@ __decorate([
 __decorate([
     (0, common_1.Post)('login'),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
     (0, common_1.Post)('sso'),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
 ], AuthController.prototype, "sso", null);
 __decorate([
     (0, common_1.Get)('memberships'),

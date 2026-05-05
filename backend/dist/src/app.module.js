@@ -44,6 +44,7 @@ const employees_module_1 = require("./employees/employees.module");
 const roles_module_1 = require("./roles/roles.module");
 const payroll_module_1 = require("./payroll/payroll.module");
 const departments_module_1 = require("./departments/departments.module");
+const throttler_1 = require("@nestjs/throttler");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -51,6 +52,7 @@ exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
             config_1.ConfigModule.forRoot({ isGlobal: true }),
+            throttler_1.ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
             auth_module_1.AuthModule, sat_catalogs_module_1.SatCatalogsModule, tenants_module_1.TenantsModule, tax_profiles_module_1.TaxProfilesModule, api_keys_module_1.ApiKeysModule, products_module_1.ProductsModule, customers_module_1.CustomersModule, quotes_module_1.QuotesModule, invoices_module_1.InvoicesModule, prisma_module_1.PrismaModule, suppliers_module_1.SuppliersModule, expense_categories_module_1.ExpenseCategoriesModule, expenses_module_1.ExpensesModule, diot_module_1.DiotModule, subscription_requests_module_1.SubscriptionRequestsModule, cfdi_module_1.CfdiModule, pos_module_1.PosModule, users_module_1.UsersModule, purchases_module_1.PurchasesModule, inventory_module_1.InventoryModule, boveda_sat_module_1.BovedaSatModule, efos_module_1.EfosModule, sat_scraper_module_1.SatScraperModule, bank_accounts_module_1.BankAccountsModule, bank_transactions_module_1.BankTransactionsModule, warehouses_module_1.WarehousesModule, transfers_module_1.TransfersModule, stock_takes_module_1.StockTakesModule, employees_module_1.EmployeesModule, roles_module_1.RolesModule, payroll_module_1.PayrollModule, departments_module_1.DepartmentsModule
         ],
         controllers: [app_controller_1.AppController, internal_controller_1.InternalController],

@@ -1,3 +1,4 @@
+import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
 export declare class AuthController {
@@ -34,7 +35,7 @@ export declare class AuthController {
             avatar: any;
         };
     }>;
-    login(body: any): Promise<{
+    login(body: any, res: Response): Promise<{
         token: string;
         tenantId: string;
         user: {
@@ -44,7 +45,7 @@ export declare class AuthController {
             avatar: string | null;
         };
     }>;
-    sso(body: any): Promise<{
+    sso(body: any, res: Response): Promise<{
         token: string;
         tenantId: string;
         user: {
@@ -56,17 +57,17 @@ export declare class AuthController {
     }>;
     getMemberships(auth: string): Promise<{
         primaryTenant: {
-            name: string;
-            subscriptionTier: string;
             id: string;
+            name: string;
             tradeName: string | null;
+            subscriptionTier: string;
             agencyId: string | null;
         } | undefined;
         agencyMemberships: {
-            name: string;
-            subscriptionTier: string;
             id: string;
+            name: string;
             tradeName: string | null;
+            subscriptionTier: string;
             agencyId: string | null;
         }[];
         isAgencyAdmin: boolean;
@@ -85,9 +86,9 @@ export declare class AuthController {
         id: string;
         role: string;
         user: {
-            name: string;
             id: string;
             email: string;
+            name: string;
             avatar: string | null;
         };
         joinedAt: Date;
@@ -170,16 +171,16 @@ export declare class AuthController {
     }>;
     getAgencyTasks(auth: string): Promise<({
         tenant: {
-            name: string;
             id: string;
+            name: string;
             tradeName: string | null;
         } | null;
         agency: {
             name: string;
         };
         assignedTo: {
-            name: string;
             id: string;
+            name: string;
             avatar: string | null;
         } | null;
     } & {

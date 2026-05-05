@@ -36,9 +36,12 @@ import { RolesModule } from './roles/roles.module';
 import { PayrollModule } from './payroll/payroll.module';
 import { DepartmentsModule } from './departments/departments.module';
 
+import { ThrottlerModule } from '@nestjs/throttler';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     AuthModule, SatCatalogsModule, TenantsModule, TaxProfilesModule, ApiKeysModule, ProductsModule, CustomersModule, QuotesModule, InvoicesModule, PrismaModule, SuppliersModule, ExpenseCategoriesModule, ExpensesModule, DiotModule, SubscriptionRequestsModule, CfdiModule, PosModule, UsersModule, PurchasesModule, InventoryModule, BovedaSatModule, EfosModule, SatScraperModule, BankAccountsModule, BankTransactionsModule, WarehousesModule, TransfersModule, StockTakesModule, EmployeesModule, RolesModule, PayrollModule, DepartmentsModule
   ],
   controllers: [AppController, InternalController],

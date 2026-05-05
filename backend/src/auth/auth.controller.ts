@@ -1,4 +1,5 @@
-import { Controller, Post, Body, Patch, Param, Headers, UnauthorizedException, Get } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Param, Headers, UnauthorizedException, Get, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
 
@@ -40,13 +41,31 @@ export class AuthController {
   }
 
   @Post('login')
-  login(@Body() body: any) {
-    return this.authService.login(body);
+  async login(@Body() body: any, @Res({ passthrough: true }) res: Response) {
+    const result = await this.authService.login(body);
+    if (result && result.access_token) {
+      res.cookie('access_token', result.access_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 15 * 60 * 1000 // 15 minutos
+      });
+    }
+    return result;
   }
 
   @Post('sso')
-  sso(@Body() body: any) {
-    return this.authService.sso(body);
+  async sso(@Body() body: any, @Res({ passthrough: true }) res: Response) {
+    const result = await this.authService.sso(body);
+    if (result && result.access_token) {
+      res.cookie('access_token', result.access_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 15 * 60 * 1000
+      });
+    }
+    return result;
   }
 
   // === MULTI-TENANT SWITCH (AGENCY) ===
