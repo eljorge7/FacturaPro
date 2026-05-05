@@ -43,8 +43,8 @@ export class AuthController {
   @Post('login')
   async login(@Body() body: any, @Res({ passthrough: true }) res: Response) {
     const result = await this.authService.login(body);
-    if (result && result.access_token) {
-      res.cookie('access_token', result.access_token, {
+    if (result && result.token) {
+      res.cookie('access_token', result.token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
@@ -57,8 +57,8 @@ export class AuthController {
   @Post('sso')
   async sso(@Body() body: any, @Res({ passthrough: true }) res: Response) {
     const result = await this.authService.sso(body);
-    if (result && result.access_token) {
-      res.cookie('access_token', result.access_token, {
+    if (result && result.token) {
+      res.cookie('access_token', result.token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
