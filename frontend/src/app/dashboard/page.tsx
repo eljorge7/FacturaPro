@@ -257,7 +257,7 @@ export default function Dashboard() {
     <div className={`space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 ${isEditMode ? 'bg-slate-50/50 p-4 rounded-3xl border-2 border-dashed border-slate-200' : ''}`}>
       
       {/* HEADER TÁCTICO */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-gradient-to-r from-slate-900 to-indigo-950 p-8 rounded-3xl shadow-xl text-white relative overflow-hidden group">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-gradient-to-r from-slate-900 via-indigo-900 to-black p-8 rounded-3xl shadow-2xl text-white relative overflow-hidden group">
         <div className="absolute top-0 right-0 p-4 z-20">
            <button 
              onClick={() => setIsEditMode(!isEditMode)} 
@@ -288,9 +288,9 @@ export default function Dashboard() {
                 onDragOver={(e) => onDragOver(e, index)}
                 onDrop={(e) => onDrop(e, index)}
                 className={`
-                  bg-white rounded-3xl border border-slate-200/60 transition-all overflow-hidden flex flex-col relative
+                  bg-white/40 dark:bg-slate-900/50 backdrop-blur-3xl rounded-3xl border border-white/80 dark:border-slate-700/50 transition-all overflow-hidden flex flex-col relative
                   ${definition.span} 
-                  ${isEditMode ? 'border-2 border-indigo-400 border-dashed shadow-xl shadow-indigo-100 cursor-grab active:cursor-grabbing hover:scale-[1.02]' : 'shadow-lg shadow-slate-200/50 hover:shadow-xl'}
+                  ${isEditMode ? 'border-2 border-indigo-400 border-dashed shadow-[0_8px_30px_rgb(0,0,0,0.12)] cursor-grab active:cursor-grabbing hover:scale-[1.02]' : 'shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.1)] hover:-translate-y-1 duration-300'}
                 `}
               >
                  {isEditMode && (
