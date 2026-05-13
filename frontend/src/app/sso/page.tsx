@@ -33,12 +33,12 @@ function SsoContent() {
            const user = await res.json();
            
            // Extraer TenantId del usuario o del token manual. 
-           // Normalmente el endpoint /profile devuelve { id, name, email, ... } pero la sesión depende del tenant que nos dio `auth.service.ts sso()`
-           // Inyectamos todo en AuthProvider.
-           let payloadTenantId = "";
+           let payloadTenantId = searchParams.get("tenant") || "";
            try {
-              const payloadStr = atob(token.split('.')[1]);
-              payloadTenantId = JSON.parse(payloadStr).tenantId;
+              if (token.includes('.')) {
+                  const payloadStr = atob(token.split('.')[1]);
+                  payloadTenantId = JSON.parse(payloadStr).tenantId || payloadTenantId;
+              }
            } catch(e) {}
 
            login(token, payloadTenantId, user); // Esto hace el push a /dashboard
@@ -48,15 +48,22 @@ function SsoContent() {
            
            // Fallback: Si falló obtener el profile, intentamos inyectarlo forzosamente para que pueda entrar al Dashboard
            setTimeout(() => {
-              let payloadTenantId = "";
+              let payloadTenantId = searchParams.get("tenant") || "";
               let payloadUserId = "admin";
               let payloadEmail = "auto";
               try {
-                 const payloadStr = atob(token.split('.')[1]);
-                 const payload = JSON.parse(payloadStr);
-                 payloadTenantId = payload.tenantId;
-                 payloadUserId = payload.userId;
-                 payloadEmail = payload.email;
+                 if (token.includes('.')) {
+                     const payloadStr = atob(token.split('.')[1]);
+                     const payload = JSON.parse(payloadStr);
+                     payloadTenantId = payload.tenantId || payloadTenantId;
+                     payloadUserId = payload.userId || payloadUserId;
+                     payloadEmail = payload.email || payloadEmail;
+                 } else {
+                     const decodedStr = atob(token);
+                     if (decodedStr.includes(':')) {
+                         payloadEmail = decodedStr.split(':')[0];
+                     }
+                 }
               } catch(e) {}
               
               if (payloadTenantId) {
