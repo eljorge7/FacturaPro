@@ -27,17 +27,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState<string | null>(() => typeof window !== 'undefined' ? localStorage.getItem('facturapro_token') : null);
-  const [tenantId, setTenantId] = useState<string | null>(() => typeof window !== 'undefined' ? localStorage.getItem('facturapro_tenantId') : null);
-  const [user, setUser] = useState<any | null>(() => {
-    if (typeof window !== 'undefined') {
-      const u = localStorage.getItem('facturapro_user');
-      if (u) {
-        try { return JSON.parse(u); } catch(e) {}
-      }
-    }
-    return null;
-  });
+  const [token, setToken] = useState<string | null>(null);
+  const [tenantId, setTenantId] = useState<string | null>(null);
+  const [user, setUser] = useState<any | null>(null);
 
   useEffect(() => {
     // Interceptar Fetch Global
@@ -73,13 +65,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const savedTenantId = localStorage.getItem('facturapro_tenantId');
     const savedUser = localStorage.getItem('facturapro_user');
 
-    if (savedToken && savedTenantId && savedUser) {
+    if (savedToken && savedTenantId && savedUser && savedUser !== 'undefined' && savedUser !== 'null') {
       setToken(savedToken);
       setTenantId(savedTenantId);
-      const parsedUser = JSON.parse(savedUser);
-      setUser(parsedUser);
-      if (parsedUser.role === 'CASHIER' && pathname !== '/pos') {
-        router.push('/pos');
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+        if (parsedUser && parsedUser.role === 'CASHIER' && pathname !== '/pos') {
+          router.push('/pos');
+        }
+      } catch(e) {
+        // Corrupted user, force login
+        localStorage.removeItem('facturapro_token');
+        localStorage.removeItem('facturapro_tenantId');
+        localStorage.removeItem('facturapro_user');
+        router.push('/login');
       }
     } else {
       // Not authenticated

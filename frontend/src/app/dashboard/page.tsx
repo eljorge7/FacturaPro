@@ -39,7 +39,10 @@ export default function Dashboard() {
     if (activeTenantId && typeof window !== 'undefined') {
        const saved = localStorage.getItem(`facturapro_layout_${activeTenantId}`);
        if (saved) {
-         try { setLayout(JSON.parse(saved)); } catch(e) {}
+         try { 
+           const parsed = JSON.parse(saved);
+           if (Array.isArray(parsed)) setLayout(parsed); 
+         } catch(e) {}
        }
     }
     fetchStats();
@@ -199,7 +202,7 @@ export default function Dashboard() {
               </div>
            </div>
            <div className="flex-1 min-h-[300px]">
-              {stats?.chartData && stats.chartData.length > 0 ? (
+              {Array.isArray(stats?.chartData) && stats.chartData.length > 0 ? (
                  <ResponsiveContainer width="100%" height="100%">
                    <BarChart data={stats.chartData} barSize={40} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
@@ -223,7 +226,7 @@ export default function Dashboard() {
               <h3 className="font-bold text-slate-900 text-lg">Actividad Reciente</h3>
            </div>
            <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar max-h-[300px]">
-              {(!stats?.recentInvoices || stats.recentInvoices.length === 0) ? (
+              {(!Array.isArray(stats?.recentInvoices) || stats.recentInvoices.length === 0) ? (
                  <div className="text-center text-slate-500 text-sm py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">Sin facturas emitidas.</div>
               ) : (
                  stats.recentInvoices.map((inv: any) => (
