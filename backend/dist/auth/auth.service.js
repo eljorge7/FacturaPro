@@ -77,7 +77,7 @@ let AuthService = class AuthService {
             create: { phone: formattedPhone, code, expiresAt, data: otpData }
         });
         try {
-            const omniUrl = process.env.OMNICHAT_API_URL || 'http://127.0.0.1:3002';
+            const omniUrl = process.env.OMNICHAT_API_URL || 'https://omnichat.radiotecpro.com/api';
             const msg = `🔐 *FacturaPro*\n\nHola ${name}, tu código de verificación es:\n*${code}*\n\n_Válido por 15 minutos._`;
             fetch(`${omniUrl}/api/v1/messages/send`, {
                 method: 'POST',

@@ -74,13 +74,17 @@ export function Sidebar() {
 
   if (pathname === '/login' || pathname === '/register' || pathname.startsWith('/portal')) return null;
 
+  const isStarter = tier === 'STARTER';
+  const isPro = tier === 'PRO' || tier === 'ENTERPRISE' || tier === 'AGENCY' || !tier;
+  const isEnterprise = tier === 'ENTERPRISE' || tier === 'AGENCY' || !tier;
+
   let links = [
     { name: "Resumen", href: "/", icon: <LayoutDashboard className="w-5 h-5 shrink-0" /> },
     
     { isDivider: true, name: "VENTAS Y COBRANZA" } as any,
     { name: "Facturas", href: "/invoices", icon: <FileText className="w-5 h-5 shrink-0 text-blue-400" /> },
-    { name: "Cuentas por Cobrar", href: "/ar", icon: <TrendingUp className="w-5 h-5 shrink-0 text-emerald-400" /> },
-    { name: "Mostrador (POS)", href: "/pos", icon: <Store className="w-5 h-5 shrink-0 text-amber-400" /> },
+    ...(isPro ? [{ name: "Cuentas por Cobrar", href: "/ar", icon: <TrendingUp className="w-5 h-5 shrink-0 text-emerald-400" /> }] : []),
+    ...(isEnterprise ? [{ name: "Mostrador (POS)", href: "/pos", icon: <Store className="w-5 h-5 shrink-0 text-amber-400" /> }] : []),
     { name: "Cotizaciones", href: "/quotes", icon: <FileBox className="w-5 h-5 shrink-0" /> },
     { name: "Clientes", href: "/customers", icon: <Users className="w-5 h-5 shrink-0" /> },
     
@@ -90,28 +94,36 @@ export function Sidebar() {
        { name: "Portal Despacho", href: "/agency/dashboard", icon: <Container className="w-5 h-5 shrink-0 text-indigo-400" /> },
     ] : []),
     
-    { isDivider: true, name: "COMPRAS Y EGRESOS" } as any,
-    { name: "Compras", href: "/purchases", icon: <ShoppingCart className="w-5 h-5 shrink-0 text-indigo-400" /> },
-    { name: "Cuentas por Pagar", href: "/ap", icon: <TrendingDown className="w-5 h-5 shrink-0 text-rose-400" /> },
-    { name: "Gastos (PyME)", href: "/expenses", icon: <Wallet className="w-5 h-5 shrink-0" /> },
-    { name: "Proveedores", href: "/suppliers", icon: <Container className="w-5 h-5 shrink-0" /> },
+    ...(isPro ? [
+        { isDivider: true, name: "COMPRAS Y EGRESOS" } as any,
+        { name: "Compras", href: "/purchases", icon: <ShoppingCart className="w-5 h-5 shrink-0 text-indigo-400" /> },
+        { name: "Cuentas por Pagar", href: "/ap", icon: <TrendingDown className="w-5 h-5 shrink-0 text-rose-400" /> },
+        { name: "Gastos (PyME)", href: "/expenses", icon: <Wallet className="w-5 h-5 shrink-0" /> },
+        { name: "Proveedores", href: "/suppliers", icon: <Container className="w-5 h-5 shrink-0" /> },
+    ] : []),
+    
+    { isDivider: true, name: "CATÁLOGO Y SAT" } as any,
+    { name: "Catálogo / Productos", href: "/products", icon: <Package className="w-5 h-5 shrink-0" /> },
     { name: "Bóveda SAT", href: "/boveda-sat", icon: <Landmark className="w-5 h-5 shrink-0 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" /> },
 
-    { isDivider: true, name: "TESORERÍA" } as any,
-    { name: "Bancos (Conciliación)", href: "/banking", icon: <Banknote className="w-5 h-5 shrink-0 text-amber-300 drop-shadow-sm" /> },
+    ...(isPro ? [
+        { isDivider: true, name: "TESORERÍA" } as any,
+        { name: "Bancos (Conciliación)", href: "/banking", icon: <Banknote className="w-5 h-5 shrink-0 text-amber-300 drop-shadow-sm" /> },
+    ] : []),
 
-    { isDivider: true, name: "OPERATIVO" } as any,
-    { name: "Cubo Inventarios", href: "/inventory/dashboard", icon: <TrendingDown className="w-5 h-5 shrink-0 text-emerald-300 drop-shadow-sm" /> },
-    { name: "Catálogo / Productos", href: "/products", icon: <Package className="w-5 h-5 shrink-0" /> },
-    { name: "WMS (Andén Recepción)", href: "/warehouse", icon: <Container className="w-5 h-5 shrink-0 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" /> },
-    { name: "Logística Y Traspasos", href: "/transfers", icon: <Truck className="w-5 h-5 shrink-0 text-blue-400" /> },
-    { name: "Conteos (Auditorías)", href: "/inventory/audit", icon: <ClipboardList className="w-5 h-5 shrink-0 text-amber-500" /> },
+    ...(isEnterprise ? [
+        { isDivider: true, name: "OPERATIVO" } as any,
+        { name: "Cubo Inventarios", href: "/inventory/dashboard", icon: <TrendingDown className="w-5 h-5 shrink-0 text-emerald-300 drop-shadow-sm" /> },
+        { name: "WMS (Andén Recepción)", href: "/warehouse", icon: <Container className="w-5 h-5 shrink-0 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" /> },
+        { name: "Logística Y Traspasos", href: "/transfers", icon: <Truck className="w-5 h-5 shrink-0 text-blue-400" /> },
+        { name: "Conteos (Auditorías)", href: "/inventory/audit", icon: <ClipboardList className="w-5 h-5 shrink-0 text-amber-500" /> },
 
-    { isDivider: true, name: "RECURSOS HUMANOS" } as any,
-    { name: "Directorio de Personal", href: "/settings/team", icon: <Users className="w-5 h-5 shrink-0 text-blue-400" /> },
-    { name: "Asistencias / Faltas", href: "/admin/hr/attendance", icon: <ClipboardList className="w-5 h-5 shrink-0 text-orange-400" /> },
-    { name: "Bandeja Vacaciones", href: "/admin/hr/time-off", icon: <Users className="w-5 h-5 shrink-0 text-teal-400" /> },
-    { name: "Nóminas (ERP)", href: "/admin/hr/payroll", icon: <Landmark className="w-5 h-5 shrink-0 text-emerald-400" /> },
+        { isDivider: true, name: "RECURSOS HUMANOS" } as any,
+        { name: "Directorio de Personal", href: "/employees", icon: <Users className="w-5 h-5 shrink-0 text-blue-400" /> },
+        { name: "Asistencias / Faltas", href: "/admin/hr/attendance", icon: <ClipboardList className="w-5 h-5 shrink-0 text-orange-400" /> },
+        { name: "Bandeja Vacaciones", href: "/admin/hr/time-off", icon: <Users className="w-5 h-5 shrink-0 text-teal-400" /> },
+        { name: "Nóminas (ERP)", href: "/payroll", icon: <Landmark className="w-5 h-5 shrink-0 text-emerald-400" /> },
+    ] : []),
 
     { isDivider: true, name: "CONFIGURACIÓN" } as any,
     { name: "Roles de Seguridad (RBAC)", href: "/settings/roles", icon: <ShieldAlert className="w-5 h-5 shrink-0 text-rose-500 drop-shadow-sm" /> },
