@@ -362,6 +362,9 @@ export default function EmployeesPage() {
             <button onClick={() => setIsBulkOpen(true)} className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center gap-2 hidden sm:flex">
                <Upload className="w-4 h-4 text-blue-600" /> Alta Masiva (CSV)
             </button>
+            <button onClick={() => setShowInactive(!showInactive)} className={`px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center gap-2 border ${showInactive ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'}`}>
+               <Trash2 className="w-4 h-4" /> {showInactive ? 'Ocultar Bajas' : 'Ver Bajas'}
+            </button>
          </div>
          
          <div className="flex items-center gap-3">
@@ -457,19 +460,21 @@ export default function EmployeesPage() {
                         </div>
                      </div>
 
-                     <div className="flex gap-2 pt-4 border-t border-slate-100 mt-auto">
-                        <Link href={`/employees/${emp.id}`} className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 py-2.5 rounded-xl border border-slate-200 transition-colors" title="Ver Expediente">
+                     <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-100 mt-auto">
+                        <Link href={`/employees/${emp.id}`} className="flex-1 min-w-[100px] flex items-center justify-center gap-1.5 text-xs font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 py-2.5 rounded-xl border border-slate-200 transition-colors" title="Ver Expediente">
                             <FileText className="w-4 h-4" /> Expediente
                         </Link>
-                        <button onClick={() => printBadge(emp)} className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-600 hover:text-white py-2.5 rounded-xl border border-blue-200 transition-colors" title="Gafete QR">
+                        <button onClick={() => printBadge(emp)} className="flex-1 min-w-[100px] flex items-center justify-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-600 hover:text-white py-2.5 rounded-xl border border-blue-200 transition-colors" title="Gafete QR">
                             <Printer className="w-4 h-4" /> Gafete
                         </button>
-                        <button onClick={() => startEdit(emp)} className="flex-[0.5] flex items-center justify-center text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-600 hover:text-white py-2.5 rounded-xl border border-amber-200 transition-colors" title="Editar">
-                            <FileEdit className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => handleDelete(emp.id)} className="flex-[0.5] flex items-center justify-center text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-600 hover:text-white py-2.5 rounded-xl border border-rose-200 transition-colors" title="Dar de Baja">
-                            <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                           <button onClick={() => startEdit(emp)} className="flex-1 sm:flex-none sm:w-10 flex items-center justify-center text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-600 hover:text-white py-2.5 rounded-xl border border-amber-200 transition-colors" title="Editar">
+                               <FileEdit className="w-4 h-4" />
+                           </button>
+                           <button onClick={() => handleDelete(emp.id)} className="flex-1 sm:flex-none sm:w-10 flex items-center justify-center text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-600 hover:text-white py-2.5 rounded-xl border border-rose-200 transition-colors" title="Dar de Baja">
+                               <Trash2 className="w-4 h-4" />
+                           </button>
+                        </div>
                      </div>
                   </div>
                ))}
