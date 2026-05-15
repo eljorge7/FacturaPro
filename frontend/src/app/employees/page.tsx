@@ -18,6 +18,7 @@ export default function EmployeesPage() {
   const [roles, setRoles] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("");
   const [mounted, setMounted] = useState(false);
 
   // Modal State

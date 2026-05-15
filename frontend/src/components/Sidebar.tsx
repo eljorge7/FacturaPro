@@ -25,7 +25,6 @@ import {
   TrendingDown,
   TrendingUp,
   Landmark,
-  Treasury,
   ChevronDown,
   Banknote,
   Truck
