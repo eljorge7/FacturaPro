@@ -70,6 +70,17 @@ export default function TimeOffPage() {
     }
   };
 
+  const calculateDays = (start: string, end: string) => {
+    const s = new Date(start);
+    const e = new Date(end);
+    // Resetear las horas para evitar problemas de zonas horarias
+    s.setHours(0, 0, 0, 0);
+    e.setHours(0, 0, 0, 0);
+    const diffTime = Math.abs(e.getTime() - s.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    return diffDays;
+  };
+
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-300">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center">
@@ -97,11 +108,14 @@ export default function TimeOffPage() {
                     <h3 className="text-xl font-bold text-slate-900">{req.employee?.firstName} {req.employee?.lastName}</h3>
                     <p className="text-slate-500 text-sm mb-4">{req.employee?.email}</p>
                     
-                    <div className="bg-slate-50 p-4 rounded-2xl">
-                       <p className="flex items-center font-medium text-slate-700">
-                         <CalendarDays className="w-4 h-4 mr-2 text-sky-500" />
-                         {new Date(req.startDate).toLocaleDateString()} al {new Date(req.endDate).toLocaleDateString()}
+                    <div className="bg-slate-50 p-4 rounded-2xl flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                       <p className="flex items-center font-medium text-slate-700 text-sm">
+                         <CalendarDays className="w-4 h-4 mr-2 text-sky-500 shrink-0" />
+                         {new Date(req.startDate).toLocaleDateString('es-MX', {day: '2-digit', month: 'short', year: 'numeric'})} al {new Date(req.endDate).toLocaleDateString('es-MX', {day: '2-digit', month: 'short', year: 'numeric'})}
                        </p>
+                       <span className="bg-indigo-100 text-indigo-700 font-bold px-3 py-1 rounded-xl text-xs w-max whitespace-nowrap">
+                         Descontar: {calculateDays(req.startDate, req.endDate)} día{calculateDays(req.startDate, req.endDate) !== 1 ? 's' : ''}
+                       </span>
                     </div>
                     
                     {req.reason && (
