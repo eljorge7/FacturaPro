@@ -131,7 +131,11 @@ export function Sidebar() {
   ];
 
   // RBAC: Roles Especializados
-  if (user?.role === 'CASHIER') {
+  if (user?.role === 'EMPLOYEE') {
+     links = [
+       { name: "Mi Portal (Empleado)", href: "/my-portal", icon: <UserIcon className="w-5 h-5 shrink-0 text-indigo-400 drop-shadow-sm" /> }
+     ];
+  } else if (user?.role === 'CASHIER') {
      links = [
        { name: "Mi Portal (Empleado)", href: "/my-portal", icon: <UserIcon className="w-5 h-5 shrink-0 text-indigo-400 drop-shadow-sm" /> },
        { name: "Mostrador (POS)", href: "/pos", icon: <Store className="w-5 h-5 shrink-0 text-emerald-400" /> }

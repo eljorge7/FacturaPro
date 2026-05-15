@@ -135,7 +135,7 @@ export class AuthService {
     return {
       token,
       tenantId: user.tenantId,
-      user: { id: user.id, name: user.name, email: user.email, avatar: user.avatar }
+      user: { id: user.id, name: user.name, email: user.email, avatar: user.avatar, role: user.role, customRoleId: user.customRoleId }
     };
   }
 
@@ -180,7 +180,7 @@ export class AuthService {
     return {
       token,
       tenantId: user.tenantId,
-      user: { id: user.id, name: user.name, email: user.email, avatar: (user as any).avatar }
+      user: { id: user.id, name: user.name, email: user.email, avatar: (user as any).avatar, role: user.role, customRoleId: user.customRoleId }
     };
   }
 
@@ -196,6 +196,8 @@ export class AuthService {
       email: user.email,
       avatar: (user as any).avatar,
       birthDate: (user as any).birthDate,
+      role: user.role,
+      customRoleId: user.customRoleId,
       tradeName: user.tenant?.tradeName,
       phone: user.tenant?.phone
     };

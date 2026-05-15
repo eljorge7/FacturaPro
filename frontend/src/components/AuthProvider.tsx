@@ -73,6 +73,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(parsedUser);
         if (parsedUser && parsedUser.role === 'CASHIER' && pathname !== '/pos') {
           router.push('/pos');
+        } else if (parsedUser && parsedUser.role === 'EMPLOYEE' && !pathname.startsWith('/my-portal')) {
+          router.push('/my-portal');
         }
       } catch(e) {
         // Corrupted user, force login
@@ -99,6 +101,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(usr);
     if (usr.role === 'CASHIER') {
       window.location.href = '/pos';
+    } else if (usr.role === 'EMPLOYEE') {
+      window.location.href = '/my-portal';
     } else {
       // Si estamos en FacturaPro, root es '/'
       window.location.href = '/';

@@ -327,7 +327,7 @@ export default function Dashboard() {
       </div>
     </div>
     
-    {!stats?.tenantLogoUrl && !isEditMode && <OnboardingWizard tenantId={activeTenantId || 'demo-tenant'} initialLegalName={stats?.tenantTradeName || ''} />}
+    {(!stats?.tenantLogoUrl && !isEditMode && (!user?.role || user?.role === 'OWNER' || user?.role === 'ADMIN')) && <OnboardingWizard tenantId={activeTenantId || 'demo-tenant'} initialLegalName={stats?.tenantTradeName || ''} />}
 
     {/* LIBRERÍA DE WIDGETS */}
     {isLibraryOpen && (

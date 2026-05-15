@@ -710,7 +710,7 @@ export default function EmployeesPage() {
                                          <div>
                                              <label className="block text-xs font-bold text-slate-700 mb-1">Matriz de Privilegios *</label>
                                              <select value={role} onChange={e=>setRole(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none bg-indigo-50/50 font-bold text-indigo-700">
-                                                 <optgroup label="Roles Fijos Clásicos"><option value="CASHIER">Cajero (Ventas)</option><option value="WAREHOUSE">Almacenista WMS</option><option value="MANAGER">Supervisor / Gerente</option><option value="OWNER">Dueño (Admin)</option></optgroup>
+                                                 <optgroup label="Roles Fijos Clásicos"><option value="EMPLOYEE">Empleado Básico (Mi Portal)</option><option value="CASHIER">Cajero (Ventas)</option><option value="WAREHOUSE">Almacenista WMS</option><option value="MANAGER">Supervisor / Gerente</option><option value="OWNER">Dueño (Admin)</option></optgroup>
                                                  {roles.length > 0 && (
                                                      <optgroup label="🔹 Roles Personalizados">
                                                          {roles.map(r => (<option key={r.id} value={`CUSTOM_${r.id}`}>{r.name}</option>))}
