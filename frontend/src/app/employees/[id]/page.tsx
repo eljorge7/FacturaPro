@@ -181,6 +181,14 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
                       <span className="text-slate-500 flex items-center gap-1"><HardHat className="w-4 h-4 text-amber-500"/> Talla Playera</span>
                       <span className="font-bold text-slate-700">{employee.shirtSize || '-'}</span>
                    </div>
+                   <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                      <span className="text-slate-500">Talla Pantalón</span>
+                      <span className="font-bold text-slate-700">{employee.pantsSize || '-'}</span>
+                   </div>
+                   <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                      <span className="text-slate-500">Número Calzado</span>
+                      <span className="font-bold text-slate-700">{employee.shoeSize || '-'}</span>
+                   </div>
                    <div className="pt-2">
                       <span className="block text-slate-500 mb-1">Contacto de Emergencia</span>
                       <p className="font-medium text-slate-800 bg-rose-50 p-2 rounded-lg border border-rose-100">
