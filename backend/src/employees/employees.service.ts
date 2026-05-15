@@ -143,7 +143,9 @@ export class EmployeesService {
     const emp = await this.findOne(tenantId, id);
 
     return this.prisma.$transaction(async (tx) => {
-        // Actualizar datos del ERP si tiene acceso linkeado
+        let newUserId = emp.userId;
+
+        // Si ya tenía acceso, actualizar rol
         if (emp.userId && data.role) {
             await tx.user.update({
                 where: { id: emp.userId },
@@ -153,11 +155,31 @@ export class EmployeesService {
                    warehouseId: data.warehouseId || null
                 }
             });
+        } 
+        // Si no tenía acceso y ahora se lo quieren dar
+        else if (!emp.userId && data.createSystemAccess && data.email && data.password && data.role) {
+            const existingUser = await tx.user.findUnique({ where: { email: data.email } });
+            if (existingUser) throw new BadRequestException('El correo ya está en uso por otro usuario.');
+
+            const hash = await bcrypt.hash(data.password, 10);
+            const newUser = await tx.user.create({
+               data: {
+                  tenantId,
+                  email: data.email,
+                  passwordHash: hash,
+                  name: `${data.firstName || emp.firstName} ${data.lastName || emp.lastName}`,
+                  role: data.role === 'CUSTOM' ? 'CUSTOM' : data.role,
+                  customRoleId: data.role === 'CUSTOM' ? data.customRoleId : null,
+                  warehouseId: data.warehouseId || null
+               }
+            });
+            newUserId = newUser.id;
         }
 
         return tx.employeeProfile.update({
             where: { id },
             data: {
+                userId: newUserId,
                 firstName: data.firstName,
                 lastName: data.lastName,
                 phone: data.phone,
