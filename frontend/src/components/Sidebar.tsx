@@ -271,7 +271,7 @@ export function Sidebar() {
       </div>
 
       {/* Footer / Settings Navigation */}
-      {user?.role !== 'CASHIER' && (
+      {(user?.role === 'OWNER' || user?.role === 'ADMIN' || !user?.role) && (
         <div className={`border-t border-slate-700/50 ${isCollapsed ? 'p-2' : 'p-4'}`}>
           <Link 
             href="/settings/import"

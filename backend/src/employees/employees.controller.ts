@@ -1,13 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Headers, UseInterceptors, UploadedFile, BadRequestException, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Headers, UseInterceptors, UploadedFile, BadRequestException, Req, UnauthorizedException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { EmployeesService } from './employees.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('employees')
 export class EmployeesController {
-  constructor(private readonly employeesService: EmployeesService) {}
+  constructor(
+    private readonly employeesService: EmployeesService,
+    private readonly jwtService: JwtService
+  ) {}
 
   @Post()
   create(@Headers('x-tenant-id') tenantId: string, @Body() data: any) {
@@ -69,19 +73,23 @@ export class EmployeesController {
   }
 
   @Get('me/portal')
-  getPortalData(@Req() req: any) {
-    const tenantId = req.headers['x-tenant-id'] || req.user?.tenantId;
-    const userId = req.user?.id;
-    if (!userId) throw new BadRequestException('User ID no encontrado');
-    return this.employeesService.getPortalData(tenantId, userId);
+  getPortalData(@Headers('Authorization') auth: string, @Headers('x-tenant-id') reqTenantId: string) {
+    if (!auth) throw new UnauthorizedException('No autorizado');
+    const token = auth.replace('Bearer ', '');
+    const decoded: any = this.jwtService.decode(token);
+    if (!decoded || !decoded.userId) throw new BadRequestException('User ID no encontrado');
+    const tenantId = reqTenantId || decoded.tenantId;
+    return this.employeesService.getPortalData(tenantId, decoded.userId);
   }
 
   @Post('me/portal/time-off')
-  createTimeOffRequest(@Req() req: any, @Body() data: any) {
-    const tenantId = req.headers['x-tenant-id'] || req.user?.tenantId;
-    const userId = req.user?.id;
-    if (!userId) throw new BadRequestException('User ID no encontrado');
-    return this.employeesService.createTimeOffRequest(tenantId, userId, data);
+  createTimeOffRequest(@Headers('Authorization') auth: string, @Headers('x-tenant-id') reqTenantId: string, @Body() data: any) {
+    if (!auth) throw new UnauthorizedException('No autorizado');
+    const token = auth.replace('Bearer ', '');
+    const decoded: any = this.jwtService.decode(token);
+    if (!decoded || !decoded.userId) throw new BadRequestException('User ID no encontrado');
+    const tenantId = reqTenantId || decoded.tenantId;
+    return this.employeesService.createTimeOffRequest(tenantId, decoded.userId, data);
   }
 
   @Get()
