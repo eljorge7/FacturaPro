@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Headers, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Headers, UseInterceptors, UploadedFile, BadRequestException, Req } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -66,6 +66,14 @@ export class EmployeesController {
     // Using original name or user provided name
     const docName = name || file.originalname;
     return this.employeesService.addDocument(tenantId, id, docName, `/uploads/documents/${file.filename}`);
+  }
+
+  @Get('me/portal')
+  getPortalData(@Req() req: any) {
+    const tenantId = req.headers['x-tenant-id'] || req.user?.tenantId;
+    const userId = req.user?.id;
+    if (!userId) throw new BadRequestException('User ID no encontrado');
+    return this.employeesService.getPortalData(tenantId, userId);
   }
 
   @Get()

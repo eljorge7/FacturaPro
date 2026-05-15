@@ -4,34 +4,45 @@ import { useState, useEffect } from "react";
 import { Plane, CheckCircle, XCircle, Clock, CalendarDays, ThumbsUp, ThumbsDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function TimeOffPage() {
+  const { tenantId: activeTenantId, token } = useAuth();
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchRequests = async () => {
     try {
-      const res = await fetch("http://localhost:3001/time-off");
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
+      const res = await fetch(`${baseUrl}/time-off`, {
+        headers: {
+            "x-tenant-id": activeTenantId,
+            "Authorization": `Bearer ${token}`
+        }
+      });
       if (res.ok) setRequests(await res.json());
     } catch (e) {
       console.error(e);
-      // Fallback para wow-factor
-      setRequests([
-        { id: "1", employee: { name: "Maria Garcia", email: "maria@empresa.com" }, type: "VACATION", startDate: "2026-06-10", endDate: "2026-06-15", status: "PENDING", reason: "Vacaciones familiares" },
-        { id: "2", employee: { name: "Juan Perez", email: "juan@empresa.com" }, type: "SICK_LEAVE", startDate: "2026-05-02", endDate: "2026-05-04", status: "APPROVED", reason: "Incapacidad IMSS Folio #1234" }
-      ]);
+      toast.error("Error al cargar la bandeja de permisos.");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchRequests(); }, []);
+  useEffect(() => { 
+    if (activeTenantId && token) fetchRequests(); 
+  }, [activeTenantId, token]);
 
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
-      await fetch(`http://localhost:3001/time-off/${id}/status`, {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
+      await fetch(`${baseUrl}/time-off/${id}/status`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+            "Content-Type": "application/json",
+            "x-tenant-id": activeTenantId,
+            "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({ status })
       });
       toast.success(`Solicitud ${status === 'APPROVED' ? 'Aprobada' : 'Rechazada'} con éxito`);
@@ -48,9 +59,15 @@ export default function TimeOffPage() {
   };
 
   const getTypeStr = (type: string) => {
-    if (type === 'VACATION') return "Vacaciones";
-    if (type === 'SICK_LEAVE') return "Incapacidad (IMSS)";
-    return "Permiso sin goce";
+    switch (type) {
+        case 'VACATION': return "Vacaciones";
+        case 'SICK_LEAVE': return "Incapacidad (IMSS)";
+        case 'BEREAVEMENT': return "Por Fallecimiento";
+        case 'MATERNITY_PATERNITY': return "Maternidad/Paternidad";
+        case 'UNPAID_LEAVE': return "Sin Goce de Sueldo";
+        case 'SPECIAL': return "Especial";
+        default: return "Permiso";
+    }
   };
 
   return (
@@ -68,7 +85,7 @@ export default function TimeOffPage() {
          {loading ? (
             <div className="col-span-full py-12 text-center text-slate-500 animate-pulse">Cargando bandeja...</div>
          ) : requests.length === 0 ? (
-            <div className="col-span-full py-12 text-center text-slate-500">No hay solicitudes pendientes.</div>
+            <div className="col-span-full py-12 text-center text-slate-500 bg-slate-50 rounded-3xl border border-dashed border-slate-200">No hay solicitudes pendientes.</div>
          ) : (
             requests.map((req: any) => (
               <div key={req.id} className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden group hover:shadow-sky-100/50 transition">
@@ -77,7 +94,7 @@ export default function TimeOffPage() {
                        {getStatusBadge(req.status)}
                        <span className="text-xs font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded">{getTypeStr(req.type)}</span>
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900">{req.employee?.name}</h3>
+                    <h3 className="text-xl font-bold text-slate-900">{req.employee?.firstName} {req.employee?.lastName}</h3>
                     <p className="text-slate-500 text-sm mb-4">{req.employee?.email}</p>
                     
                     <div className="bg-slate-50 p-4 rounded-2xl">
@@ -97,10 +114,10 @@ export default function TimeOffPage() {
 
                  {req.status === 'PENDING' && (
                     <div className="p-4 bg-slate-50 flex gap-3">
-                       <Button variant="outline" className="flex-1 border-rose-200 text-rose-600 hover:bg-rose-50" onClick={() => handleUpdateStatus(req.id, 'REJECTED')}>
+                       <Button variant="outline" className="flex-1 border-rose-200 text-rose-600 hover:bg-rose-50 rounded-xl" onClick={() => handleUpdateStatus(req.id, 'REJECTED')}>
                          <ThumbsDown className="w-4 h-4 mr-2" /> Denegar
                        </Button>
-                       <Button className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20" onClick={() => handleUpdateStatus(req.id, 'APPROVED')}>
+                       <Button className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 rounded-xl" onClick={() => handleUpdateStatus(req.id, 'APPROVED')}>
                          <ThumbsUp className="w-4 h-4 mr-2" /> Autorizar
                        </Button>
                     </div>

@@ -61,6 +61,7 @@ model Tenant {
   departments          Department[]
   roles                TenantRole[]
   payrollRuns          PayrollRun[]
+  timeOffRequests      TimeOffRequest[]
   
   warehouses           Warehouse[]
   transferOrders       TransferOrder[]
@@ -899,6 +900,7 @@ model EmployeeProfile {
   
   documents      EmployeeDocument[]
   payslips       Payslip[]
+  timeOffRequests TimeOffRequest[]
   
   // Enlace Opcional al Acceso del Sistema (Si usan el ERP)
   userId         String? @unique 
@@ -1000,6 +1002,30 @@ model TenantRole {
   isSystem    Boolean  @default(false)
   
   users       User[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ----------------------------------------------------
+// PORTAL DEL EMPLEADO (VACACIONES Y PERMISOS)
+// ----------------------------------------------------
+
+model TimeOffRequest {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  
+  employeeId  String
+  employee    EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  type        String   // VACATION, SICK_LEAVE, BEREAVEMENT, MATERNITY_PATERNITY, UNPAID_LEAVE, SPECIAL
+  startDate   DateTime
+  endDate     DateTime
+  
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  reason      String?  @db.Text
+  adminNotes  String?  @db.Text
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

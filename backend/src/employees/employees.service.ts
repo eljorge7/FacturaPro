@@ -215,4 +215,31 @@ export class EmployeesService {
       }
     });
   }
+
+  async getPortalData(tenantId: string, userId: string) {
+    const employee = await this.prisma.employeeProfile.findUnique({
+      where: { userId }
+    });
+
+    if (!employee || employee.tenantId !== tenantId) {
+      throw new NotFoundException('Perfil de empleado no encontrado para este usuario');
+    }
+
+    const payslips = await this.prisma.payslip.findMany({
+      where: { employeeId: employee.id, status: 'PAID' },
+      include: { payrollRun: true },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const documents = await this.prisma.employeeDocument.findMany({
+      where: { employeeId: employee.id },
+      orderBy: { uploadedAt: 'desc' }
+    });
+
+    return {
+      employee,
+      payslips,
+      documents
+    };
+  }
 }
