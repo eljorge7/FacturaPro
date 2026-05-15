@@ -37,14 +37,17 @@ export class EmployeesService {
 
        // Si se solicita aprovisionar acceso al ERP
        if (data.createSystemAccess && data.email && data.password && data.role) {
-          const existingUser = await tx.user.findUnique({ where: { email: data.email } });
+          const cleanEmail = data.email.trim().toLowerCase();
+          const cleanPassword = data.password.trim();
+          
+          const existingUser = await tx.user.findUnique({ where: { email: cleanEmail } });
           if (existingUser) throw new BadRequestException('El correo ya está en uso por otro usuario.');
 
-          const hash = await bcrypt.hash(data.password, 10);
+          const hash = await bcrypt.hash(cleanPassword, 10);
           const newUser = await tx.user.create({
              data: {
                 tenantId,
-                email: data.email,
+                email: cleanEmail,
                 passwordHash: hash,
                 name: `${data.firstName} ${data.lastName}`,
                 role: data.role === 'CUSTOM' ? 'CUSTOM' : data.role,
@@ -62,7 +65,7 @@ export class EmployeesService {
              firstName: data.firstName,
              lastName: data.lastName,
              phone: data.phone,
-             email: data.email || null, // Guardamos también en el perfil
+             email: data.email ? data.email.trim().toLowerCase() : null, // Guardamos también en el perfil
              employeeNumber: data.employeeNumber,
              departmentId: data.departmentId || null,
              jobTitle: data.jobTitle,
@@ -145,27 +148,36 @@ export class EmployeesService {
     return this.prisma.$transaction(async (tx) => {
         let newUserId = emp.userId;
 
-        // Si ya tenía acceso, actualizar rol
+        // Si ya tenía acceso, actualizar rol y/o contraseña
         if (emp.userId && data.role) {
+            const updateData: any = {
+               role: data.role === 'CUSTOM' ? 'CUSTOM' : data.role,
+               customRoleId: data.role === 'CUSTOM' ? data.customRoleId : null,
+               warehouseId: data.warehouseId || null
+            };
+            
+            if (data.password) {
+                updateData.passwordHash = await bcrypt.hash(data.password.trim(), 10);
+            }
+
             await tx.user.update({
                 where: { id: emp.userId },
-                data: {
-                   role: data.role === 'CUSTOM' ? 'CUSTOM' : data.role,
-                   customRoleId: data.role === 'CUSTOM' ? data.customRoleId : null,
-                   warehouseId: data.warehouseId || null
-                }
+                data: updateData
             });
         } 
         // Si no tenía acceso y ahora se lo quieren dar
         else if (!emp.userId && data.createSystemAccess && data.email && data.password && data.role) {
-            const existingUser = await tx.user.findUnique({ where: { email: data.email } });
+            const cleanEmail = data.email.trim().toLowerCase();
+            const cleanPassword = data.password.trim();
+
+            const existingUser = await tx.user.findUnique({ where: { email: cleanEmail } });
             if (existingUser) throw new BadRequestException('El correo ya está en uso por otro usuario.');
 
-            const hash = await bcrypt.hash(data.password, 10);
+            const hash = await bcrypt.hash(cleanPassword, 10);
             const newUser = await tx.user.create({
                data: {
                   tenantId,
-                  email: data.email,
+                  email: cleanEmail,
                   passwordHash: hash,
                   name: `${data.firstName || emp.firstName} ${data.lastName || emp.lastName}`,
                   role: data.role === 'CUSTOM' ? 'CUSTOM' : data.role,
@@ -183,7 +195,7 @@ export class EmployeesService {
                 firstName: data.firstName,
                 lastName: data.lastName,
                 phone: data.phone,
-                email: data.email !== undefined ? data.email : undefined,
+                email: data.email ? data.email.trim().toLowerCase() : null,
                 employeeNumber: data.employeeNumber,
                 departmentId: data.departmentId || null,
                 jobTitle: data.jobTitle,

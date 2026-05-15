@@ -112,19 +112,21 @@ export class AuthService {
 
   async login(data: any) {
     const { email, password } = data;
+    const cleanEmail = email ? email.trim().toLowerCase() : '';
+    const cleanPassword = password ? password.trim() : '';
     
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const user = await this.prisma.user.findUnique({ where: { email: cleanEmail } });
     if (!user) {
-      throw new UnauthorizedException('Credenciales inválidas');
+      throw new UnauthorizedException('El correo no está registrado o fue escrito incorrectamente.');
     }
 
     if (user.passwordHash === 'SSO_MANAGED') {
       throw new UnauthorizedException('Esta cuenta está enlazada al Control Central. Inicia sesión desde tu portal de administración (RentControl/OmniChat).');
     }
 
-    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    const isMatch = await bcrypt.compare(cleanPassword, user.passwordHash);
     if (!isMatch) {
-      throw new UnauthorizedException('Credenciales inválidas');
+      throw new UnauthorizedException('La contraseña es incorrecta.');
     }
 
     const payload = { userId: user.id, email: user.email, tenantId: user.tenantId };
