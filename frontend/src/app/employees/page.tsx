@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Plus, Save, Loader2, X, FileEdit, Trash2, ChevronDown, User, UserPlus, Phone, Mail, MapPin, Building2, Briefcase, FileText, Printer, ShieldCheck, Key, HeartPulse, Shirt } from "lucide-react";
+import { Search, Plus, Save, Loader2, X, FileEdit, Trash2, ChevronDown, User, UserPlus, Phone, Mail, MapPin, Building2, Briefcase, FileText, Printer, ShieldCheck, Key, HeartPulse, Shirt, LayoutGrid, List, Download, Upload } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
@@ -22,6 +22,12 @@ export default function EmployeesPage() {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Advanced Features State
+  const [viewMode, setViewMode] = useState<'grid'|'list'>('grid');
+  const [isEditingId, setIsEditingId] = useState<string | null>(null);
+  const [isBulkOpen, setIsBulkOpen] = useState(false);
+  const [bulkFile, setBulkFile] = useState<File | null>(null);
 
   // Form Fields
   const [firstName, setFirstName] = useState("");
@@ -54,11 +60,106 @@ export default function EmployeesPage() {
   const [printingEmp, setPrintingEmp] = useState<any>(null);
 
   const resetForm = () => {
+    setIsEditingId(null);
     setFirstName(""); setLastName(""); setEmail(""); setPhone(""); setJobTitle("");
     setDepartmentId(""); setBaseSalary(""); setEmployeeType("DIRECT"); setIsActive(true);
     setEmployeeNumber(""); setRfc(""); setNss(""); setCurp("");
     setShirtSize(""); setPantsSize(""); setShoeSize(""); setBloodType(""); setEmergencyContact("");
     setGiveAccess(false); setPassword(""); setRole("CASHIER"); setWarehouseId("");
+  };
+
+  const startEdit = (emp: any) => {
+    setIsEditingId(emp.id);
+    setFirstName(emp.firstName || ""); setLastName(emp.lastName || ""); 
+    setEmail(emp.email || ""); setPhone(emp.phone || ""); setJobTitle(emp.jobTitle || "");
+    setDepartmentId(emp.departmentId || ""); setBaseSalary(emp.baseSalary?.toString() || ""); 
+    setEmployeeType(emp.employeeType || "DIRECT"); setIsActive(emp.isActive !== false);
+    setEmployeeNumber(emp.employeeNumber || ""); setRfc(emp.rfc || ""); 
+    setNss(emp.nss || ""); setCurp(emp.curp || "");
+    setShirtSize(emp.shirtSize || ""); setPantsSize(emp.pantsSize || ""); 
+    setShoeSize(emp.shoeSize || ""); setBloodType(emp.bloodType || ""); 
+    setEmergencyContact(emp.emergencyContact || "");
+    
+    if (emp.user) {
+       setGiveAccess(true);
+       setRole(emp.user.role === 'CUSTOM' ? `CUSTOM_${emp.user.customRoleId}` : (emp.user.role || "CASHIER"));
+       setWarehouseId(emp.user.warehouseId || "");
+    } else {
+       setGiveAccess(false);
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('¿Estás seguro de que deseas dar de baja a este empleado? Su cuenta y acceso al ERP serán desactivados.')) return;
+    try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
+        const res = await fetch(`${baseUrl}/employees/${id}`, {
+            method: "DELETE",
+            headers: { 'x-tenant-id': activeTenantId, 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error(await res.text());
+        fetchData();
+    } catch (e: any) {
+        alert(`Error al eliminar: ${e.message}`);
+    }
+  };
+
+  const parseCSV = (text: string) => {
+    const lines = text.split('\n').filter(l => l.trim());
+    if(lines.length < 2) return [];
+    const headers = lines[0].split(',').map(h => h.trim().replace(/['"]/g,''));
+    return lines.slice(1).map(line => {
+        const values = line.split(',').map(v => v.trim().replace(/['"]/g,''));
+        const obj: any = {};
+        headers.forEach((h, i) => obj[h] = values[i]);
+        return obj;
+    });
+  };
+
+  const handleBulkUpload = async () => {
+    if(!bulkFile) return alert("Selecciona un archivo CSV primero.");
+    setIsSaving(true);
+    try {
+        const text = await bulkFile.text();
+        const data = parseCSV(text);
+        
+        const payload = data.map(row => ({
+            firstName: row.Nombre || row.firstName || "",
+            lastName: row.Apellidos || row.lastName || "",
+            email: row.Email || row.email || "",
+            phone: row.Telefono || row.phone || "",
+            jobTitle: row.Puesto || row.jobTitle || "",
+            employeeNumber: row.Matricula || row.employeeNumber || "",
+            baseSalary: row.SalarioBase ? parseFloat(row.SalarioBase) : 0,
+            employeeType: (row.Tipo === 'Contratista' || row.employeeType === 'CONTRACTOR') ? 'CONTRACTOR' : 'DIRECT',
+            isActive: true
+        })).filter(r => r.firstName && r.lastName);
+
+        if(payload.length === 0) return alert("El archivo está vacío o no tiene la columna Nombre/Apellidos.");
+
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
+        const res = await fetch(`${baseUrl}/employees/bulk`, {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json",
+                "x-tenant-id": activeTenantId,
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if(!res.ok) throw new Error(await res.text());
+        alert(`¡Éxito! Se importaron ${payload.length} empleados correctamente.`);
+        setIsBulkOpen(false);
+        setBulkFile(null);
+        fetchData();
+    } catch(e: any) {
+        console.error(e);
+        alert(`Error: ${e.message}`);
+    } finally {
+        setIsSaving(false);
+    }
   };
 
   useEffect(() => {
@@ -92,7 +193,7 @@ export default function EmployeesPage() {
 
   const handleSave = async () => {
     if (!firstName || !lastName) return alert('El nombre y apellido son obligatorios');
-    if (giveAccess && (!email || !password)) return alert('Para dar acceso al sistema, el correo y contraseña son obligatorios.');
+    if (!isEditingId && giveAccess && (!email || !password)) return alert('Para dar acceso al sistema, el correo y contraseña son obligatorios.');
     setIsSaving(true);
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
@@ -113,8 +214,11 @@ export default function EmployeesPage() {
         createSystemAccess: giveAccess, password, role: finalRole, customRoleId: finalCustomRoleId, warehouseId: warehouseId || undefined
       };
 
-      const res = await fetch(`${baseUrl}/employees`, {
-        method: "POST",
+      const url = isEditingId ? `${baseUrl}/employees/${isEditingId}` : `${baseUrl}/employees`;
+      const method = isEditingId ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { 
             "Content-Type": "application/json",
             "x-tenant-id": activeTenantId,
@@ -129,8 +233,12 @@ export default function EmployeesPage() {
       setIsModalOpen(false);
       resetForm();
       
-      // Navigate straight to their file so he can upload contracts immediately
-      router.push(`/employees/${newEmp.id}`);
+      // If editing, refresh the table. If creating, go to dossier.
+      if (isEditingId) {
+          fetchData();
+      } else {
+          router.push(`/employees/${newEmp.id}`);
+      }
       
     } catch (e: any) {
       console.error(e);
@@ -239,22 +347,35 @@ export default function EmployeesPage() {
                <Briefcase className="w-5 h-5 text-blue-600" />
                Directorio Corporativo
             </h1>
-            <div className="h-6 w-px bg-slate-200 mx-2"></div>
+            <div className="h-6 w-px bg-slate-200 mx-2 hidden md:block"></div>
             <button onClick={() => { resetForm(); setIsModalOpen(true); }} className="bg-[#10b981] hover:bg-[#059669] text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
                <UserPlus className="w-4 h-4" /> Alta de Personal
             </button>
+            <button onClick={() => setIsBulkOpen(true)} className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center gap-2 hidden sm:flex">
+               <Upload className="w-4 h-4 text-blue-600" /> Alta Masiva (CSV)
+            </button>
          </div>
          
-         <div className="flex border border-slate-200 rounded text-slate-400 bg-slate-50 items-center px-2 py-1.5 max-w-sm w-full focus-within:border-slate-400 focus-within:bg-white transition-colors">
-            <Search className="w-4 h-4 mr-2 ml-1" />
-            <input 
-                type="text" 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Buscar por Nombre, Puesto o Matrícula..." 
-                className="bg-transparent border-none outline-none text-sm w-full py-0.5 text-slate-800" 
-            />
-            {searchTerm && <button onClick={() => setSearchTerm("")} className="hover:text-slate-600"><X className="w-4 h-4 ml-1" /></button>}
+         <div className="flex items-center gap-3">
+             <div className="bg-slate-100 p-1 rounded-lg flex items-center gap-1 hidden md:flex">
+                 <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}>
+                     <LayoutGrid className="w-4 h-4" />
+                 </button>
+                 <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}>
+                     <List className="w-4 h-4" />
+                 </button>
+             </div>
+             <div className="flex border border-slate-200 rounded text-slate-400 bg-slate-50 items-center px-2 py-1.5 w-64 focus-within:border-slate-400 focus-within:bg-white transition-colors">
+                <Search className="w-4 h-4 mr-2 ml-1" />
+                <input 
+                    type="text" 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Buscar por Nombre, Puesto o Matrícula..." 
+                    className="bg-transparent border-none outline-none text-sm w-full py-0.5 text-slate-800" 
+                />
+                {searchTerm && <button onClick={() => setSearchTerm("")} className="hover:text-slate-600"><X className="w-4 h-4 ml-1" /></button>}
+             </div>
          </div>
       </div>
 
@@ -272,14 +393,18 @@ export default function EmployeesPage() {
                   Registrar Primer Empleado
                </button>
             </div>
-         ) : (
+         ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                {filteredEmployees.map(emp => (
                   <div key={emp.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all p-6 relative flex flex-col">
                      {/* Status Indicator */}
                      <div className={`absolute top-0 right-0 w-2 h-full ${emp.isActive ? 'bg-emerald-500' : 'bg-rose-500'} rounded-r-2xl`}></div>
+                     <div className="absolute top-4 right-5 flex items-center gap-1 bg-white/80 backdrop-blur rounded-lg">
+                        <button onClick={() => startEdit(emp)} className="p-1.5 text-slate-400 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors" title="Editar Empleado"><FileEdit className="w-4 h-4"/></button>
+                        <button onClick={() => handleDelete(emp.id)} className="p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 rounded-lg transition-colors" title="Dar de Baja"><Trash2 className="w-4 h-4"/></button>
+                     </div>
                      
-                     <div className="flex items-start gap-4 mb-4">
+                     <div className="flex items-start gap-4 mb-4 mt-2">
                         <Link href={`/employees/${emp.id}`} className="shrink-0 cursor-pointer">
                             <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden shrink-0 hover:ring-2 ring-blue-500 transition-all">
                             {emp.avatarUrl ? (
@@ -289,7 +414,7 @@ export default function EmployeesPage() {
                             )}
                             </div>
                         </Link>
-                        <div className="flex-1 min-w-0 pt-1">
+                        <div className="flex-1 min-w-0 pt-1 pr-14">
                            <Link href={`/employees/${emp.id}`} className="hover:text-blue-600 transition-colors">
                                <h3 className="font-bold text-slate-900 text-lg leading-tight truncate">
                                   {emp.firstName} {emp.lastName}
@@ -334,6 +459,72 @@ export default function EmployeesPage() {
                      </div>
                   </div>
                ))}
+            </div>
+         ) : (
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in">
+               <div className="overflow-x-auto">
+                   <table className="w-full text-left text-sm whitespace-nowrap">
+                       <thead className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                           <tr>
+                               <th className="px-6 py-4">Empleado</th>
+                               <th className="px-6 py-4">Puesto y Depto</th>
+                               <th className="px-6 py-4">Contacto</th>
+                               <th className="px-6 py-4">Acceso ERP</th>
+                               <th className="px-6 py-4">Estatus</th>
+                               <th className="px-6 py-4 text-right">Acciones</th>
+                           </tr>
+                       </thead>
+                       <tbody className="divide-y divide-slate-100">
+                           {filteredEmployees.map(emp => (
+                               <tr key={emp.id} className="hover:bg-slate-50/50 transition-colors">
+                                   <td className="px-6 py-4">
+                                       <div className="flex items-center gap-3">
+                                           <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden flex items-center justify-center shrink-0">
+                                               {emp.avatarUrl ? <img src={`${process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api"}${emp.avatarUrl}`} className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-slate-400" />}
+                                           </div>
+                                           <div>
+                                               <Link href={`/employees/${emp.id}`} className="font-bold text-slate-800 hover:text-blue-600 block">{emp.firstName} {emp.lastName}</Link>
+                                               <div className="flex items-center gap-2 mt-0.5">
+                                                   {emp.employeeNumber && <span className="text-[10px] text-slate-400 font-mono">{emp.employeeNumber}</span>}
+                                                   {emp.employeeType === 'CONTRACTOR' && <span className="text-[9px] bg-orange-100 text-orange-700 px-1.5 rounded-sm font-bold uppercase tracking-wider">Contratista</span>}
+                                               </div>
+                                           </div>
+                                       </div>
+                                   </td>
+                                   <td className="px-6 py-4">
+                                       <div className="text-slate-800 font-medium">{emp.jobTitle || '-'}</div>
+                                       <div className="text-slate-500 text-xs mt-0.5">{emp.departmentRef?.name || 'General'}</div>
+                                   </td>
+                                   <td className="px-6 py-4">
+                                       <div className="text-slate-600">{emp.phone || '-'}</div>
+                                       <div className="text-slate-400 text-xs mt-0.5">{emp.email || '-'}</div>
+                                   </td>
+                                   <td className="px-6 py-4">
+                                       {emp.user ? (
+                                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold border border-indigo-100">
+                                               <Key className="w-3 h-3" /> {emp.user.role === 'CUSTOM' ? 'Especial' : emp.user.role}
+                                           </span>
+                                       ) : <span className="text-slate-400 text-xs italic">Sin acceso</span>}
+                                   </td>
+                                   <td className="px-6 py-4">
+                                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${emp.isActive ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                                           <div className={`w-1.5 h-1.5 rounded-full ${emp.isActive ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
+                                           {emp.isActive ? 'Activo' : 'Baja'}
+                                       </span>
+                                   </td>
+                                   <td className="px-6 py-4 text-right">
+                                       <div className="flex items-center justify-end gap-1">
+                                           <button onClick={() => printBadge(emp)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Imprimir Gafete"><Printer className="w-4 h-4"/></button>
+                                           <Link href={`/employees/${emp.id}`} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Ver Expediente"><FileText className="w-4 h-4"/></Link>
+                                           <button onClick={() => startEdit(emp)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Editar"><FileEdit className="w-4 h-4"/></button>
+                                           <button onClick={() => handleDelete(emp.id)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Dar de Baja"><Trash2 className="w-4 h-4"/></button>
+                                       </div>
+                                   </td>
+                               </tr>
+                           ))}
+                       </tbody>
+                   </table>
+               </div>
             </div>
          )}
       </div>
@@ -514,6 +705,53 @@ export default function EmployeesPage() {
                   <button onClick={handleSave} disabled={isSaving} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-black shadow-lg shadow-blue-500/30 transition-transform hover:-translate-y-0.5 flex items-center gap-2">
                      {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <UserPlus className="w-5 h-5" />}
                      REGISTRAR Y ABRIR EXPEDIENTE DIGITAL
+                  </button>
+               </div>
+            </div>
+         </div>
+      )}
+      {/* BULK IMPORT MODAL */}
+      {isBulkOpen && (
+         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in p-4">
+            <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg border border-slate-200 overflow-hidden scale-in-95 duration-200 flex flex-col">
+               <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50 shrink-0">
+                  <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                     <Upload className="w-6 h-6 text-blue-600" />
+                     Alta Masiva (CSV)
+                  </h2>
+                  <button onClick={() => setIsBulkOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors bg-white hover:bg-slate-100 p-2 rounded-lg">
+                     <X className="w-5 h-5"/>
+                  </button>
+               </div>
+               
+               <div className="p-8 bg-slate-50/30 text-center">
+                  <div className="mb-6">
+                      <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <FileText className="w-8 h-8" />
+                      </div>
+                      <h3 className="font-bold text-slate-800 text-lg mb-2">Importa tu Equipo en Segundos</h3>
+                      <p className="text-sm text-slate-500 mb-6">Descarga la plantilla de Excel, llénala con los datos de tu equipo, expórtala como "Valores Separados por Comas (.csv)" y súbela aquí.</p>
+                      
+                      <a href="data:text/csv;charset=utf-8,Nombre,Apellidos,Matricula,Telefono,Email,Puesto,SalarioBase,Tipo%0AJuan,Perez,EMP-01,5551234567,juan@ejemplo.com,Técnico,12000,Planta%0AMaria,Lopez,EMP-02,5557654321,,Supervisora,18000,Planta%0ACarlos,Gomez,CON-01,,,Instalador,,Contratista" download="Plantilla_Empleados_FacturaPro.csv" className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-colors mb-8">
+                          <Download className="w-4 h-4" /> Descargar Plantilla .CSV
+                      </a>
+                  </div>
+
+                  <div className="border-2 border-dashed border-blue-200 bg-blue-50/30 rounded-2xl p-6 relative group hover:border-blue-400 transition-colors">
+                      <input type="file" accept=".csv" onChange={(e) => setBulkFile(e.target.files?.[0] || null)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                      <div className="flex flex-col items-center pointer-events-none">
+                          <Upload className={`w-8 h-8 mb-2 ${bulkFile ? 'text-emerald-500' : 'text-blue-400 group-hover:text-blue-500'}`} />
+                          <p className="font-bold text-slate-700">{bulkFile ? bulkFile.name : 'Haz clic para seleccionar tu .CSV'}</p>
+                          <p className="text-xs text-slate-400 mt-1">{bulkFile ? `${(bulkFile.size / 1024).toFixed(1)} KB` : 'Solo archivos .csv (Máx. 500 registros)'}</p>
+                      </div>
+                  </div>
+               </div>
+               
+               <div className="p-6 border-t border-slate-100 bg-white flex justify-end gap-3 shrink-0">
+                  <button onClick={() => setIsBulkOpen(false)} className="px-6 py-3 rounded-xl font-bold text-slate-600 hover:bg-slate-100 transition-colors">Cancelar</button>
+                  <button onClick={handleBulkUpload} disabled={isSaving || !bulkFile} className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-8 py-3 rounded-xl font-black shadow-lg shadow-blue-500/30 transition-transform flex items-center gap-2">
+                     {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+                     {isSaving ? 'Procesando...' : 'SUBIR EMPLEADOS'}
                   </button>
                </div>
             </div>

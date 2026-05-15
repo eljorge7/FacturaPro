@@ -14,6 +14,11 @@ export class EmployeesController {
     return this.employeesService.create(tenantId, data);
   }
 
+  @Post('bulk')
+  createBulk(@Headers('x-tenant-id') tenantId: string, @Body() data: any[]) {
+    return this.employeesService.createBulk(tenantId, data);
+  }
+
   @Post(':id/avatar')
   @UseInterceptors(FileInterceptor('file', {
     storage: diskStorage({

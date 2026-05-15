@@ -82,6 +82,63 @@ export class EmployeesService {
     });
   }
 
+  async createBulk(tenantId: string, employeesData: any[]) {
+    return this.prisma.$transaction(async (tx) => {
+      const createdCount = { users: 0, profiles: 0 };
+      
+      for (const data of employeesData) {
+        let userId = null;
+
+        if (data.createSystemAccess && data.email && data.password && data.role) {
+           const existingUser = await tx.user.findUnique({ where: { email: data.email } });
+           if (!existingUser) {
+              const hash = await bcrypt.hash(data.password, 10);
+              const newUser = await tx.user.create({
+                 data: {
+                    tenantId,
+                    email: data.email,
+                    passwordHash: hash,
+                    name: `${data.firstName} ${data.lastName}`,
+                    role: data.role === 'CUSTOM' ? 'CUSTOM' : data.role,
+                    customRoleId: data.role === 'CUSTOM' ? data.customRoleId : null,
+                    warehouseId: data.warehouseId || null
+                 }
+              });
+              userId = newUser.id;
+              createdCount.users++;
+           }
+        }
+
+        await tx.employeeProfile.create({
+           data: {
+              tenantId,
+              userId,
+              firstName: data.firstName,
+              lastName: data.lastName,
+              phone: data.phone ? String(data.phone) : null,
+              email: data.email || null,
+              employeeNumber: data.employeeNumber || null,
+              departmentId: data.departmentId || null,
+              jobTitle: data.jobTitle || null,
+              employeeType: data.employeeType || 'DIRECT',
+              rfc: data.rfc || null,
+              nss: data.nss ? String(data.nss) : null,
+              curp: data.curp || null,
+              baseSalary: data.baseSalary ? parseFloat(data.baseSalary) : 0,
+              hireDate: data.hireDate ? new Date(data.hireDate) : null,
+              shirtSize: data.shirtSize || null,
+              pantsSize: data.pantsSize || null,
+              shoeSize: data.shoeSize || null,
+              bloodType: data.bloodType || null,
+              emergencyContact: data.emergencyContact || null
+           }
+        });
+        createdCount.profiles++;
+      }
+      return createdCount;
+    });
+  }
+
   async update(tenantId: string, id: string, data: any) {
     const emp = await this.findOne(tenantId, id);
 
