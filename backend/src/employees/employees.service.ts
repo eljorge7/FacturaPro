@@ -270,10 +270,42 @@ export class EmployeesService {
       orderBy: { uploadedAt: 'desc' }
     });
 
+    const timeOffRequests = await this.prisma.timeOffRequest.findMany({
+      where: { employeeId: employee.id },
+      orderBy: { createdAt: 'desc' }
+    });
+
     return {
       employee,
       payslips,
-      documents
+      documents,
+      timeOffRequests
     };
+  }
+
+  async createTimeOffRequest(tenantId: string, userId: string, data: any) {
+    const employee = await this.prisma.employeeProfile.findUnique({
+      where: { userId }
+    });
+
+    if (!employee || employee.tenantId !== tenantId) {
+      throw new NotFoundException('Perfil de empleado no encontrado para este usuario');
+    }
+
+    if (!data.type || !data.startDate || !data.endDate) {
+      throw new BadRequestException('Tipo, fecha de inicio y fecha de fin son obligatorios');
+    }
+
+    return this.prisma.timeOffRequest.create({
+      data: {
+        tenantId,
+        employeeId: employee.id,
+        type: data.type,
+        startDate: new Date(data.startDate),
+        endDate: new Date(data.endDate),
+        reason: data.reason || null,
+        status: 'PENDING'
+      }
+    });
   }
 }

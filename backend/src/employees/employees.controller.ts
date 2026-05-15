@@ -76,6 +76,14 @@ export class EmployeesController {
     return this.employeesService.getPortalData(tenantId, userId);
   }
 
+  @Post('me/portal/time-off')
+  createTimeOffRequest(@Req() req: any, @Body() data: any) {
+    const tenantId = req.headers['x-tenant-id'] || req.user?.tenantId;
+    const userId = req.user?.id;
+    if (!userId) throw new BadRequestException('User ID no encontrado');
+    return this.employeesService.createTimeOffRequest(tenantId, userId, data);
+  }
+
   @Get()
   findAll(@Headers('x-tenant-id') tenantId: string) {
     return this.employeesService.findAll(tenantId);

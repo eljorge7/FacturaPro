@@ -1,86 +1,77 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plane, CalendarDays, FileText, User, CreditCard, Clock, CheckCircle, XCircle, ShieldCheck, HeartPulse, LogOut, Send } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
-import { useRouter } from "next/navigation";
+import { Loader2, Calendar, FileText, Download, Briefcase, Plus, Clock, CheckCircle2, XCircle, ChevronRight, Plane, Stethoscope, HeartPulse, User } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function MyPortalPage() {
-  const router = useRouter();
-  const { tenantId: activeTenantId, token, logout } = useAuth();
+  const { tenantId, token, user } = useAuth();
   
-  const [activeTab, setActiveTab] = useState<'profile' | 'payslips' | 'timeoff'>('profile');
-  
-  const [employee, setEmployee] = useState<any>(null);
-  const [payslips, setPayslips] = useState<any[]>([]);
-  const [documents, setDocuments] = useState<any[]>([]);
-  const [timeOffRequests, setTimeOffRequests] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Time off form
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [type, setType] = useState("VACATION");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [reason, setReason] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const fetchPortalData = async () => {
+  const fetchData = async () => {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
-      
       const res = await fetch(`${baseUrl}/employees/me/portal`, {
-        headers: { "x-tenant-id": activeTenantId, "Authorization": `Bearer ${token}` }
+        headers: { 
+          'x-tenant-id': tenantId || "",
+          'Authorization': `Bearer ${token}`
+        }
       });
+      if (!res.ok) throw new Error("No tienes un perfil de empleado asignado.");
       
-      if (!res.ok) throw new Error("No pudimos cargar tu portal");
-      const data = await res.json();
-      setEmployee(data.employee);
-      setPayslips(data.payslips || []);
-      setDocuments(data.documents || []);
-
-      // Fetch time off
-      const timeOffRes = await fetch(`${baseUrl}/time-off/my-requests?employeeId=${data.employee.id}`, {
-        headers: { "x-tenant-id": activeTenantId, "Authorization": `Bearer ${token}` }
-      });
-      if (timeOffRes.ok) {
-          setTimeOffRequests(await timeOffRes.json());
-      }
+      const result = await res.json();
+      setData(result);
     } catch (e: any) {
-      toast.error(e.message || "Error al cargar el portal");
+      console.error(e);
+      toast.error(e.message);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    if (activeTenantId && token) fetchPortalData();
-  }, [activeTenantId, token]);
+    if (tenantId && token) {
+      fetchData();
+    }
+  }, [tenantId, token]);
 
-  const submitTimeOff = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!startDate || !endDate) return toast.error("Selecciona las fechas");
+    if (new Date(startDate) > new Date(endDate)) return toast.error("La fecha de inicio debe ser antes del fin");
+
     setIsSubmitting(true);
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
-      const res = await fetch(`${baseUrl}/time-off`, {
-        method: "POST",
+      const res = await fetch(`${baseUrl}/employees/me/portal/time-off`, {
+        method: 'POST',
         headers: { 
-            "Content-Type": "application/json",
-            "x-tenant-id": activeTenantId, 
-            "Authorization": `Bearer ${token}` 
+          'Content-Type': 'application/json',
+          'x-tenant-id': tenantId || "",
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-            employeeId: employee.id,
-            type, startDate, endDate, reason
-        })
+        body: JSON.stringify({ type, startDate, endDate, reason })
       });
-      if (!res.ok) throw new Error("No se pudo enviar la solicitud");
       
-      toast.success("Solicitud enviada correctamente a Recursos Humanos");
-      setStartDate(""); setEndDate(""); setReason("");
-      fetchPortalData(); // Refresh history
+      if (!res.ok) throw new Error("Error al enviar la solicitud");
       
+      toast.success("Solicitud enviada a Recursos Humanos");
+      setIsModalOpen(false);
+      setStartDate("");
+      setEndDate("");
+      setReason("");
+      fetchData(); // Refresh data
     } catch (e: any) {
       toast.error(e.message);
     } finally {
@@ -88,211 +79,206 @@ export default function MyPortalPage() {
     }
   };
 
-  const getTypeStr = (t: string) => {
-    switch (t) {
-        case 'VACATION': return "Vacaciones";
-        case 'SICK_LEAVE': return "Incapacidad (IMSS)";
-        case 'BEREAVEMENT': return "Por Fallecimiento";
-        case 'MATERNITY_PATERNITY': return "Maternidad/Paternidad";
-        case 'UNPAID_LEAVE': return "Sin Goce de Sueldo";
-        case 'SPECIAL': return "Especial";
-        default: return "Permiso";
-    }
+  if (isLoading) return <div className="flex h-screen items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-indigo-600" /></div>;
+  if (!data) return <div className="flex h-screen items-center justify-center font-bold text-slate-500">Perfil no encontrado. Contacta a RRHH.</div>;
+
+  const { employee, timeOffRequests, payslips, documents } = data;
+
+  const getTypeIcon = (t: string) => {
+      switch(t) {
+          case 'VACATION': return <Plane className="w-5 h-5 text-sky-500" />;
+          case 'SICK_LEAVE': return <Stethoscope className="w-5 h-5 text-rose-500" />;
+          default: return <HeartPulse className="w-5 h-5 text-indigo-500" />;
+      }
   };
 
   const getStatusBadge = (status: string) => {
-    if (status === 'APPROVED') return <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold flex items-center"><CheckCircle className="w-3 h-3 mr-1" /> Aprobada</span>;
-    if (status === 'REJECTED') return <span className="bg-rose-100 text-rose-700 px-3 py-1 rounded-full text-xs font-bold flex items-center"><XCircle className="w-3 h-3 mr-1" /> Rechazada</span>;
-    return <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold flex items-center"><Clock className="w-3 h-3 mr-1" /> En Revisión</span>;
-  };
+      switch(status) {
+          case 'APPROVED': return <span className="flex items-center gap-1 text-xs font-bold bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full"><CheckCircle2 className="w-3 h-3"/> Aprobado</span>;
+          case 'REJECTED': return <span className="flex items-center gap-1 text-xs font-bold bg-rose-100 text-rose-700 px-2 py-1 rounded-full"><XCircle className="w-3 h-3"/> Rechazado</span>;
+          default: return <span className="flex items-center gap-1 text-xs font-bold bg-amber-100 text-amber-700 px-2 py-1 rounded-full"><Clock className="w-3 h-3"/> En Revisión</span>;
+      }
+  }
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen text-slate-500 animate-pulse">Cargando tu portal...</div>;
-  if (!employee) return <div className="flex items-center justify-center min-h-screen text-slate-500">No tienes un perfil de empleado asignado. Contacta a RRHH.</div>;
+  const getTypeLabel = (t: string) => {
+      const labels: any = {
+          'VACATION': 'Vacaciones',
+          'SICK_LEAVE': 'Enfermedad',
+          'BEREAVEMENT': 'Fallecimiento',
+          'MATERNITY_PATERNITY': 'Maternidad/Paternidad',
+          'SPECIAL': 'Permiso Especial'
+      };
+      return labels[t] || t;
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-       <div className="bg-slate-900 text-white pt-12 pb-24 px-6 relative overflow-hidden">
-           <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500 rounded-full blur-[100px] opacity-20 translate-x-1/3 -translate-y-1/3"></div>
-           <div className="max-w-5xl mx-auto flex items-center justify-between relative z-10">
-               <div className="flex items-center gap-6">
-                   <div className="w-20 h-20 bg-slate-800 rounded-full border-4 border-slate-700 shadow-xl overflow-hidden flex items-center justify-center shrink-0">
-                       {employee.avatarUrl ? (
-                           <img src={`${process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api"}${employee.avatarUrl}`} className="w-full h-full object-cover" />
-                       ) : <User className="w-8 h-8 text-slate-400" />}
-                   </div>
-                   <div>
-                       <h1 className="text-3xl font-extrabold tracking-tight">¡Hola, {employee.firstName}!</h1>
-                       <p className="text-slate-400 text-lg">{employee.jobTitle || 'Miembro del Equipo'}</p>
-                   </div>
-               </div>
-               
-               <button onClick={() => { logout(); router.push('/login'); }} className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors flex items-center gap-2">
-                   <LogOut className="w-4 h-4" /> Cerrar Sesión
-               </button>
-           </div>
-       </div>
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans">
+      <div className="max-w-5xl mx-auto space-y-6">
+          
+        {/* ENCABEZADO Y RESUMEN */}
+        <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-blue-900 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-12 opacity-10">
+                <Briefcase className="w-64 h-64" />
+            </div>
+            
+            <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
+                <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md border-4 border-white/30 shadow-lg">
+                    {employee.avatarUrl ? (
+                        <img src={employee.avatarUrl} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                        <User className="w-10 h-10 text-white" />
+                    )}
+                </div>
+                <div className="text-center md:text-left">
+                    <h1 className="text-3xl font-black mb-1">¡Hola, {employee.firstName}!</h1>
+                    <p className="text-indigo-200 font-medium text-lg flex items-center justify-center md:justify-start gap-2">
+                        {employee.jobTitle || 'Miembro del Equipo'}
+                    </p>
+                    <div className="flex flex-wrap gap-3 mt-4 justify-center md:justify-start">
+                        <span className="bg-white/10 px-3 py-1.5 rounded-lg text-sm font-bold backdrop-blur-md border border-white/10">ID: {employee.employeeNumber || 'N/A'}</span>
+                        <span className="bg-white/10 px-3 py-1.5 rounded-lg text-sm font-bold backdrop-blur-md border border-white/10 flex items-center gap-1"><Calendar className="w-4 h-4"/> 12 Días de Vacaciones</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-       <div className="max-w-5xl mx-auto px-6 -mt-12 relative z-20">
-           {/* Navigation Tabs */}
-           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-2 flex flex-col sm:flex-row gap-2 mb-8">
-               <button onClick={() => setActiveTab('profile')} className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors ${activeTab === 'profile' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'}`}>
-                   <User className="w-4 h-4" /> Mi Expediente
-               </button>
-               <button onClick={() => setActiveTab('timeoff')} className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors ${activeTab === 'timeoff' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}>
-                   <Plane className="w-4 h-4" /> Permisos y Vacaciones
-               </button>
-               <button onClick={() => setActiveTab('payslips')} className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors ${activeTab === 'payslips' ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50'}`}>
-                   <CreditCard className="w-4 h-4" /> Recibos de Nómina
-               </button>
-           </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* COLUMNA IZQUIERDA: PERMISOS Y VACACIONES */}
+            <div className="md:col-span-2 space-y-6">
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Calendar className="w-6 h-6 text-indigo-500"/> Mis Permisos</h2>
+                        <button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition-all flex items-center gap-2">
+                            <Plus className="w-4 h-4" /> Solicitar
+                        </button>
+                    </div>
 
-           {/* Tab Contents */}
-           <div className="animate-in fade-in duration-300">
-               {activeTab === 'profile' && (
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                       <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
-                           <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><HeartPulse className="w-5 h-5 text-rose-500" /> Información Médica y Tallas</h2>
-                           <div className="space-y-4">
-                               <div><p className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-1">Contacto de Emergencia</p><p className="font-medium text-slate-800">{employee.emergencyContact || 'No registrado'}</p></div>
-                               <div><p className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-1">Tipo de Sangre</p><p className="font-medium text-slate-800">{employee.bloodType || 'No registrado'}</p></div>
-                               <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-100">
-                                   <div><p className="text-xs text-slate-500 uppercase font-bold mb-1">Camisa</p><p className="font-bold text-slate-800">{employee.shirtSize || '-'}</p></div>
-                                   <div><p className="text-xs text-slate-500 uppercase font-bold mb-1">Pantalón</p><p className="font-bold text-slate-800">{employee.pantsSize || '-'}</p></div>
-                                   <div><p className="text-xs text-slate-500 uppercase font-bold mb-1">Calzado</p><p className="font-bold text-slate-800">{employee.shoeSize || '-'}</p></div>
-                               </div>
-                           </div>
-                       </div>
-                       <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
-                           <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-emerald-500" /> Mis Documentos</h2>
-                           {documents.length === 0 ? (
-                               <p className="text-slate-500 text-sm">No tienes documentos en tu expediente.</p>
-                           ) : (
-                               <div className="space-y-3">
-                                   {documents.map(doc => (
-                                       <a key={doc.id} href={`${process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api"}${doc.fileUrl}`} target="_blank" className="flex items-center gap-3 p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors border border-slate-100">
-                                           <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-blue-500 shadow-sm shrink-0"><FileText className="w-5 h-5" /></div>
-                                           <div className="flex-1 min-w-0">
-                                               <p className="text-sm font-bold text-slate-800 truncate">{doc.name}</p>
-                                               <p className="text-xs text-slate-500">Documento de RRHH</p>
-                                           </div>
-                                       </a>
-                                   ))}
-                               </div>
-                           )}
-                       </div>
-                   </div>
-               )}
+                    {timeOffRequests?.length > 0 ? (
+                        <div className="space-y-4">
+                            {timeOffRequests.map((req: any) => (
+                                <div key={req.id} className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:border-indigo-100 hover:bg-indigo-50/30 transition-colors">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100">
+                                            {getTypeIcon(req.type)}
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-slate-800 text-sm">{getTypeLabel(req.type)}</p>
+                                            <p className="text-xs text-slate-500 mt-0.5">
+                                                {new Date(req.startDate).toLocaleDateString('es-MX', {day: '2-digit', month: 'short'})} 
+                                                {' '}al{' '}
+                                                {new Date(req.endDate).toLocaleDateString('es-MX', {day: '2-digit', month: 'short'})}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        {getStatusBadge(req.status)}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+                            <Plane className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                            <p className="font-bold text-slate-600">Sin historial de permisos</p>
+                            <p className="text-xs text-slate-400 mt-1">Aquí aparecerán tus vacaciones y solicitudes.</p>
+                        </div>
+                    )}
+                </div>
 
-               {activeTab === 'timeoff' && (
-                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                       <div className="lg:col-span-1 bg-white rounded-3xl p-8 border border-slate-200 shadow-sm h-fit">
-                           <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><Plane className="w-5 h-5 text-indigo-500" /> Solicitar Permiso</h2>
-                           <form onSubmit={submitTimeOff} className="space-y-5">
-                               <div>
-                                   <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Tipo de Permiso</label>
-                                   <select value={type} onChange={e => setType(e.target.value)} className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50">
-                                       <option value="VACATION">Vacaciones</option>
-                                       <option value="SICK_LEAVE">Incapacidad (IMSS)</option>
-                                       <option value="BEREAVEMENT">Por Fallecimiento</option>
-                                       <option value="MATERNITY_PATERNITY">Maternidad/Paternidad</option>
-                                       <option value="SPECIAL">Permiso Especial</option>
-                                       <option value="UNPAID_LEAVE">Sin Goce de Sueldo</option>
-                                   </select>
-                               </div>
-                               <div className="grid grid-cols-2 gap-4">
-                                   <div>
-                                       <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Desde</label>
-                                       <input type="date" required value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50" />
-                                   </div>
-                                   <div>
-                                       <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Hasta</label>
-                                       <input type="date" required value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50" />
-                                   </div>
-                               </div>
-                               <div>
-                                   <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Motivo o Notas (Opcional)</label>
-                                   <textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Ej. Viaje familiar, Cita médica..." className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 h-24 resize-none"></textarea>
-                               </div>
-                               <button type="submit" disabled={isSubmitting} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2">
-                                   {isSubmitting ? "Enviando..." : <><Send className="w-4 h-4" /> Enviar Solicitud a RRHH</>}
-                               </button>
-                           </form>
-                       </div>
-                       
-                       <div className="lg:col-span-2 space-y-4">
-                           <h2 className="text-lg font-bold text-slate-800 mb-2">Historial de Solicitudes</h2>
-                           {timeOffRequests.length === 0 ? (
-                               <div className="bg-white rounded-3xl p-8 border border-dashed border-slate-200 text-center">
-                                   <Plane className="w-12 h-12 text-slate-200 mx-auto mb-3" />
-                                   <p className="text-slate-500">Aún no has solicitado vacaciones ni permisos.</p>
-                               </div>
-                           ) : (
-                               timeOffRequests.map(req => (
-                                   <div key={req.id} className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
-                                       <div className="flex items-start gap-4">
-                                           <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${req.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-500' : req.status === 'REJECTED' ? 'bg-rose-50 text-rose-500' : 'bg-indigo-50 text-indigo-500'}`}>
-                                               <CalendarDays className="w-6 h-6" />
-                                           </div>
-                                           <div>
-                                               <h3 className="font-bold text-slate-800">{getTypeStr(req.type)}</h3>
-                                               <p className="text-sm text-slate-500">{new Date(req.startDate).toLocaleDateString()} al {new Date(req.endDate).toLocaleDateString()}</p>
-                                               {req.adminNotes && (
-                                                   <p className="text-xs text-slate-600 mt-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
-                                                       <span className="font-bold">Nota de RRHH:</span> {req.adminNotes}
-                                                   </p>
-                                               )}
-                                           </div>
-                                       </div>
-                                       <div>
-                                           {getStatusBadge(req.status)}
-                                       </div>
-                                   </div>
-                               ))
-                           )}
-                       </div>
-                   </div>
-               )}
+                {/* RECIBOS DE NÓMINA */}
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                    <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2 mb-6"><FileText className="w-6 h-6 text-emerald-500"/> Mis Recibos de Nómina</h2>
+                    
+                    {payslips?.length > 0 ? (
+                        <div className="space-y-3">
+                            {payslips.map((ps: any) => (
+                                <div key={ps.id} className="flex items-center justify-between p-4 border border-slate-100 rounded-xl hover:bg-slate-50 cursor-pointer group transition-colors">
+                                    <div className="flex flex-col">
+                                        <span className="font-bold text-slate-800 text-sm">{ps.payrollRun?.name || 'Nómina'}</span>
+                                        <span className="text-xs text-slate-500">{new Date(ps.createdAt).toLocaleDateString()}</span>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <span className="font-bold text-emerald-600">${ps.netPay?.toFixed(2)}</span>
+                                        <button className="text-slate-400 group-hover:text-emerald-600 transition-colors bg-white p-2 border border-slate-200 rounded-lg shadow-sm">
+                                            <Download className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-8">
+                            <p className="text-sm font-medium text-slate-500">No hay recibos de nómina disponibles.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
 
-               {activeTab === 'payslips' && (
-                   <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
-                       <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><CreditCard className="w-5 h-5 text-emerald-500" /> Mis Recibos de Nómina</h2>
-                       {payslips.length === 0 ? (
-                           <div className="text-center py-12">
-                               <FileText className="w-12 h-12 text-slate-200 mx-auto mb-3" />
-                               <p className="text-slate-500">No hay recibos de nómina disponibles todavía.</p>
-                           </div>
-                       ) : (
-                           <div className="overflow-x-auto">
-                               <table className="w-full text-left text-sm whitespace-nowrap">
-                                   <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-xs tracking-wider border-b border-slate-200">
-                                       <tr>
-                                           <th className="p-4 rounded-tl-xl">Periodo de Pago</th>
-                                           <th className="p-4">Salario Base</th>
-                                           <th className="p-4">Total Pagado</th>
-                                           <th className="p-4 text-right rounded-tr-xl">Estado</th>
-                                       </tr>
-                                   </thead>
-                                   <tbody className="divide-y divide-slate-100">
-                                       {payslips.map(ps => (
-                                           <tr key={ps.id} className="hover:bg-slate-50 transition-colors">
-                                               <td className="p-4 font-bold text-slate-800">
-                                                   {new Date(ps.payrollRun.periodStart).toLocaleDateString()} - {new Date(ps.payrollRun.periodEnd).toLocaleDateString()}
-                                               </td>
-                                               <td className="p-4 text-slate-600">${ps.baseSalary.toLocaleString()}</td>
-                                               <td className="p-4 font-black text-emerald-600">${ps.netPay.toLocaleString()}</td>
-                                               <td className="p-4 text-right">
-                                                   <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold inline-block">Pagado</span>
-                                               </td>
-                                           </tr>
-                                       ))}
-                                   </tbody>
-                               </table>
-                           </div>
-                       )}
-                   </div>
-               )}
-           </div>
-       </div>
+            {/* COLUMNA DERECHA: DOCUMENTOS Y UTILIDADES */}
+            <div className="space-y-6">
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                    <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><Briefcase className="w-5 h-5 text-amber-500"/> Mi Expediente</h2>
+                    {documents?.length > 0 ? (
+                        <div className="space-y-3">
+                            {documents.map((doc: any) => (
+                                <div key={doc.id} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl hover:border-amber-200 transition-colors cursor-pointer group">
+                                    <span className="text-sm font-bold text-slate-700 truncate mr-2">{doc.name}</span>
+                                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-amber-500 shrink-0" />
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-xs text-slate-500 text-center italic py-4">No hay documentos en tu expediente.</p>
+                    )}
+                </div>
+            </div>
+        </div>
+
+      </div>
+
+      {/* MODAL NUEVA SOLICITUD */}
+      {isModalOpen && (
+          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
+              <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg border border-slate-200 overflow-hidden scale-in-95 duration-200">
+                  <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                      <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2"><Plane className="w-5 h-5 text-indigo-500"/> Nueva Solicitud</h2>
+                      <button onClick={()=>setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><XCircle className="w-5 h-5"/></button>
+                  </div>
+                  <form onSubmit={handleSubmit} className="p-6 space-y-5">
+                      <div>
+                          <label className="block text-sm font-bold text-slate-700 mb-1">Tipo de Permiso</label>
+                          <select value={type} onChange={e=>setType(e.target.value)} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 font-medium">
+                              <option value="VACATION">🏖️ Vacaciones</option>
+                              <option value="SICK_LEAVE">🤒 Enfermedad / Incapacidad</option>
+                              <option value="MATERNITY_PATERNITY">👶 Maternidad / Paternidad</option>
+                              <option value="BEREAVEMENT">🕊️ Fallecimiento</option>
+                              <option value="SPECIAL">⭐ Permiso Especial</option>
+                          </select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                          <div>
+                              <label className="block text-sm font-bold text-slate-700 mb-1">Día de Inicio</label>
+                              <input type="date" value={startDate} onChange={e=>setStartDate(e.target.value)} required className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500" />
+                          </div>
+                          <div>
+                              <label className="block text-sm font-bold text-slate-700 mb-1">Día Final</label>
+                              <input type="date" value={endDate} onChange={e=>setEndDate(e.target.value)} required className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500" />
+                          </div>
+                      </div>
+                      <div>
+                          <label className="block text-sm font-bold text-slate-700 mb-1">Motivo / Notas Adicionales</label>
+                          <textarea value={reason} onChange={e=>setReason(e.target.value)} rows={3} placeholder="Describe brevemente el motivo..." className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 resize-none"></textarea>
+                      </div>
+                      <div className="pt-2">
+                          <button disabled={isSubmitting} type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition-all flex justify-center items-center gap-2">
+                              {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Enviar a Recursos Humanos"}
+                          </button>
+                      </div>
+                  </form>
+              </div>
+          </div>
+      )}
     </div>
   );
 }
