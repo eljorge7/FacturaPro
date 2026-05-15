@@ -392,6 +392,7 @@ export default function EmployeesPage() {
                 />
                 {searchTerm && <button onClick={() => setSearchTerm("")} className="hover:text-slate-600"><X className="w-4 h-4 ml-1" /></button>}
              </div>
+             </div>
          </div>
       </div>
 
