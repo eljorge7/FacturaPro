@@ -39,9 +39,9 @@ export class TimeOffController {
   updateStatus(
     @Req() req: any, 
     @Param('id') id: string, 
-    @Body() body: { status: string, adminNotes?: string }
+    @Body() body: { status: string, adminNotes?: string, deductedDays?: number }
   ) {
     const tenantId = req.headers['x-tenant-id'] || req.user?.tenantId;
-    return this.timeOffService.updateStatus(tenantId, id, body.status, body.adminNotes);
+    return this.timeOffService.updateStatus(tenantId, id, body.status, body.adminNotes, body.deductedDays);
   }
 }

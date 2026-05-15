@@ -38,7 +38,7 @@ export class TimeOffService {
     });
   }
 
-  async updateStatus(tenantId: string, id: string, status: string, adminNotes?: string) {
+  async updateStatus(tenantId: string, id: string, status: string, adminNotes?: string, deductedDays?: number) {
     const req = await this.prisma.timeOffRequest.findUnique({
       where: { id, tenantId }
     });
@@ -49,7 +49,7 @@ export class TimeOffService {
 
     return this.prisma.timeOffRequest.update({
       where: { id },
-      data: { status, adminNotes }
+      data: { status, adminNotes, deductedDays: deductedDays ?? undefined }
     });
   }
 }

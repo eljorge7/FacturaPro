@@ -1026,6 +1026,7 @@ model TimeOffRequest {
   status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
   reason      String?  @db.Text
   adminNotes  String?  @db.Text
+  deductedDays Float   @default(0)
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

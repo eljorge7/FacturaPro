@@ -11,6 +11,11 @@ export default function TimeOffPage() {
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedReq, setSelectedReq] = useState<any>(null);
+  const [overrideDays, setOverrideDays] = useState(0);
+
   const fetchRequests = async () => {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
@@ -33,7 +38,7 @@ export default function TimeOffPage() {
     if (activeTenantId && token) fetchRequests(); 
   }, [activeTenantId, token]);
 
-  const handleUpdateStatus = async (id: string, status: string) => {
+  const handleUpdateStatus = async (id: string, status: string, deductedDays?: number) => {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
       await fetch(`${baseUrl}/time-off/${id}/status`, {
@@ -43,9 +48,10 @@ export default function TimeOffPage() {
             "x-tenant-id": activeTenantId,
             "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ status, deductedDays })
       });
       toast.success(`Solicitud ${status === 'APPROVED' ? 'Aprobada' : 'Rechazada'} con éxito`);
+      setIsModalOpen(false);
       fetchRequests();
     } catch (e) {
       toast.error("Error al actualizar la solicitud");
@@ -76,9 +82,17 @@ export default function TimeOffPage() {
     // Resetear las horas para evitar problemas de zonas horarias
     s.setHours(0, 0, 0, 0);
     e.setHours(0, 0, 0, 0);
-    const diffTime = Math.abs(e.getTime() - s.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-    return diffDays;
+    
+    let days = 0;
+    let cur = new Date(s);
+    while (cur <= e) {
+       // Excluir Domingos (0)
+       if (cur.getDay() !== 0) {
+           days++;
+       }
+       cur.setDate(cur.getDate() + 1);
+    }
+    return days;
   };
 
   return (
@@ -114,7 +128,7 @@ export default function TimeOffPage() {
                          {new Date(req.startDate).toLocaleDateString('es-MX', {day: '2-digit', month: 'short', year: 'numeric'})} al {new Date(req.endDate).toLocaleDateString('es-MX', {day: '2-digit', month: 'short', year: 'numeric'})}
                        </p>
                        <span className="bg-indigo-100 text-indigo-700 font-bold px-3 py-1 rounded-xl text-xs w-max whitespace-nowrap">
-                         Descontar: {calculateDays(req.startDate, req.endDate)} día{calculateDays(req.startDate, req.endDate) !== 1 ? 's' : ''}
+                         Descontar: {req.status === 'PENDING' ? calculateDays(req.startDate, req.endDate) : (req.deductedDays || 0)} día{(req.status === 'PENDING' ? calculateDays(req.startDate, req.endDate) : (req.deductedDays || 0)) !== 1 ? 's' : ''}
                        </span>
                     </div>
                     
@@ -131,7 +145,11 @@ export default function TimeOffPage() {
                        <Button variant="outline" className="flex-1 border-rose-200 text-rose-600 hover:bg-rose-50 rounded-xl" onClick={() => handleUpdateStatus(req.id, 'REJECTED')}>
                          <ThumbsDown className="w-4 h-4 mr-2" /> Denegar
                        </Button>
-                       <Button className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 rounded-xl" onClick={() => handleUpdateStatus(req.id, 'APPROVED')}>
+                       <Button className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 rounded-xl" onClick={() => {
+                           setSelectedReq(req);
+                           setOverrideDays(calculateDays(req.startDate, req.endDate));
+                           setIsModalOpen(true);
+                       }}>
                          <ThumbsUp className="w-4 h-4 mr-2" /> Autorizar
                        </Button>
                     </div>
@@ -140,6 +158,42 @@ export default function TimeOffPage() {
             ))
          )}
       </div>
+
+      {/* MODAL DE AUTORIZACIÓN */}
+      {isModalOpen && selectedReq && (
+          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
+              <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm border border-slate-200 overflow-hidden scale-in-95 duration-200">
+                  <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                      <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">Confirmar Deducción</h2>
+                      <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><XCircle className="w-5 h-5"/></button>
+                  </div>
+                  <div className="p-6 space-y-5">
+                      <p className="text-sm text-slate-600">
+                          El sistema calculó <strong>{calculateDays(selectedReq.startDate, selectedReq.endDate)} días</strong> hábiles (excluyendo domingos). Puedes ajustar este valor si el turno de <strong>{selectedReq.employee?.firstName}</strong> es diferente.
+                      </p>
+                      <div>
+                          <label className="block text-sm font-bold text-slate-700 mb-1">Días a Descontar</label>
+                          <input 
+                              type="number" 
+                              step="0.5"
+                              min="0"
+                              value={overrideDays} 
+                              onChange={e => setOverrideDays(parseFloat(e.target.value) || 0)} 
+                              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 font-bold text-indigo-700" 
+                          />
+                      </div>
+                      <div className="pt-2 flex gap-3">
+                          <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setIsModalOpen(false)}>
+                              Cancelar
+                          </Button>
+                          <Button className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl" onClick={() => handleUpdateStatus(selectedReq.id, 'APPROVED', overrideDays)}>
+                              Confirmar
+                          </Button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      )}
     </div>
   );
 }
