@@ -376,7 +376,12 @@ export default function EmployeesPage() {
                      <List className="w-4 h-4" />
                  </button>
              </div>
-             <div className="flex border border-slate-200 rounded text-slate-400 bg-slate-50 items-center px-2 py-1.5 w-64 focus-within:border-slate-400 focus-within:bg-white transition-colors">
+             <div className="flex items-center gap-2">
+                 <select value={departmentFilter} onChange={e=>setDepartmentFilter(e.target.value)} className="bg-white border border-slate-200 rounded text-slate-600 px-3 py-1.5 text-sm font-bold focus:outline-none focus:border-blue-500 hidden sm:block">
+                    <option value="">Todos los Departamentos</option>
+                    {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                 </select>
+                 <div className="flex border border-slate-200 rounded text-slate-400 bg-slate-50 items-center px-2 py-1.5 w-64 focus-within:border-slate-400 focus-within:bg-white transition-colors">
                 <Search className="w-4 h-4 mr-2 ml-1" />
                 <input 
                     type="text" 
@@ -410,10 +415,6 @@ export default function EmployeesPage() {
                   <div key={emp.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all p-6 relative flex flex-col">
                      {/* Status Indicator */}
                      <div className={`absolute top-0 right-0 w-2 h-full ${emp.isActive ? 'bg-emerald-500' : 'bg-rose-500'} rounded-r-2xl`}></div>
-                     <div className="absolute top-4 right-5 flex items-center gap-1 bg-white/80 backdrop-blur rounded-lg">
-                        <button onClick={() => startEdit(emp)} className="p-1.5 text-slate-400 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors" title="Editar Empleado"><FileEdit className="w-4 h-4"/></button>
-                        <button onClick={() => handleDelete(emp.id)} className="p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 rounded-lg transition-colors" title="Dar de Baja"><Trash2 className="w-4 h-4"/></button>
-                     </div>
                      
                      <div className="flex items-start gap-4 mb-4 mt-2">
                         <Link href={`/employees/${emp.id}`} className="shrink-0 cursor-pointer">
@@ -600,6 +601,18 @@ export default function EmployeesPage() {
                                        <option value="">(Sin asignar)</option>
                                        {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                                     </select>
+                                 </div>
+                                 <div className="col-span-2 mt-1">
+                                    <label className="flex items-center cursor-pointer w-max">
+                                       <div className="relative">
+                                          <input type="checkbox" className="sr-only" checked={isActive} onChange={e => setIsActive(e.target.checked)} />
+                                          <div className={`block w-10 h-6 rounded-full transition-colors ${isActive ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
+                                          <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${isActive ? 'transform translate-x-4' : ''}`}></div>
+                                       </div>
+                                       <div className="ml-3 text-sm font-bold text-slate-700">
+                                          {isActive ? 'Empleado Activo (Con Acceso)' : 'Empleado en Baja (Sin Acceso)'}
+                                       </div>
+                                    </label>
                                  </div>
                                  <div className="col-span-2">
                                     <label className="text-xs font-bold text-slate-600 uppercase">Puesto Corporativo</label>
