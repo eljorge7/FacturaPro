@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Search, Plus, Save, Loader2, X, FileEdit, Trash2, ChevronDown, User, UserPlus, Phone, Mail, MapPin, Building2, Briefcase, FileText, Printer, ShieldCheck, Key, HeartPulse, Shirt, LayoutGrid, List, Download, Upload } from "lucide-react";
+import toast from "react-hot-toast";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
@@ -99,9 +100,10 @@ export default function EmployeesPage() {
             headers: { 'x-tenant-id': activeTenantId, 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error(await res.text());
+        toast.success("Empleado dado de baja.");
         fetchData();
     } catch (e: any) {
-        alert(`Error al eliminar: ${e.message}`);
+        toast.error(`Error al eliminar: ${e.message}`);
     }
   };
 
@@ -192,8 +194,8 @@ export default function EmployeesPage() {
   };
 
   const handleSave = async () => {
-    if (!firstName || !lastName) return alert('El nombre y apellido son obligatorios');
-    if (!isEditingId && giveAccess && (!email || !password)) return alert('Para dar acceso al sistema, el correo y contraseña son obligatorios.');
+    if (!firstName || !lastName) return toast.error('El nombre y apellido son obligatorios');
+    if (!isEditingId && giveAccess && (!email || !password)) return toast.error('Para dar acceso al sistema, el correo y la contraseña inicial son obligatorios.');
     setIsSaving(true);
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
@@ -232,6 +234,7 @@ export default function EmployeesPage() {
       const newEmp = await res.json();
       setIsModalOpen(false);
       resetForm();
+      toast.success(isEditingId ? "Cambios guardados con éxito" : "Empleado registrado correctamente");
       
       // If editing, refresh the table. If creating, go to dossier.
       if (isEditingId) {
@@ -242,7 +245,7 @@ export default function EmployeesPage() {
       
     } catch (e: any) {
       console.error(e);
-      alert(`Error al guardar: ${e.message}`);
+      toast.error(`Error al guardar: ${e.message}`);
     } finally {
       setIsSaving(false);
     }
