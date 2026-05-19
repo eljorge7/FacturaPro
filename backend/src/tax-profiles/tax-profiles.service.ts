@@ -2,19 +2,44 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { CreateTaxProfileDto } from './dto/create-tax-profile.dto';
 import { UpdateTaxProfileDto } from './dto/update-tax-profile.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { CryptoService } from '../crypto/crypto.service';
 
 @Injectable()
 export class TaxProfilesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private crypto: CryptoService,
+  ) {}
+
+  private decryptProfile(profile: any) {
+    if (!profile) return profile;
+    return {
+      ...profile,
+      cerBase64: this.crypto.decrypt(profile.cerBase64),
+      keyBase64: this.crypto.decrypt(profile.keyBase64),
+      keyPassword: this.crypto.decrypt(profile.keyPassword),
+      fielCerBase64: this.crypto.decrypt(profile.fielCerBase64),
+      fielKeyBase64: this.crypto.decrypt(profile.fielKeyBase64),
+      fielPassword: this.crypto.decrypt(profile.fielPassword),
+    };
+  }
 
   async create(createTaxProfileDto: CreateTaxProfileDto) {
-    return this.prisma.taxProfile.create({
-      data: createTaxProfileDto,
-    });
+    const data = { ...createTaxProfileDto } as any;
+    if (data.cerBase64) data.cerBase64 = this.crypto.encrypt(data.cerBase64);
+    if (data.keyBase64) data.keyBase64 = this.crypto.encrypt(data.keyBase64);
+    if (data.keyPassword) data.keyPassword = this.crypto.encrypt(data.keyPassword);
+    if (data.fielCerBase64) data.fielCerBase64 = this.crypto.encrypt(data.fielCerBase64);
+    if (data.fielKeyBase64) data.fielKeyBase64 = this.crypto.encrypt(data.fielKeyBase64);
+    if (data.fielPassword) data.fielPassword = this.crypto.encrypt(data.fielPassword);
+    
+    const created = await this.prisma.taxProfile.create({ data });
+    return this.decryptProfile(created);
   }
 
   async findAll() {
-    return this.prisma.taxProfile.findMany();
+    const profiles = await this.prisma.taxProfile.findMany();
+    return profiles.map(p => this.decryptProfile(p));
   }
 
   async findOne(id: string) {
@@ -22,7 +47,7 @@ export class TaxProfilesService {
       where: { id },
     });
     if (!profile) throw new NotFoundException('Tax Profile not found');
-    return profile;
+    return this.decryptProfile(profile);
   }
 
   async findMine(tenantId: string) {
@@ -48,7 +73,7 @@ export class TaxProfilesService {
            throw new NotFoundException('El sistema no está inicializado con un Tenant válido.');
        }
     }
-    return profile;
+    return this.decryptProfile(profile);
   }
 
   async update(id: string, updateTaxProfileDto: any) {
@@ -103,10 +128,18 @@ export class TaxProfilesService {
        (dataToUpdate as any).logoUrl = logoUrl;
     }
 
-    return this.prisma.taxProfile.update({
+    if (dataToUpdate.cerBase64) dataToUpdate.cerBase64 = this.crypto.encrypt(dataToUpdate.cerBase64);
+    if (dataToUpdate.keyBase64) dataToUpdate.keyBase64 = this.crypto.encrypt(dataToUpdate.keyBase64);
+    if (dataToUpdate.keyPassword) dataToUpdate.keyPassword = this.crypto.encrypt(dataToUpdate.keyPassword);
+    if (dataToUpdate.fielCerBase64) dataToUpdate.fielCerBase64 = this.crypto.encrypt(dataToUpdate.fielCerBase64);
+    if (dataToUpdate.fielKeyBase64) dataToUpdate.fielKeyBase64 = this.crypto.encrypt(dataToUpdate.fielKeyBase64);
+    if (dataToUpdate.fielPassword) dataToUpdate.fielPassword = this.crypto.encrypt(dataToUpdate.fielPassword);
+
+    const updated = await this.prisma.taxProfile.update({
       where: { id },
       data: dataToUpdate,
     });
+    return this.decryptProfile(updated);
   }
 
   async remove(id: string) {
