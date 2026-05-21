@@ -70,6 +70,7 @@ export declare class PosController {
         cfdiUse: string | null;
         subtotal: number;
         taxTotal: number;
+        tdsTotal: number;
         total: number;
         currency: string;
         exchangeRate: number;

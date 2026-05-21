@@ -35,6 +35,8 @@ export declare class PurchasesController {
                 currency: string;
                 satProductCode: string | null;
                 satUnitCode: string | null;
+                isPublishedToStore: boolean;
+                storeCategory: string | null;
                 taxIncluded: boolean;
                 taxRate: number;
                 createdAt: Date;

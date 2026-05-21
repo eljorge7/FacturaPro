@@ -66,6 +66,7 @@ model Tenant {
   warehouses           Warehouse[]
   transferOrders       TransferOrder[]
   stockTakes           StockTake[]
+  proposalTemplates    ProposalTemplate[]
 }
 
 // ----------------------------------------------------
@@ -275,6 +276,9 @@ model Product {
   satProductCode String? // Clave ProdServ SAT (ej. 81111509)
   satUnitCode    String? // Clave Unidad SAT (ej. E48, H87)
 
+  isPublishedToStore Boolean @default(false) // Publicar en Tienda Online RentControl
+  storeCategory      String? // Categoría para mostrar en la tienda
+
   taxIncluded Boolean @default(false)
   taxRate     Float   @default(0.16) // IVA
 
@@ -354,9 +358,22 @@ model Quote {
 
   subtotal Float
   taxTotal Float
+  tdsTotal Float @default(0)
   total    Float
 
   currency String @default("MXN")
+
+  // --- CAMPOS PARA PROPUESTAS COMERCIALES ---
+  isProposal      Boolean @default(false)
+  projectName     String?
+  projectScope    String? @db.Text
+  projectNotes    String? @db.Text
+  coordinates     String?
+  personnel       String? @db.Text
+  materials       String? @db.Text
+  coverImageUrl   String?
+  templateId      String?
+  // ------------------------------------------
 
   notes  String?
   status String  @default("DRAFT") // DRAFT, SENT, ACCEPTED, DECLINED, INVOICED
@@ -364,8 +381,9 @@ model Quote {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  items    QuoteItem[]
-  invoices Invoice[] // Relación: 1 cotización puede generar 1 o varias facturas
+  items       QuoteItem[]
+  attachments QuoteAttachment[]
+  invoices    Invoice[] // Relación: 1 cotización puede generar 1 o varias facturas
 }
 
 model QuoteItem {
@@ -382,6 +400,26 @@ model QuoteItem {
   discount    Float  @default(0)
   taxRate     Float  @default(0.16)
   total       Float
+}
+
+model QuoteAttachment {
+  id        String   @id @default(uuid())
+  quoteId   String
+  quote     Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  fileName  String
+  fileUrl   String
+  fileSize  Int?     // bytes
+  createdAt DateTime @default(now())
+}
+
+model InvoiceAttachment {
+  id        String   @id @default(uuid())
+  invoiceId String
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  fileName  String
+  fileUrl   String
+  fileSize  Int?     // bytes
+  createdAt DateTime @default(now())
 }
 
 model Invoice {
@@ -409,6 +447,7 @@ model Invoice {
 
   subtotal Float
   taxTotal Float
+  tdsTotal Float @default(0)
   total    Float
 
   currency     String @default("MXN")
@@ -427,8 +466,9 @@ model Invoice {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  items    InvoiceItem[]
-  payments Payment[]
+  items       InvoiceItem[]
+  payments    Payment[]
+  attachments InvoiceAttachment[]
 }
 
 model Payment {
@@ -1032,3 +1072,26 @@ model TimeOffRequest {
   updatedAt   DateTime @updatedAt
 }
 
+
+
+// ----------------------------------------------------
+// PROPUESTAS COMERCIALES Y PLANTILLAS
+// ----------------------------------------------------
+
+model ProposalTemplate {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  
+  name        String
+  description String?
+  
+  defaultScope    String? @db.Text
+  defaultNotes    String? @db.Text
+  defaultPersonnel String? @db.Text
+  defaultMaterials String? @db.Text
+  coverImageUrl   String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

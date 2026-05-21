@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { Search, FileText, Download, XCircle, Loader2, Plus, Mail, Share2, Printer, MoreHorizontal, ChevronDown, FileEdit, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function QuotesPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [quotes, setQuotes] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedQuote, setSelectedQuote] = useState<any | null>(null);
@@ -14,6 +15,7 @@ export default function QuotesPage() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [dashboardStats, setDashboardStats] = useState<any>(null);
   
   // Template Modal
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
@@ -28,9 +30,29 @@ export default function QuotesPage() {
   const fetchQuotes = async () => {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
+      const tenantId = typeof window !== 'undefined' ? localStorage.getItem('tenantId') || 'demo-tenant' : 'demo-tenant';
+      
       const res = await fetch(`${baseUrl}/quotes`);
       const data = await res.json();
-      setQuotes(data);
+      
+      const statsRes = await fetch(`${baseUrl}/quotes/stats/dashboard`, {
+        headers: { 'x-tenant-id': tenantId }
+      });
+      if (statsRes.ok) {
+        setDashboardStats(await statsRes.json());
+      }
+
+      const targetId = searchParams.get('targetId');
+      if (Array.isArray(data)) {
+        setQuotes(data);
+        if (targetId && data.length > 0) {
+           const target = data.find((inv: any) => inv.id === targetId);
+           if (target) setSelectedQuote(target);
+        }
+      } else {
+        console.warn("Backend error or non-array response:", data);
+        setQuotes([]);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -69,6 +91,42 @@ export default function QuotesPage() {
       if(selectedQuote && selectedQuote.id === id) setSelectedQuote({...selectedQuote, status: newStatus});
     } catch (e) {
       console.error('Error updating status', e);
+    }
+  };
+
+  const handleConvertToInvoice = async (id: string) => {
+    try {
+      alert("Convirtiendo a factura...");
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
+      const res = await fetch(`${baseUrl}/quotes/${id}/convert-to-invoice`, {
+         method: "POST"
+      });
+      if (!res.ok) throw new Error("Error en conversión");
+      alert("¡Factura creada exitosamente! 🚀");
+      fetchQuotes();
+      setSelectedQuote(null);
+    } catch (e) {
+      console.error(e);
+      alert("Hubo un error al convertir la cotización.");
+    }
+  };
+
+  const handleUploadAttachment = async (id: string, file: File) => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const res = await fetch(`${baseUrl}/quotes/${id}/attachments`, {
+         method: "POST",
+         body: formData
+      });
+      if (!res.ok) throw new Error("Error al subir anexo");
+      alert("¡Archivo subido exitosamente! 🚀");
+      fetchQuotes();
+    } catch (e) {
+      console.error(e);
+      alert("Error al subir el archivo.");
     }
   };
 
@@ -115,7 +173,11 @@ export default function QuotesPage() {
   const handleDownload = async (id: string, quoteNum: string) => {
      try {
        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
-       const res = await fetch(`${baseUrl}/quotes/${id}/pdf`, { method: 'GET' });
+       const tenantId = typeof window !== 'undefined' ? localStorage.getItem('tenantId') || 'demo-tenant' : 'demo-tenant';
+       const res = await fetch(`${baseUrl}/quotes/${id}/pdf`, { 
+          method: 'GET',
+          headers: { 'x-tenant-id': tenantId }
+       });
        if (!res.ok) throw new Error("Error al consultar el documento fiscal.");
        
        const blob = await res.blob();
@@ -130,6 +192,26 @@ export default function QuotesPage() {
        console.error("Error al descargar:", e);
        alert("Ocurrió un error al generar pdf.");
      }
+  };
+
+  const handleSendEmail = async (id: string) => {
+    try {
+      alert("Enviando correo...");
+      const tenantId = typeof window !== 'undefined' ? localStorage.getItem('tenantId') || 'demo-tenant' : 'demo-tenant';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
+      const response = await fetch(`${baseUrl}/quotes/${id}/send`, {
+        method: 'POST',
+        headers: {
+          'x-tenant-id': tenantId
+        }
+      });
+      if (!response.ok) throw new Error('Error al enviar correo');
+      alert("¡Correo enviado exitosamente! 🚀");
+      fetchQuotes(); // refresh status
+    } catch (error) {
+      console.error('Send email error:', error);
+      alert('Error al enviar el correo. Verifica que el cliente tenga un email registrado.');
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -158,30 +240,40 @@ export default function QuotesPage() {
         {/* Resumen Banner Zoho Style */}
         <div className="bg-white border-b border-slate-200">
            <div className="px-6 py-4 flex items-center justify-between border-b border-slate-100">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Resumen de Estimaciones</span>
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Dashboard de Ventas en Vivo</span>
            </div>
            
            <div className="grid grid-cols-4 px-6 py-4 items-center">
               <div className="border-r border-slate-100 pr-4">
-                 <div className="flex gap-2 items-center">
-                    <div className="bg-blue-400 p-2 rounded-full"><FileEdit className="w-4 h-4 text-white" /></div>
+                 <div className="flex gap-3 items-center">
+                    <div className="bg-blue-100 p-3 rounded-xl"><FileEdit className="w-5 h-5 text-[#2563eb]" /></div>
                     <div>
-                       <p className="text-xs text-slate-500">Estimaciones Pendientes</p>
-                       <p className="text-xl font-bold text-blue-600">MXN{totals.pendientes.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                       <p className="text-xs text-slate-500 font-medium">Cotizado (Total Enviado)</p>
+                       <p className="text-2xl font-bold text-slate-800">MXN {dashboardStats?.totalSent?.toLocaleString(undefined, {minimumFractionDigits: 2}) || '0.00'}</p>
                     </div>
                  </div>
               </div>
               <div className="border-r border-slate-100 px-4">
-                 <p className="text-xs text-slate-500">Estimaciones Aceptadas</p>
-                 <p className="text-xl font-bold text-[#10b981]">MXN{totals.aceptados.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                 <div className="flex gap-3 items-center">
+                    <div className="bg-emerald-100 p-3 rounded-xl"><CheckCircle2 className="w-5 h-5 text-[#10b981]" /></div>
+                    <div>
+                       <p className="text-xs text-slate-500 font-medium">Ganado (Aceptado/Facturado)</p>
+                       <p className="text-2xl font-bold text-[#10b981]">MXN {dashboardStats?.totalWon?.toLocaleString(undefined, {minimumFractionDigits: 2}) || '0.00'}</p>
+                    </div>
+                 </div>
               </div>
               <div className="border-r border-slate-100 px-4">
-                 <p className="text-xs text-slate-500">Estimaciones Rechazadas</p>
-                 <p className="text-xl font-bold text-red-500">MXN{totals.rechazados.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                 <div className="flex gap-3 items-center">
+                    <div className="bg-purple-100 p-3 rounded-xl"><FileText className="w-5 h-5 text-purple-600" /></div>
+                    <div>
+                       <p className="text-xs text-slate-500 font-medium">Tasa de Cierre (Conversión)</p>
+                       <p className="text-2xl font-bold text-purple-600">{dashboardStats?.conversionRate || 0}%</p>
+                    </div>
+                 </div>
               </div>
               <div className="pl-4">
-                 <p className="text-xs text-slate-500">Cotizaciones Creadas</p>
-                 <p className="text-xl font-bold text-slate-800">{quotes.length}</p>
+                 <p className="text-xs text-slate-500 font-medium">Total de Documentos</p>
+                 <p className="text-2xl font-bold text-slate-800">{quotes.length}</p>
               </div>
            </div>
         </div>
@@ -333,10 +425,15 @@ export default function QuotesPage() {
                  {/* Action Bar */}
                  <div className="bg-white rounded-md shadow-sm border border-slate-200 px-4 py-2.5 flex items-center justify-between text-sm font-medium text-slate-600 overflow-x-auto gap-2">
                     <div className="flex items-center gap-1">
-                       <button className="flex items-center gap-1.5 hover:bg-slate-100 px-3 py-1.5 rounded transition-colors whitespace-nowrap"><FileEdit className="w-4 h-4 text-slate-500"/> Editar</button>
-                       <button className="flex items-center gap-1.5 hover:bg-slate-100 px-3 py-1.5 rounded transition-colors whitespace-nowrap"><Mail className="w-4 h-4 text-slate-500"/> Correos <ChevronDown className="w-3 h-3"/></button>
-                       <button className="flex items-center gap-1.5 hover:bg-slate-100 px-3 py-1.5 rounded transition-colors whitespace-nowrap"><Share2 className="w-4 h-4 text-slate-500"/> Compartir</button>
+                       <button onClick={() => router.push(`/quotes/new?editId=${selectedQuote.id}`)} className="flex items-center gap-1.5 hover:bg-slate-100 px-3 py-1.5 rounded transition-colors whitespace-nowrap"><FileEdit className="w-4 h-4 text-slate-500"/> Editar</button>
+                       <button onClick={() => handleSendEmail(selectedQuote.id)} className="flex items-center gap-1.5 hover:bg-slate-100 px-3 py-1.5 rounded transition-colors whitespace-nowrap"><Mail className="w-4 h-4 text-slate-500"/> Correos <ChevronDown className="w-3 h-3"/></button>
+                       <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/quotes/${selectedQuote.id}/proposal`); alert("¡Enlace de propuesta copiado al portapapeles! Listo para enviarse por WhatsApp."); }} className="flex items-center gap-1.5 hover:bg-slate-100 px-3 py-1.5 rounded transition-colors whitespace-nowrap"><Share2 className="w-4 h-4 text-slate-500"/> Compartir</button>
                        <button onClick={() => handleDownload(selectedQuote.id, selectedQuote.quoteNumber)} className="flex items-center gap-1.5 hover:bg-slate-100 px-3 py-1.5 rounded transition-colors whitespace-nowrap"><Printer className="w-4 h-4 text-slate-500"/> PDF/Imprimir <ChevronDown className="w-3 h-3"/></button>
+                       {selectedQuote?.isProposal && (
+                          <Link href={`/quotes/${selectedQuote.id}/proposal`} target="_blank" className="flex items-center gap-1.5 text-amber-600 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded transition-colors whitespace-nowrap font-bold">
+                             <FileText className="w-4 h-4" /> Propuesta Web
+                          </Link>
+                       )}
                        <span className="w-px h-5 bg-slate-200 mx-2"></span>
                        
                        <div className="flex items-center gap-2">
@@ -357,7 +454,7 @@ export default function QuotesPage() {
 
                     <div className="flex gap-2 items-center">
                        <button className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded transition-colors font-medium">Crear proyecto</button>
-                       <button onClick={() => router.push('/invoices/new?quoteId=' + selectedQuote.id)} className="bg-[#10b981] hover:bg-[#059669] text-white px-4 py-1.5 rounded transition-colors font-medium flex items-center gap-2">Convertir en factura <ChevronDown className="w-3 h-3"/></button>
+                       <button onClick={() => handleConvertToInvoice(selectedQuote.id)} className="bg-[#10b981] hover:bg-[#059669] text-white px-4 py-1.5 rounded transition-colors font-medium flex items-center gap-2">Convertir en factura <ChevronDown className="w-3 h-3"/></button>
                        <button className="p-1 hover:bg-slate-100 border border-transparent rounded"><MoreHorizontal className="w-5 h-5 text-slate-400"/></button>
                     </div>
                  </div>
@@ -371,7 +468,7 @@ export default function QuotesPage() {
                              ¿CÓMO CONTINUAR? Cree una factura para esta estimación para confirmar la venta y facturar a su cliente.
                           </p>
                           <div className="flex gap-2">
-                             <button onClick={() => router.push('/invoices/new?quoteId=' + selectedQuote.id)} className="bg-[#10b981] text-white hover:bg-[#059669] font-bold px-3 py-1 text-xs rounded shadow-sm">Convertir en factura</button>
+                             <button onClick={() => handleConvertToInvoice(selectedQuote.id)} className="bg-[#10b981] text-white hover:bg-[#059669] font-bold px-3 py-1 text-xs rounded shadow-sm">Convertir en factura</button>
                              <button className="bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 font-bold px-3 py-1 text-xs rounded shadow-sm">Crear proyecto</button>
                           </div>
                        </div>
@@ -519,6 +616,37 @@ export default function QuotesPage() {
                     </div>
                     <button onClick={() => setIsTemplateModalOpen(true)} className="text-[#2563eb] hover:underline font-bold">Cambiar</button>
                  </div>
+
+                 {/* Attachments Upload Banner */}
+                 <div className="max-w-4xl mx-auto bg-white shadow-sm border border-slate-200 p-4 mt-6 flex justify-between items-center rounded-t text-sm text-slate-700">
+                    <div className="flex items-center gap-2">
+                       <span className="font-bold">Anexos y Archivos PDF ({selectedQuote.attachments?.length || 0}):</span>
+                       <span className="text-slate-500">Documentos que acompañan la propuesta web</span>
+                    </div>
+                    <div>
+                       <input 
+                         type="file" 
+                         id="file-upload" 
+                         className="hidden" 
+                         accept="application/pdf"
+                         onChange={(e) => {
+                           if(e.target.files && e.target.files[0]) handleUploadAttachment(selectedQuote.id, e.target.files[0]);
+                         }} 
+                       />
+                       <label htmlFor="file-upload" className="cursor-pointer bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded font-bold transition-colors">
+                          + Subir PDF
+                       </label>
+                    </div>
+                 </div>
+                 {selectedQuote.attachments && selectedQuote.attachments.map((att: any) => (
+                   <div key={att.id} className="max-w-4xl mx-auto bg-white border border-t-0 border-slate-200 px-4 py-3 flex justify-between items-center text-xs">
+                     <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-red-500" />
+                        <span className="font-bold text-slate-700">{att.fileName}</span>
+                     </div>
+                     <span className="text-slate-400">{(att.fileSize/1024/1024).toFixed(2)} MB</span>
+                   </div>
+                 ))}
 
               </div>
            </div>

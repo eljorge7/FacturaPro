@@ -23,7 +23,7 @@ const ALL_WIDGETS = [
 
 export default function Dashboard() {
   const router = useRouter();
-  const { tenantId: activeTenantId } = useAuth();
+  const { tenantId: activeTenantId, user } = useAuth();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");

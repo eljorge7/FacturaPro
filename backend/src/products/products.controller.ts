@@ -21,6 +21,11 @@ export class ProductsController {
     return this.productsService.findAll(tenantId);
   }
 
+  @Get('store/published')
+  getPublishedStoreProducts() {
+    return this.productsService.getPublishedStoreProducts();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.productsService.findOne(id);

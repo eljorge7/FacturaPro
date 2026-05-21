@@ -11,6 +11,8 @@ export declare class AuthController {
         email: string;
         avatar: any;
         birthDate: any;
+        role: string;
+        customRoleId: string | null;
         tradeName: string | null;
         phone: string | null;
     }>;
@@ -43,6 +45,8 @@ export declare class AuthController {
             name: string;
             email: string;
             avatar: string | null;
+            role: string;
+            customRoleId: string | null;
         };
     }>;
     sso(body: any, res: Response): Promise<{
@@ -53,6 +57,8 @@ export declare class AuthController {
             name: string;
             email: string;
             avatar: any;
+            role: string;
+            customRoleId: string | null;
         };
     }>;
     getMemberships(auth: string): Promise<{

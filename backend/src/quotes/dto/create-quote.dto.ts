@@ -44,6 +44,41 @@ export class CreateQuoteDto {
   @IsOptional()
   taxIncluded?: boolean;
 
+  @IsOptional()
+  isProposal?: boolean;
+
+  @IsString()
+  @IsOptional()
+  projectName?: string;
+
+  @IsString()
+  @IsOptional()
+  projectScope?: string;
+
+  @IsString()
+  @IsOptional()
+  projectNotes?: string;
+
+  @IsString()
+  @IsOptional()
+  coordinates?: string;
+
+  @IsString()
+  @IsOptional()
+  personnel?: string;
+
+  @IsString()
+  @IsOptional()
+  materials?: string;
+
+  @IsString()
+  @IsOptional()
+  coverImageUrl?: string;
+
+  @IsString()
+  @IsOptional()
+  templateId?: string;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => QuoteItemDto)

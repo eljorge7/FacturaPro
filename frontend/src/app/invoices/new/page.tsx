@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, Plus, X, Save, Loader2, Info, Search, FileText, ChevronDown, PlusCircle, PanelRight, MessageCircle, FileEdit, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, X, Save, Loader2, Info, Search, FileText, ChevronDown, PlusCircle, PanelRight, MessageCircle, FileEdit, Trash2, Globe } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
@@ -37,8 +37,32 @@ export default function NewInvoicePage() {
   const [pendingSaveParams, setPendingSaveParams] = useState<boolean | null>(null);
   const [isCatalogModalOpen, setIsCatalogModalOpen] = useState(false);
 
+  // Syscom Integration States
+  const [isSyscomModalOpen, setIsSyscomModalOpen] = useState(false);
+  const [syscomSearch, setSyscomSearch] = useState("");
+  const [syscomResults, setSyscomResults] = useState<any[]>([]);
+  const [isSearchingSyscom, setIsSearchingSyscom] = useState(false);
+
+  // Auto-save Draft
   useEffect(() => {
-    fetchCatalogs();
+     const draft = localStorage.getItem('facturapro_draft_invoice');
+     if (draft) {
+        try {
+           const d = JSON.parse(draft);
+           if (d.items && d.items.length > 0) setItems(d.items);
+           if (d.customerId) setCustomerId(d.customerId);
+        } catch(e){}
+     }
+  }, []);
+
+  useEffect(() => {
+     if (items.length > 0 && items[0].description) {
+        localStorage.setItem('facturapro_draft_invoice', JSON.stringify({ items, customerId }));
+     }
+  }, [items, customerId]);
+
+  useEffect(() => {
+     fetchCatalogs();
   }, []);
 
   useEffect(() => {
@@ -96,6 +120,27 @@ export default function NewInvoicePage() {
     }
   };
 
+  const fetchSyscom = async () => {
+    if (!syscomSearch.trim()) return;
+    setIsSearchingSyscom(true);
+    try {
+      const res = await fetch(`http://localhost:3001/store/products?search=${encodeURIComponent(syscomSearch)}`);
+      const data = await res.json();
+      setSyscomResults(data.products.slice(0, 8)); // Top 8 results
+    } catch (e) {
+      console.error("Syscom API Error:", e);
+    } finally {
+      setIsSearchingSyscom(false);
+    }
+  };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchSyscom();
+    }, 600);
+    return () => clearTimeout(delayDebounceFn);
+  }, [syscomSearch]);
+
   const handleProductSelect = (index: number, productId: string) => {
     const product = products.find(p => p.id === productId);
     const newItems = [...items];
@@ -136,7 +181,12 @@ export default function NewInvoicePage() {
       }
     });
 
-    return { subtotal, taxes, total: subtotal + taxes };
+    let tds = 0;
+    if (selectedCustomerObj?.tdsEnabled) {
+       tds = subtotal * 0.0125;
+    }
+
+    return { subtotal, taxes, tds, total: subtotal + taxes - tds };
   };
 
   const triggerSave = (send: boolean) => {
@@ -223,6 +273,9 @@ export default function NewInvoicePage() {
          }).catch(e => console.error("Error updating quote status:", e));
       }
 
+      // Clear draft on successful save
+      localStorage.removeItem('facturapro_draft_invoice');
+
       router.push('/invoices');
     } catch (e: any) {
       console.error(e);
@@ -231,7 +284,6 @@ export default function NewInvoicePage() {
     }
   };
 
-  const totals = calculateTotals();
 
   // Cliente Modal y Detalles
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
@@ -264,6 +316,7 @@ export default function NewInvoicePage() {
          });
          // tdsEnabled mapped manually
          cleanPayload.tdsEnabled = newCustomerData.enableTds;
+         cleanPayload.taxRegime = (newCustomerData.taxRegime || '601').substring(0, 3);
 
          const res = await fetch(`${baseUrl}/customers`, {
             method: 'POST',
@@ -276,7 +329,7 @@ export default function NewInvoicePage() {
             setCustomers([...customers, customer]);
             setCustomerId(customer.id);
             setIsCustomerModalOpen(false);
-            setNewCustomerData({ legalName: "", rfc: "", taxRegime: "601", zipCode: "", email: "", phone: "", currency: "MXN", vatTreatment: "within_mexico", enableTds: false });
+            setNewCustomerData({ legalName: "", rfc: "", taxRegime: "", zipCode: "", email: "", phone: "", currency: "MXN", vatTreatment: "within_mexico", enableTds: false });
          } else {
             const errData = await res.text();
             alert(`Error del Servidor al crear cliente:\n${errData}`);
@@ -290,6 +343,7 @@ export default function NewInvoicePage() {
   };
 
   const selectedCustomerObj = customers.find(c => c.id === customerId);
+  const totals = calculateTotals();
 
   // Derivar opciones permitidas de Uso de CFDI basado en régimen fiscal del cliente seleccionado
   const getAllowedCfdiUses = () => {
@@ -601,12 +655,15 @@ export default function NewInvoicePage() {
                   <div className="flex gap-2">
                      <button 
                         onClick={() => setItems([...items, { productId: "", description: "", quantity: 1, unitPrice: 0, taxRate: 0.16, discount: 0 }])}
-                        className="flex items-center gap-1 text-sm bg-[#f1f5f9] text-[#2563eb] hover:bg-[#e2e8f0] font-medium px-4 py-2 rounded transition-colors"
+                        className="flex items-center gap-1 text-sm bg-[#fcf5ff] text-[#a855f7] hover:bg-[#f3e8ff] font-medium px-4 py-2 rounded transition-colors"
                      >
-                        <Plus className="w-4 h-4 bg-[#2563eb] text-white rounded-full p-0.5" /> Añadir nueva fila
+                        <Plus className="w-4 h-4 text-[#a855f7]" /> Añadir nueva fila
                      </button>
-                     <button className="flex items-center gap-1 text-sm bg-[#f1f5f9] text-[#2563eb] hover:bg-[#e2e8f0] font-medium px-4 py-2 rounded transition-colors hidden sm:flex">
-                        <Plus className="w-4 h-4 bg-[#2563eb] text-white rounded-full p-0.5" /> Agregar artículos a granel
+                     <button 
+                        onClick={() => setIsSyscomModalOpen(true)}
+                        className="flex items-center gap-1 text-sm bg-white border border-[#d8b4fe] text-[#9333ea] hover:bg-[#faf5ff] font-medium px-4 py-2 rounded transition-colors"
+                     >
+                        <Search className="w-4 h-4" /> Buscar en Syscom
                      </button>
                   </div>
 
@@ -626,7 +683,7 @@ export default function NewInvoicePage() {
                   </div>
                </div>
 
-               {/* Totales Flex - Zoho Style */}
+                {/* Totales Flex - Zoho Style */}
                <div className="flex justify-end mt-4">
                   <div className="w-full max-w-md bg-[#fafafa] rounded-lg p-6 space-y-4">
                      <div className="flex justify-between items-center bg-white p-3 rounded shadow-sm border border-slate-100">
@@ -637,6 +694,17 @@ export default function NewInvoicePage() {
                         <span>Impuesto</span>
                         <span>{totals.taxes.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                      </div>
+                     {selectedCustomerObj?.tdsEnabled && (
+                        <>
+                          <div className="flex justify-between items-center px-3 text-sm font-bold text-slate-700 mt-2">
+                             <span>Impuesto retenido en origen</span>
+                          </div>
+                          <div className="flex justify-between items-center px-3 text-sm text-slate-600">
+                             <span>Impuestos retenidos ISR [1.25%]</span>
+                             <span>-{totals.tds.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                          </div>
+                        </>
+                     )}
                      <div className="flex justify-between items-center px-3 text-lg font-bold">
                         <span className="text-slate-800">Total ( {currency} )</span>
                         <span className="text-slate-900 font-mono tracking-tight text-xl">{totals.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
@@ -734,13 +802,34 @@ export default function NewInvoicePage() {
                      </div>
                      <div>
                         <label className="text-xs font-bold text-red-500 uppercase">Régimen Fiscal*</label>
-                        <select value={newCustomerData.taxRegime} onChange={e=>setNewCustomerData({...newCustomerData, taxRegime: e.target.value})} className="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#10b981]">
+                        <input 
+                           list="miniTaxRegimes"
+                           value={(newCustomerData.taxRegime || '601').substring(0, 3)} 
+                           onChange={e=>setNewCustomerData({...newCustomerData, taxRegime: e.target.value})} 
+                           placeholder="Ej. 601"
+                           className="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#10b981]" 
+                        />
+                        <datalist id="miniTaxRegimes">
                            <option value="601">601 - General de Ley Personas Morales</option>
-                           <option value="605">605 - Sueldos y Salarios e Ingresos Asimilados</option>
-                           <option value="612">612 - Personas Físicas con Actividades Emp.</option>
+                           <option value="603">603 - Personas Morales con Fines no Lucrativos</option>
+                           <option value="605">605 - Sueldos y Salarios e Ingresos Asimilados a Salarios</option>
+                           <option value="606">606 - Arrendamiento</option>
+                           <option value="608">608 - Demás ingresos</option>
+                           <option value="609">609 - Consolidación</option>
+                           <option value="610">610 - Residentes en el Extranjero sin Establecimiento Permanente en México</option>
+                           <option value="611">611 - Ingresos por Dividendos (socios y accionistas)</option>
+                           <option value="612">612 - Personas Físicas con Actividades Empresariales y Profesionales</option>
+                           <option value="614">614 - Ingresos por intereses</option>
+                           <option value="615">615 - Régimen de los ingresos por obtención de premios</option>
                            <option value="616">616 - Sin obligaciones fiscales</option>
+                           <option value="620">620 - Sociedades Cooperativas de Producción que optan por diferir sus ingresos</option>
+                           <option value="621">621 - Incorporación Fiscal</option>
+                           <option value="622">622 - Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras</option>
+                           <option value="623">623 - Opcional para Grupos de Sociedades</option>
+                           <option value="624">624 - Coordinados</option>
+                           <option value="625">625 - Régimen de las Actividades Empresariales con ingresos a través de Plataformas Tecnológicas</option>
                            <option value="626">626 - Régimen Simplificado de Confianza (RESICO)</option>
-                        </select>
+                        </datalist>
                      </div>
                      <div>
                         <label className="text-xs font-bold text-red-500 uppercase">Código Postal*</label>
@@ -964,6 +1053,102 @@ export default function NewInvoicePage() {
                )}
             </div>
          </div>
+      )}
+
+      {/* SYSCOM SEARCH MODAL */}
+      {isSyscomModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col h-[80vh]">
+            <div className="px-6 py-4 border-b border-purple-100 flex items-center justify-between bg-purple-50">
+               <div>
+                  <h3 className="text-lg font-bold text-purple-900 flex items-center gap-2">
+                     <Search className="w-5 h-5 text-purple-600" /> 
+                     Búsqueda en Red Global Syscom
+                  </h3>
+                  <p className="text-xs text-purple-600 mt-1">Agrega productos directamente a tu cotización sin darlos de alta.</p>
+               </div>
+               <button onClick={() => setIsSyscomModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                  <X className="w-5 h-5"/>
+               </button>
+            </div>
+            
+            <div className="p-6 border-b border-slate-100 relative">
+               <Search className="w-5 h-5 absolute left-9 top-1/2 -translate-y-1/2 text-slate-400" />
+               <input 
+                  type="text" 
+                  autoFocus
+                  placeholder="Ej. SXTsq Lite5, DS-2CE72..." 
+                  value={syscomSearch}
+                  onChange={e => setSyscomSearch(e.target.value)}
+                  className="w-full border-2 border-purple-200 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-purple-500 font-medium text-slate-800" 
+               />
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 bg-slate-50">
+               {isSearchingSyscom ? (
+                  <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-3">
+                     <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+                     <p className="text-sm font-medium">Buscando en inventarios Syscom...</p>
+                  </div>
+               ) : syscomResults.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-3">
+                     {syscomResults.map((p, idx) => (
+                        <div key={idx} className="bg-white border border-slate-200 rounded-xl p-4 flex gap-4 hover:border-purple-300 transition-colors group">
+                           <div className="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center shrink-0 overflow-hidden">
+                              {p.imageUrl ? <img src={p.imageUrl} className="w-full h-full object-cover" /> : <Search className="w-6 h-6 text-slate-300" />}
+                           </div>
+                           <div className="flex-1">
+                              <h4 className="font-bold text-slate-800 text-sm group-hover:text-purple-700">{p.title}</h4>
+                              <p className="text-xs text-slate-500 mt-1 font-mono">{p.model} | {p.brand}</p>
+                              <p className="text-[#10b981] font-bold text-sm mt-1">${parseFloat(p.price).toLocaleString()} <span className="text-xs text-slate-400 font-medium line-through ml-1">${(parseFloat(p.price) * 1.3).toLocaleString()}</span></p>
+                           </div>
+                           <div className="flex items-center">
+                              <button 
+                                 onClick={() => {
+                                    const newItems = [...items];
+                                    const lastItem = newItems[newItems.length - 1];
+                                    const payload = {
+                                       productId: "",
+                                       description: p.title,
+                                       quantity: 1,
+                                       unitPrice: parseFloat(p.price),
+                                       taxRate: 0.16,
+                                       discount: 0
+                                    };
+
+                                    if (newItems.length === 1 && !lastItem.description && lastItem.unitPrice === 0) {
+                                       newItems[0] = payload;
+                                    } else {
+                                       newItems.push(payload);
+                                    }
+                                    
+                                    setItems(newItems);
+                                    setIsSyscomModalOpen(false);
+                                    setSyscomSearch("");
+                                    setSyscomResults([]);
+                                 }}
+                                 className="bg-purple-100 text-purple-700 hover:bg-purple-600 hover:text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
+                              >
+                                 Añadir
+                              </button>
+                           </div>
+                        </div>
+                     ))}
+                  </div>
+               ) : syscomSearch.length > 2 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                     <Search className="w-12 h-12 text-slate-200 mb-3" />
+                     <p>No se encontraron resultados en Syscom.</p>
+                  </div>
+               ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-slate-400 text-center px-10">
+                     <Globe className="w-12 h-12 text-slate-200 mb-3" />
+                     <p>Escribe el modelo o descripción del equipo que buscas.<br/>La búsqueda se hace en tiempo real.</p>
+                  </div>
+               )}
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

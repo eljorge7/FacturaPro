@@ -29,6 +29,8 @@ export declare class AuthService {
             name: string;
             email: string;
             avatar: string | null;
+            role: string;
+            customRoleId: string | null;
         };
     }>;
     sso(data: any): Promise<{
@@ -39,6 +41,8 @@ export declare class AuthService {
             name: string;
             email: string;
             avatar: any;
+            role: string;
+            customRoleId: string | null;
         };
     }>;
     getProfile(userId: string): Promise<{
@@ -47,6 +51,8 @@ export declare class AuthService {
         email: string;
         avatar: any;
         birthDate: any;
+        role: string;
+        customRoleId: string | null;
         tradeName: string | null;
         phone: string | null;
     }>;

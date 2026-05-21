@@ -85,7 +85,8 @@ export class InvoicesService {
       };
     });
 
-    const total = subtotal + taxTotal;
+    const tdsTotal = customer.tdsEnabled ? (subtotal * 0.0125) : 0;
+    const total = subtotal + taxTotal - tdsTotal;
     
     let invoiceNumber = createInvoiceDto.invoiceNumber;
     if (!invoiceNumber || invoiceNumber.trim() === '') {
@@ -116,6 +117,7 @@ export class InvoicesService {
       exchangeRate,
       subtotal,
       taxTotal,
+      tdsTotal,
       total,
       customer,
       items: invoiceItemsData
@@ -151,6 +153,7 @@ export class InvoicesService {
           exchangeRate: exchangeRate || 1.0,
           subtotal,
           taxTotal,
+          tdsTotal,
           total,
           xmlContent,
           cashShiftId: (createInvoiceDto as any).cashShiftId,
@@ -185,7 +188,7 @@ export class InvoicesService {
 
     return this.prisma.invoice.findMany({
       where: whereFilter,
-      include: { customer: true, items: true, taxProfile: true, payments: true },
+      include: { customer: true, items: true, taxProfile: true, payments: true, attachments: true },
       orderBy: { createdAt: 'desc' }
     });
   }
@@ -326,7 +329,8 @@ export class InvoicesService {
         items: true, 
         customer: true,
         taxProfile: true,
-        payments: true
+        payments: true,
+        attachments: true
       }
     });
     if (!inv) throw new NotFoundException('Factura no encontrada');
@@ -523,6 +527,24 @@ export class InvoicesService {
     } catch(e) {
         throw new BadRequestException('Fallo al conectar con el motor de envíos');
     }
+  }
+
+  async addAttachment(id: string, file: Express.Multer.File) {
+     const invoice = await this.findOne(id);
+     if (!invoice) throw new NotFoundException('Factura no encontrada');
+
+     const fileUrl = `/uploads/invoices/${file.filename}`;
+     
+     const attachment = await this.prisma.invoiceAttachment.create({
+        data: {
+           invoiceId: id,
+           fileName: file.originalname,
+           fileUrl: fileUrl,
+           fileSize: file.size
+        }
+     });
+     
+     return attachment;
   }
 
   async getArReport(tenantId: string) {

@@ -140,23 +140,25 @@ let AuthService = class AuthService {
     }
     async login(data) {
         const { email, password } = data;
-        const user = await this.prisma.user.findUnique({ where: { email } });
+        const cleanEmail = email ? email.trim().toLowerCase() : '';
+        const cleanPassword = password ? password.trim() : '';
+        const user = await this.prisma.user.findUnique({ where: { email: cleanEmail } });
         if (!user) {
-            throw new common_1.UnauthorizedException('Credenciales inválidas');
+            throw new common_1.UnauthorizedException('El correo no está registrado o fue escrito incorrectamente.');
         }
         if (user.passwordHash === 'SSO_MANAGED') {
             throw new common_1.UnauthorizedException('Esta cuenta está enlazada al Control Central. Inicia sesión desde tu portal de administración (RentControl/OmniChat).');
         }
-        const isMatch = await bcrypt.compare(password, user.passwordHash);
+        const isMatch = await bcrypt.compare(cleanPassword, user.passwordHash);
         if (!isMatch) {
-            throw new common_1.UnauthorizedException('Credenciales inválidas');
+            throw new common_1.UnauthorizedException('La contraseña es incorrecta.');
         }
         const payload = { userId: user.id, email: user.email, tenantId: user.tenantId };
         const token = this.jwtService.sign(payload);
         return {
             token,
             tenantId: user.tenantId,
-            user: { id: user.id, name: user.name, email: user.email, avatar: user.avatar }
+            user: { id: user.id, name: user.name, email: user.email, avatar: user.avatar, role: user.role, customRoleId: user.customRoleId }
         };
     }
     async sso(data) {
@@ -195,7 +197,7 @@ let AuthService = class AuthService {
         return {
             token,
             tenantId: user.tenantId,
-            user: { id: user.id, name: user.name, email: user.email, avatar: user.avatar }
+            user: { id: user.id, name: user.name, email: user.email, avatar: user.avatar, role: user.role, customRoleId: user.customRoleId }
         };
     }
     async getProfile(userId) {
@@ -211,6 +213,8 @@ let AuthService = class AuthService {
             email: user.email,
             avatar: user.avatar,
             birthDate: user.birthDate,
+            role: user.role,
+            customRoleId: user.customRoleId,
             tradeName: user.tenant?.tradeName,
             phone: user.tenant?.phone
         };

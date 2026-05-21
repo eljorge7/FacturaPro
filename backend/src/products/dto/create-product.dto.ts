@@ -69,5 +69,13 @@ export class CreateProductDto {
   type?: string;
 
   @IsOptional()
+  @IsBoolean()
+  isPublishedToStore?: boolean;
+
+  @IsOptional()
+  @IsString()
+  storeCategory?: string;
+
+  @IsOptional()
   kitComponents?: any[];
 }

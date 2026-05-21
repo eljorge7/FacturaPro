@@ -79,14 +79,16 @@ let EmployeesService = class EmployeesService {
         return this.prisma.$transaction(async (tx) => {
             let userId = null;
             if (data.createSystemAccess && data.email && data.password && data.role) {
-                const existingUser = await tx.user.findUnique({ where: { email: data.email } });
+                const cleanEmail = data.email.trim().toLowerCase();
+                const cleanPassword = data.password.trim();
+                const existingUser = await tx.user.findUnique({ where: { email: cleanEmail } });
                 if (existingUser)
                     throw new common_1.BadRequestException('El correo ya está en uso por otro usuario.');
-                const hash = await bcrypt.hash(data.password, 10);
+                const hash = await bcrypt.hash(cleanPassword, 10);
                 const newUser = await tx.user.create({
                     data: {
                         tenantId,
-                        email: data.email,
+                        email: cleanEmail,
                         passwordHash: hash,
                         name: `${data.firstName} ${data.lastName}`,
                         role: data.role === 'CUSTOM' ? 'CUSTOM' : data.role,
@@ -103,7 +105,7 @@ let EmployeesService = class EmployeesService {
                     firstName: data.firstName,
                     lastName: data.lastName,
                     phone: data.phone,
-                    email: data.email || null,
+                    email: data.email ? data.email.trim().toLowerCase() : null,
                     employeeNumber: data.employeeNumber,
                     departmentId: data.departmentId || null,
                     jobTitle: data.jobTitle,
@@ -122,26 +124,105 @@ let EmployeesService = class EmployeesService {
             });
         });
     }
+    async createBulk(tenantId, employeesData) {
+        return this.prisma.$transaction(async (tx) => {
+            const createdCount = { users: 0, profiles: 0 };
+            for (const data of employeesData) {
+                let userId = null;
+                if (data.createSystemAccess && data.email && data.password && data.role) {
+                    const existingUser = await tx.user.findUnique({ where: { email: data.email } });
+                    if (!existingUser) {
+                        const hash = await bcrypt.hash(data.password, 10);
+                        const newUser = await tx.user.create({
+                            data: {
+                                tenantId,
+                                email: data.email,
+                                passwordHash: hash,
+                                name: `${data.firstName} ${data.lastName}`,
+                                role: data.role === 'CUSTOM' ? 'CUSTOM' : data.role,
+                                customRoleId: data.role === 'CUSTOM' ? data.customRoleId : null,
+                                warehouseId: data.warehouseId || null
+                            }
+                        });
+                        userId = newUser.id;
+                        createdCount.users++;
+                    }
+                }
+                await tx.employeeProfile.create({
+                    data: {
+                        tenantId,
+                        userId,
+                        firstName: data.firstName,
+                        lastName: data.lastName,
+                        phone: data.phone ? String(data.phone) : null,
+                        email: data.email || null,
+                        employeeNumber: data.employeeNumber || null,
+                        departmentId: data.departmentId || null,
+                        jobTitle: data.jobTitle || null,
+                        employeeType: data.employeeType || 'DIRECT',
+                        rfc: data.rfc || null,
+                        nss: data.nss ? String(data.nss) : null,
+                        curp: data.curp || null,
+                        baseSalary: data.baseSalary ? parseFloat(data.baseSalary) : 0,
+                        hireDate: data.hireDate ? new Date(data.hireDate) : null,
+                        shirtSize: data.shirtSize || null,
+                        pantsSize: data.pantsSize || null,
+                        shoeSize: data.shoeSize || null,
+                        bloodType: data.bloodType || null,
+                        emergencyContact: data.emergencyContact || null
+                    }
+                });
+                createdCount.profiles++;
+            }
+            return createdCount;
+        });
+    }
     async update(tenantId, id, data) {
         const emp = await this.findOne(tenantId, id);
         return this.prisma.$transaction(async (tx) => {
+            let newUserId = emp.userId;
             if (emp.userId && data.role) {
+                const updateData = {
+                    role: data.role === 'CUSTOM' ? 'CUSTOM' : data.role,
+                    customRoleId: data.role === 'CUSTOM' ? data.customRoleId : null,
+                    warehouseId: data.warehouseId || null
+                };
+                if (data.password) {
+                    updateData.passwordHash = await bcrypt.hash(data.password.trim(), 10);
+                }
                 await tx.user.update({
                     where: { id: emp.userId },
+                    data: updateData
+                });
+            }
+            else if (!emp.userId && data.createSystemAccess && data.email && data.password && data.role) {
+                const cleanEmail = data.email.trim().toLowerCase();
+                const cleanPassword = data.password.trim();
+                const existingUser = await tx.user.findUnique({ where: { email: cleanEmail } });
+                if (existingUser)
+                    throw new common_1.BadRequestException('El correo ya está en uso por otro usuario.');
+                const hash = await bcrypt.hash(cleanPassword, 10);
+                const newUser = await tx.user.create({
                     data: {
+                        tenantId,
+                        email: cleanEmail,
+                        passwordHash: hash,
+                        name: `${data.firstName || emp.firstName} ${data.lastName || emp.lastName}`,
                         role: data.role === 'CUSTOM' ? 'CUSTOM' : data.role,
                         customRoleId: data.role === 'CUSTOM' ? data.customRoleId : null,
                         warehouseId: data.warehouseId || null
                     }
                 });
+                newUserId = newUser.id;
             }
             return tx.employeeProfile.update({
                 where: { id },
                 data: {
+                    userId: newUserId,
                     firstName: data.firstName,
                     lastName: data.lastName,
                     phone: data.phone,
-                    email: data.email !== undefined ? data.email : undefined,
+                    email: data.email ? data.email.trim().toLowerCase() : null,
                     employeeNumber: data.employeeNumber,
                     departmentId: data.departmentId || null,
                     jobTitle: data.jobTitle,
@@ -188,6 +269,55 @@ let EmployeesService = class EmployeesService {
                 employeeId: emp.id,
                 name,
                 fileUrl
+            }
+        });
+    }
+    async getPortalData(tenantId, userId) {
+        const employee = await this.prisma.employeeProfile.findUnique({
+            where: { userId }
+        });
+        if (!employee || employee.tenantId !== tenantId) {
+            return { isEmployee: false, message: 'Perfil de empleado no encontrado' };
+        }
+        const payslips = await this.prisma.payslip.findMany({
+            where: { employeeId: employee.id, status: 'PAID' },
+            include: { payrollRun: true },
+            orderBy: { createdAt: 'desc' }
+        });
+        const documents = await this.prisma.employeeDocument.findMany({
+            where: { employeeId: employee.id },
+            orderBy: { uploadedAt: 'desc' }
+        });
+        const timeOffRequests = await this.prisma.timeOffRequest.findMany({
+            where: { employeeId: employee.id },
+            orderBy: { createdAt: 'desc' }
+        });
+        return {
+            employee,
+            payslips,
+            documents,
+            timeOffRequests
+        };
+    }
+    async createTimeOffRequest(tenantId, userId, data) {
+        const employee = await this.prisma.employeeProfile.findUnique({
+            where: { userId }
+        });
+        if (!employee || employee.tenantId !== tenantId) {
+            throw new common_1.NotFoundException('Perfil de empleado no encontrado para este usuario');
+        }
+        if (!data.type || !data.startDate || !data.endDate) {
+            throw new common_1.BadRequestException('Tipo, fecha de inicio y fecha de fin son obligatorios');
+        }
+        return this.prisma.timeOffRequest.create({
+            data: {
+                tenantId,
+                employeeId: employee.id,
+                type: data.type,
+                startDate: new Date(data.startDate),
+                endDate: new Date(data.endDate),
+                reason: data.reason || null,
+                status: 'PENDING'
             }
         });
     }

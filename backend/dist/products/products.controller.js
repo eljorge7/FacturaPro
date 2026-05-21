@@ -31,6 +31,9 @@ let ProductsController = class ProductsController {
     findAll(tenantId) {
         return this.productsService.findAll(tenantId);
     }
+    getPublishedStoreProducts() {
+        return this.productsService.getPublishedStoreProducts();
+    }
     findOne(id) {
         return this.productsService.findOne(id);
     }
@@ -78,6 +81,12 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ProductsController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)('store/published'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], ProductsController.prototype, "getPublishedStoreProducts", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),

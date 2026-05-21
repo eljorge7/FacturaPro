@@ -45,6 +45,25 @@ export class ProductsService {
     });
   }
 
+  async getPublishedStoreProducts() {
+    return this.prisma.product.findMany({
+      where: { 
+        isPublishedToStore: true 
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        price: true,
+        stock: true,
+        type: true,
+        imageUrl: true,
+        storeCategory: true,
+        tenantId: true
+      }
+    });
+  }
+
   async findOne(id: string) {
     const product = await this.prisma.product.findUnique({ 
         where: { id }, 

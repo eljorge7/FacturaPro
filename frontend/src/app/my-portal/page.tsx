@@ -28,7 +28,7 @@ export default function MyPortalPage() {
           'Authorization': `Bearer ${token}`
         }
       });
-      if (!res.ok) throw new Error("No tienes un perfil de empleado asignado.");
+      if (!res.ok) throw new Error("Error de conexión al cargar tu portal.");
       
       const result = await res.json();
       setData(result);
@@ -81,6 +81,22 @@ export default function MyPortalPage() {
 
   if (isLoading) return <div className="flex h-screen items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-indigo-600" /></div>;
   if (!data) return <div className="flex h-screen items-center justify-center font-bold text-slate-500">Perfil no encontrado. Contacta a RRHH.</div>;
+  if (data.isEmployee === false) {
+     return (
+        <div className="flex flex-col h-screen items-center justify-center bg-slate-50 p-6 text-center">
+           <div className="w-20 h-20 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
+              <Briefcase className="w-10 h-10" />
+           </div>
+           <h2 className="text-2xl font-black text-slate-800 mb-2">Portal de Colaborador</h2>
+           <p className="text-slate-500 max-w-md mx-auto leading-relaxed">
+              Hola <b>{user?.name || 'Administrador'}</b>, actualmente estás ingresando con una cuenta administrativa o de dueño. No tienes un perfil de empleado operativo asignado.
+           </p>
+           <p className="text-sm text-slate-400 max-w-sm mx-auto mt-4">
+              Si necesitas registrar tus asistencias o solicitar vacaciones, por favor créate un perfil de empleado en el <b>Directorio de Personal</b> y vincúlalo a tu cuenta.
+           </p>
+        </div>
+     );
+  }
 
   const { employee, timeOffRequests, payslips, documents } = data;
 

@@ -79,7 +79,7 @@ export function Sidebar() {
 
   let links = [
     { name: "Resumen", href: "/", icon: <LayoutDashboard className="w-5 h-5 shrink-0" /> },
-    { name: "Mi Portal (Empleado)", href: "/my-portal", icon: <UserIcon className="w-5 h-5 shrink-0 text-indigo-400 drop-shadow-sm" /> },
+    { name: "Mi Portal", href: "/my-portal", icon: <UserIcon className="w-5 h-5 shrink-0 text-indigo-400 drop-shadow-sm" /> },
     
     { isDivider: true, name: "VENTAS Y COBRANZA" } as any,
     { name: "Facturas", href: "/invoices", icon: <FileText className="w-5 h-5 shrink-0 text-blue-400" /> },
@@ -128,21 +128,22 @@ export function Sidebar() {
     { isDivider: true, name: "CONFIGURACIÓN" } as any,
     { name: "Roles de Seguridad (RBAC)", href: "/settings/roles", icon: <ShieldAlert className="w-5 h-5 shrink-0 text-rose-500 drop-shadow-sm" /> },
     { name: "Configurar Sucursales", href: "/settings/warehouses", icon: <Settings className="w-5 h-5 shrink-0" /> },
+    { name: "Plantillas de Propuestas", href: "/settings/proposal-templates", icon: <FileText className="w-5 h-5 shrink-0 text-amber-500" /> },
   ];
 
   // RBAC: Roles Especializados
   if (user?.role === 'EMPLOYEE') {
      links = [
-       { name: "Mi Portal (Empleado)", href: "/my-portal", icon: <UserIcon className="w-5 h-5 shrink-0 text-indigo-400 drop-shadow-sm" /> }
+       { name: "Mi Portal", href: "/my-portal", icon: <UserIcon className="w-5 h-5 shrink-0 text-indigo-400 drop-shadow-sm" /> }
      ];
   } else if (user?.role === 'CASHIER') {
      links = [
-       { name: "Mi Portal (Empleado)", href: "/my-portal", icon: <UserIcon className="w-5 h-5 shrink-0 text-indigo-400 drop-shadow-sm" /> },
+       { name: "Mi Portal", href: "/my-portal", icon: <UserIcon className="w-5 h-5 shrink-0 text-indigo-400 drop-shadow-sm" /> },
        { name: "Mostrador (POS)", href: "/pos", icon: <Store className="w-5 h-5 shrink-0 text-emerald-400" /> }
      ];
   } else if (user?.role === 'WAREHOUSE') {
      links = [
-       { name: "Mi Portal (Empleado)", href: "/my-portal", icon: <UserIcon className="w-5 h-5 shrink-0 text-indigo-400 drop-shadow-sm" /> },
+       { name: "Mi Portal", href: "/my-portal", icon: <UserIcon className="w-5 h-5 shrink-0 text-indigo-400 drop-shadow-sm" /> },
        { isDivider: true, name: "OPERATIVO" } as any,
        { name: "WMS (Andén Recepción)", href: "/warehouse", icon: <Container className="w-5 h-5 shrink-0 text-amber-500" /> },
        { name: "Catálogo / Productos", href: "/products", icon: <Package className="w-5 h-5 shrink-0" /> },

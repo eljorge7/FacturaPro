@@ -16,5 +16,7 @@ export declare class CreateProductDto {
     taxType: string;
     costPrice?: number;
     type?: string;
+    isPublishedToStore?: boolean;
+    storeCategory?: string;
     kitComponents?: any[];
 }

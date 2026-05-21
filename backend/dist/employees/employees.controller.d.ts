@@ -1,7 +1,9 @@
 import { EmployeesService } from './employees.service';
+import { JwtService } from '@nestjs/jwt';
 export declare class EmployeesController {
     private readonly employeesService;
-    constructor(employeesService: EmployeesService);
+    private readonly jwtService;
+    constructor(employeesService: EmployeesService, jwtService: JwtService);
     create(tenantId: string, data: any): Promise<{
         id: string;
         tenantId: string;
@@ -29,6 +31,10 @@ export declare class EmployeesController {
         isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
+    }>;
+    createBulk(tenantId: string, data: any[]): Promise<{
+        users: number;
+        profiles: number;
     }>;
     uploadAvatar(tenantId: string, id: string, file: any): Promise<{
         id: string;
@@ -64,6 +70,105 @@ export declare class EmployeesController {
         name: string;
         fileUrl: string;
         uploadedAt: Date;
+    }>;
+    getPortalData(auth: string, reqTenantId: string): Promise<{
+        isEmployee: boolean;
+        message: string;
+        employee?: undefined;
+        payslips?: undefined;
+        documents?: undefined;
+        timeOffRequests?: undefined;
+    } | {
+        employee: {
+            id: string;
+            tenantId: string;
+            userId: string | null;
+            firstName: string;
+            lastName: string;
+            phone: string | null;
+            email: string | null;
+            employeeNumber: string | null;
+            department: string | null;
+            departmentId: string | null;
+            jobTitle: string | null;
+            employeeType: string;
+            rfc: string | null;
+            curp: string | null;
+            nss: string | null;
+            baseSalary: number | null;
+            avatarUrl: string | null;
+            shirtSize: string | null;
+            pantsSize: string | null;
+            shoeSize: string | null;
+            bloodType: string | null;
+            emergencyContact: string | null;
+            hireDate: Date | null;
+            isActive: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+        payslips: ({
+            payrollRun: {
+                id: string;
+                tenantId: string;
+                periodStart: Date;
+                periodEnd: Date;
+                paymentDate: Date | null;
+                status: string;
+                totalAmount: number;
+                createdAt: Date;
+                updatedAt: Date;
+            };
+        } & {
+            id: string;
+            payrollRunId: string;
+            employeeId: string;
+            baseSalary: number;
+            bonuses: number;
+            deductions: number;
+            netPay: number;
+            status: string;
+            auditSignature: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+        })[];
+        documents: {
+            id: string;
+            employeeId: string;
+            name: string;
+            fileUrl: string;
+            uploadedAt: Date;
+        }[];
+        timeOffRequests: {
+            id: string;
+            tenantId: string;
+            employeeId: string;
+            type: string;
+            startDate: Date;
+            endDate: Date;
+            status: string;
+            reason: string | null;
+            adminNotes: string | null;
+            deductedDays: number;
+            createdAt: Date;
+            updatedAt: Date;
+        }[];
+        isEmployee?: undefined;
+        message?: undefined;
+    }>;
+    createTimeOffRequest(auth: string, reqTenantId: string, data: any): Promise<{
+        id: string;
+        tenantId: string;
+        employeeId: string;
+        type: string;
+        startDate: Date;
+        endDate: Date;
+        status: string;
+        reason: string | null;
+        adminNotes: string | null;
+        deductedDays: number;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     findAll(tenantId: string): Promise<({
         user: {

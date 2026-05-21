@@ -81,7 +81,8 @@ let InvoicesService = class InvoicesService {
                 total: amount + taxes
             };
         });
-        const total = subtotal + taxTotal;
+        const tdsTotal = customer.tdsEnabled ? (subtotal * 0.0125) : 0;
+        const total = subtotal + taxTotal - tdsTotal;
         let invoiceNumber = createInvoiceDto.invoiceNumber;
         if (!invoiceNumber || invoiceNumber.trim() === '') {
             const series = await this.prisma.invoiceSeries.findFirst({
@@ -110,6 +111,7 @@ let InvoicesService = class InvoicesService {
             exchangeRate,
             subtotal,
             taxTotal,
+            tdsTotal,
             total,
             customer,
             items: invoiceItemsData
@@ -138,6 +140,7 @@ let InvoicesService = class InvoicesService {
                     exchangeRate: exchangeRate || 1.0,
                     subtotal,
                     taxTotal,
+                    tdsTotal,
                     total,
                     xmlContent,
                     cashShiftId: createInvoiceDto.cashShiftId,
@@ -168,7 +171,7 @@ let InvoicesService = class InvoicesService {
         }
         return this.prisma.invoice.findMany({
             where: whereFilter,
-            include: { customer: true, items: true, taxProfile: true, payments: true },
+            include: { customer: true, items: true, taxProfile: true, payments: true, attachments: true },
             orderBy: { createdAt: 'desc' }
         });
     }
@@ -293,7 +296,8 @@ let InvoicesService = class InvoicesService {
                 items: true,
                 customer: true,
                 taxProfile: true,
-                payments: true
+                payments: true,
+                attachments: true
             }
         });
         if (!inv)
@@ -449,6 +453,21 @@ let InvoicesService = class InvoicesService {
         catch (e) {
             throw new common_1.BadRequestException('Fallo al conectar con el motor de envíos');
         }
+    }
+    async addAttachment(id, file) {
+        const invoice = await this.findOne(id);
+        if (!invoice)
+            throw new common_1.NotFoundException('Factura no encontrada');
+        const fileUrl = `/uploads/invoices/${file.filename}`;
+        const attachment = await this.prisma.invoiceAttachment.create({
+            data: {
+                invoiceId: id,
+                fileName: file.originalname,
+                fileUrl: fileUrl,
+                fileSize: file.size
+            }
+        });
+        return attachment;
     }
     async getArReport(tenantId) {
         let whereFilter = {};

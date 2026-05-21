@@ -1,8 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Res, Headers, BadRequestException, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Res, Headers, BadRequestException, UseGuards, Req, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { HybridAuthGuard } from '../auth/hybrid-auth.guard';
 import { InvoicesService } from './invoices.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { PdfService } from './pdf.service';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 
 @Controller('invoices')
 @UseGuards(HybridAuthGuard)
@@ -56,6 +59,21 @@ export class InvoicesController {
     });
     
     res.end(pdfBuffer);
+  }
+
+  @Post(':id/attachments')
+  @UseInterceptors(FileInterceptor('file', {
+    storage: diskStorage({
+      destination: './uploads/invoices',
+      filename: (req, file, cb) => {
+        const randomName = Array(32).fill(null).map(() => (Math.round(Math.random() * 16)).toString(16)).join('');
+        cb(null, `${randomName}${extname(file.originalname)}`);
+      }
+    })
+  }))
+  uploadAttachment(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('Archivo no proveído');
+    return this.invoicesService.addAttachment(id, file);
   }
 
   @Post(':id/cancel')

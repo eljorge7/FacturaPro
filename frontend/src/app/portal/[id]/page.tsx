@@ -139,6 +139,29 @@ export default function PortalPage() {
                </div>
             </div>
 
+            {/* Anexos y Documentos (Si existen) */}
+            {invoice.attachments && invoice.attachments.length > 0 && (
+               <div className="px-8 py-6 bg-white border-b border-slate-100">
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                     <FileText className="w-4 h-4 text-[#10b981]" /> Documentos Adjuntos (Anexos)
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                     {invoice.attachments.map((att: any) => (
+                        <div key={att.id} onClick={() => window.open(`${baseUrl}${att.fileUrl}`, '_blank')} className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:border-[#2563eb] hover:bg-blue-50 transition-colors cursor-pointer group shadow-sm">
+                           <div className="bg-red-50 text-red-500 p-2 rounded">
+                              <FileText className="w-5 h-5" />
+                           </div>
+                           <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold text-slate-700 truncate group-hover:text-[#2563eb] transition-colors">{att.fileName}</p>
+                              <p className="text-xs text-slate-500">{(att.fileSize / 1024 / 1024).toFixed(2)} MB</p>
+                           </div>
+                           <Download className="w-4 h-4 text-slate-400 group-hover:text-[#2563eb]" />
+                        </div>
+                     ))}
+                  </div>
+               </div>
+            )}
+
             {/* Botonera de Acción */}
             <div className="p-8 flex flex-col sm:flex-row gap-4 bg-white items-center justify-between">
                 <div className="flex gap-4 w-full sm:w-auto">

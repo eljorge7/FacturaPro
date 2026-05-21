@@ -3,9 +3,10 @@ import { QuotesService } from './quotes.service';
 import { QuotesController } from './quotes.controller';
 import { PdfService } from '../invoices/pdf.service';
 import { PrismaModule } from '../prisma/prisma.module';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, MailModule],
   controllers: [QuotesController],
   providers: [QuotesService, PdfService],
 })

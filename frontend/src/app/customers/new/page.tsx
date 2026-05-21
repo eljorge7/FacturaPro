@@ -81,7 +81,7 @@ export default function NewCustomerPage() {
         legalName: legalName || 'Cliente Sin Nombre',
         rfc: formData.rfc || 'XAXX010101000',
         phone: finalPhone,
-        taxRegime: formData.regimenFiscal || '601',
+        taxRegime: (formData.regimenFiscal || '601').substring(0, 3),
         zipCode: formData.zipCode || '00000',
         street: formData.street,
         city: formData.city,
@@ -320,8 +320,14 @@ export default function NewCustomerPage() {
                      <div className="grid grid-cols-[200px_1fr] gap-6 items-center">
                         <label className="text-sm font-semibold text-slate-700">Régimen fiscal <span className="text-red-500">*</span></label>
                         <div className="relative">
-                           <select value={formData.regimenFiscal} onChange={e=>setFormData({...formData, regimenFiscal: e.target.value})} className="w-full appearance-none bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 font-medium text-slate-700 cursor-pointer">
-                              <option value="">Seleccionar</option>
+                           <input 
+                              list="taxRegimes"
+                              value={formData.regimenFiscal} 
+                              onChange={e=>setFormData({...formData, regimenFiscal: e.target.value})} 
+                              placeholder="Ej. 601 o General de Ley"
+                              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 font-medium text-slate-700" 
+                           />
+                           <datalist id="taxRegimes">
                               <option value="601">601 - General de Ley Personas Morales</option>
                               <option value="603">603 - Personas Morales con Fines no Lucrativos</option>
                               <option value="605">605 - Sueldos y Salarios e Ingresos Asimilados a Salarios</option>
@@ -340,8 +346,8 @@ export default function NewCustomerPage() {
                               <option value="623">623 - Opcional para Grupos de Sociedades</option>
                               <option value="624">624 - Coordinados</option>
                               <option value="625">625 - Régimen de las Actividades Empresariales con ingresos a través de Plataformas Tecnológicas</option>
-                              <option value="626">626 - Régimen Simplificado de Confianza</option>
-                           </select>
+                              <option value="626">626 - Régimen Simplificado de Confianza (RESICO)</option>
+                           </datalist>
                            <ChevronDown className="w-4 h-4 absolute right-3 top-3 text-slate-400 pointer-events-none" />
                         </div>
                      </div>

@@ -41,12 +41,16 @@ export default function InvoicesPage() {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
       const res = await fetch(`${baseUrl}/invoices`);
       const data = await res.json();
-      setInvoices(data);
-      
       const targetId = searchParams.get('targetId');
-      if (targetId && data.length > 0) {
-         const target = data.find((inv: any) => inv.id === targetId);
-         if (target) setSelectedInvoice(target);
+      if (Array.isArray(data)) {
+        setInvoices(data);
+        if (targetId && data.length > 0) {
+           const target = data.find((inv: any) => inv.id === targetId);
+           if (target) setSelectedInvoice(target);
+        }
+      } else {
+        console.warn("Backend error or non-array response:", data);
+        setInvoices([]);
       }
     } catch (e) {
       console.error(e);
@@ -55,9 +59,55 @@ export default function InvoicesPage() {
     }
   };
 
+  const [dashboardStats, setDashboardStats] = useState<any>(null);
+
+  const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
+
+  const handleUploadAttachment = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0 || !selectedInvoice) return;
+    const file = e.target.files[0];
+    
+    setIsUploadingAttachment(true);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const res = await fetch(`${baseUrl}/invoices/${selectedInvoice.id}/attachments`, {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!res.ok) throw new Error("Error al subir anexo");
+      
+      const newAttachment = await res.json();
+      setSelectedInvoice({...selectedInvoice, attachments: [...(selectedInvoice.attachments || []), newAttachment]});
+      fetchInvoices();
+    } catch (err) {
+      console.error(err);
+      alert("Error al adjuntar archivo. Intenta de nuevo.");
+    } finally {
+      setIsUploadingAttachment(false);
+      e.target.value = '';
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
+      const tenantId = typeof window !== 'undefined' ? localStorage.getItem('tenantId') || 'demo-tenant' : 'demo-tenant';
+      const res = await fetch(`${baseUrl}/invoices/stats`, { headers: { 'x-tenant-id': tenantId } });
+      const data = await res.json();
+      setDashboardStats(data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   useEffect(() => {
     setMounted(true);
     fetchInvoices();
+    fetchStats();
   }, []);
 
   if (!mounted) return null;
@@ -271,45 +321,68 @@ export default function InvoicesPage() {
   if (!selectedInvoice) {
     return (
       <div className="font-sans min-h-screen bg-[#f9fafb] relative">
-        {/* Resumen Banner Zoho Style */}
+        {/* Premium Dashboard Banner */}
         <div className="bg-white border-b border-slate-200">
            <div className="px-6 py-4 flex items-center justify-between border-b border-slate-100">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Resumen del Pago</span>
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                 <Globe className="w-4 h-4 text-slate-400" />
+                 Dashboard de Facturación
+              </span>
            </div>
            
-           <div className="grid grid-cols-5 px-6 py-4 items-center">
-              <div className="border-r border-slate-100 pr-4">
-                 <div className="flex gap-2 items-center">
-                    <div className="bg-[#fcd34d] p-2 rounded-full"><ArrowLeft className="w-4 h-4 text-white transform rotate-45" /></div>
+           <div className="grid grid-cols-4 px-6 py-4 items-center gap-6">
+              <div className="border-r border-slate-100 pr-6">
+                 <div className="flex gap-3 items-center mb-1">
+                    <div className="bg-indigo-50 p-2.5 rounded-xl"><FileText className="w-5 h-5 text-indigo-600" /></div>
                     <div>
-                       <p className="text-xs text-slate-500">Total de cuentas pendientes de cobro</p>
-                       <p className="text-xl font-bold">MXN{totals.pendientes.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                       <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Facturado</p>
+                    </div>
+                 </div>
+                 <p className="text-3xl font-black text-slate-800 tracking-tight mt-2 flex items-baseline gap-1">
+                    <span className="text-lg font-medium text-slate-400">$</span>
+                    {dashboardStats?.totalRevenue ? dashboardStats.totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 2}) : totals.pagados.toLocaleString(undefined, {minimumFractionDigits: 2})}
+                 </p>
+              </div>
+
+              <div className="border-r border-slate-100 px-6">
+                 <div className="flex gap-3 items-center mb-1">
+                    <div className="bg-emerald-50 p-2.5 rounded-xl"><CheckCircle2 className="w-5 h-5 text-emerald-600" /></div>
+                    <div>
+                       <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Ingresos (Cobrado)</p>
+                    </div>
+                 </div>
+                 <p className="text-3xl font-black text-slate-800 tracking-tight mt-2 flex items-baseline gap-1">
+                    <span className="text-lg font-medium text-slate-400">$</span>
+                    {totals.pagados.toLocaleString(undefined, {minimumFractionDigits: 2})}
+                 </p>
+              </div>
+
+              <div className="border-r border-slate-100 px-6">
+                 <div className="flex gap-3 items-center mb-1">
+                    <div className="bg-amber-50 p-2.5 rounded-xl"><ArrowLeft className="w-5 h-5 text-amber-600 transform rotate-45" /></div>
+                    <div>
+                       <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Cuentas por Cobrar</p>
+                    </div>
+                 </div>
+                 <p className="text-3xl font-black text-slate-800 tracking-tight mt-2 flex items-baseline gap-1">
+                    <span className="text-lg font-medium text-slate-400">$</span>
+                    {dashboardStats?.accountsReceivable ? dashboardStats.accountsReceivable.toLocaleString(undefined, {minimumFractionDigits: 2}) : totals.pendientes.toLocaleString(undefined, {minimumFractionDigits: 2})}
+                 </p>
+              </div>
+
+              <div className="pl-6">
+                 <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex items-center justify-between">
+                    <div>
+                       <p className="text-xs font-medium text-slate-500 mb-1">Facturas Emitidas</p>
+                       <p className="text-xl font-bold text-slate-700">{dashboardStats?.totalInvoices || invoices.length}</p>
+                    </div>
+                    <div className="h-10 w-px bg-slate-200 mx-4"></div>
+                    <div>
+                       <p className="text-xs font-medium text-slate-500 mb-1">Pendientes</p>
+                       <p className="text-xl font-bold text-amber-600">{invoices.filter(i=>i.status !== 'PAID' && i.status !== 'CANCELADA').length}</p>
                     </div>
                  </div>
               </div>
-              <div className="border-r border-slate-100 px-4">
-                 <p className="text-xs text-slate-500">Vencidos hoy</p>
-                 <p className="text-xl font-bold text-[#f59e0b]">MXN{totals.vencidosHoy.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
-              </div>
-              <div className="border-r border-slate-100 px-4">
-                 <p className="text-xs text-slate-500">Vence en los prÃ³ximos 30 dÃ­as</p>
-                 <p className="text-xl font-bold text-slate-400">MXN{totals.proximos30Dias.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
-              </div>
-              <div className="border-r border-slate-100 px-4">
-                 <p className="text-xs text-slate-500">Factura vencida</p>
-                 <p className="text-xl font-bold text-slate-700">MXN{totals.vencidos.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
-              </div>
-              <div className="pl-4">
-                 <p className="text-xs text-slate-500">Total Validado</p>
-                 <p className="text-xl font-bold text-slate-800">MXN{totals.pagados.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
-              </div>
-           </div>
-
-           <div className="bg-[#f8fafc] px-6 py-2 border-t border-slate-100 flex items-center text-xs text-slate-600">
-              <span className="font-bold text-[#2563eb] mr-2 flex items-center gap-1"><ArrowLeft className="w-3 h-3 transform rotate-45"/> Resumen de facturas electrÃ³nicas:</span>
-              <span className="mx-2"><span className="text-[#10b981] font-bold">{invoices.filter(i=>i.status === 'PAID').length}</span> Han sido pagadas</span> |
-              <span className="mx-2"><span className="text-[#f59e0b] font-bold">{invoices.filter(i=>i.status !== 'PAID' && i.status !== 'CANCELADA').length}</span> Tienen saldo pendiente</span> |
-              <span className="mx-2"><span className="text-red-500 font-bold">{invoices.filter(i=>i.status==='CANCELADA').length}</span> Se han cancelado</span>
            </div>
         </div>
 
@@ -803,7 +876,41 @@ export default function InvoicesPage() {
                         </div>
                      </div>
                   </div>
-               </div>
+
+                  {/* Anexos y Archivos PDF */}
+                  <div className="bg-white rounded-md shadow-sm border border-slate-200 p-6 mt-6 max-w-4xl mx-auto">
+                     <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                           <FileText className="w-4 h-4 text-emerald-500" /> Documentos Adjuntos (PDF/Imágenes)
+                        </h4>
+                        <div>
+                           <input type="file" id="upload-attachment" className="hidden" accept=".pdf,.jpg,.jpeg,.png" onChange={handleUploadAttachment} disabled={isUploadingAttachment} />
+                           <label htmlFor="upload-attachment" className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded transition-colors font-medium text-xs flex items-center gap-2 cursor-pointer">
+                              {isUploadingAttachment ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />} Subir Archivo
+                           </label>
+                        </div>
+                     </div>
+                     {(!selectedInvoice.attachments || selectedInvoice.attachments.length === 0) ? (
+                        <p className="text-xs text-slate-400 italic">No hay documentos adjuntos en esta factura. Sube comprobantes de entrega o garantías aquí.</p>
+                     ) : (
+                        <div className="grid grid-cols-2 gap-3">
+                           {selectedInvoice.attachments.map((att: any) => (
+                              <div key={att.id} className="flex items-center gap-3 p-3 border border-slate-100 rounded bg-slate-50 hover:bg-white hover:border-[#2563eb] transition-colors group cursor-pointer" onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3005"}${att.fileUrl}`, '_blank')}>
+                                 <div className="bg-red-50 text-red-500 p-2 rounded">
+                                    <FileText className="w-5 h-5" />
+                                 </div>
+                                 <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-slate-700 truncate">{att.fileName}</p>
+                                    <p className="text-xs text-slate-400">{(att.fileSize / 1024 / 1024).toFixed(2)} MB &bull; Anexo</p>
+                                 </div>
+                                 <Download className="w-4 h-4 text-slate-400 group-hover:text-[#2563eb]" />
+                              </div>
+                           ))}
+                        </div>
+                     )}
+                  </div>
+
+                </div>
             </div>
          )}
          {/* Payment Modal */}

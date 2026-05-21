@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Plus, Save, Loader2, X, FileEdit, Trash2, ChevronDown, MoreHorizontal, Package, Tag, ArrowLeft, Image as ImageIcon, XCircle, FileText } from "lucide-react";
+import { Search, Plus, Save, Loader2, X, FileEdit, Trash2, ChevronDown, MoreHorizontal, Package, Tag, ArrowLeft, Image as ImageIcon, XCircle, FileText, Globe } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
@@ -47,6 +47,10 @@ export default function ProductsPage() {
   const [locationShelf, setLocationShelf] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
+  // eCommerce Fields
+  const [isPublishedToStore, setIsPublishedToStore] = useState(false);
+  const [storeCategory, setStoreCategory] = useState("");
+
   // SAT Catalogs
   const [satCatalogsOptions, setSatCatalogsOptions] = useState<any[]>([]);
 
@@ -82,6 +86,8 @@ export default function ProductsPage() {
     setMaxStock("");
     setLocationShelf("");
     setImageUrl(null);
+    setIsPublishedToStore(false);
+    setStoreCategory("");
   };
 
   const openEdit = (product: any) => {
@@ -100,6 +106,8 @@ export default function ProductsPage() {
     setLocationShelf(product.locationShelf || "");
     setImageUrl(product.imageUrl || null);
     setType(product.type || "PRODUCT");
+    setIsPublishedToStore(product.isPublishedToStore || false);
+    setStoreCategory(product.storeCategory || "");
     
     if (product.kitComponents && Array.isArray(product.kitComponents)) {
        setKitComponents(product.kitComponents.map((k: any) => ({ componentId: k.childProductId, quantity: k.quantity.toString(), name: k.childProduct?.name })));
@@ -218,6 +226,8 @@ export default function ProductsPage() {
         maxStock: maxStock ? parseFloat(maxStock) : null,
         locationShelf: locationShelf || null,
         imageUrl: imageUrl,
+        isPublishedToStore,
+        storeCategory: storeCategory || null,
         kitComponents: (type === 'KIT' || type === 'SERVICE') ? kitComponents : undefined
       };
 
@@ -686,7 +696,7 @@ export default function ProductsPage() {
 
   function renderProductModal() {
      return (
-        <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg border border-slate-200 overflow-hidden scale-in-95 duration-200">
+        <div className="bg-white rounded-3xl shadow-xl w-full max-w-2xl border border-slate-200 overflow-hidden scale-in-95 duration-200">
            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
               <h2 className="text-xl font-bold text-slate-800">{editingId ? "Editar Artículo" : "Nuevo Artículo"}</h2>
               <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
@@ -825,6 +835,37 @@ export default function ProductsPage() {
                     </div>
                  </div>
               )}
+
+              {/* eCommerce Store Section */}
+              <div className="space-y-4 mt-6 bg-purple-50 p-6 rounded-xl border border-purple-100">
+                  <div className="flex items-center justify-between">
+                      <div>
+                          <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                              <Globe className="w-5 h-5 text-purple-600" />
+                              Catálogo Web
+                          </h3>
+                          <p className="text-xs text-slate-500 mt-1">Sincroniza este artículo con tu Tienda en Línea Pública</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" checked={isPublishedToStore} onChange={e => setIsPublishedToStore(e.target.checked)} className="sr-only peer" />
+                          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                      </label>
+                  </div>
+                  {isPublishedToStore && (
+                      <div className="mt-4 pt-4 border-t border-purple-200/50">
+                          <label className="text-sm font-bold text-slate-700 block mb-2">Categoría Web</label>
+                          <select value={storeCategory} onChange={e => setStoreCategory(e.target.value)} className="w-full bg-white border border-purple-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-purple-500 font-medium">
+                              <option value="">-- Sin categoría --</option>
+                              <option value="Accesorios">Accesorios</option>
+                              <option value="Cables y Conectores">Cables y Conectores</option>
+                              <option value="Cámaras">Cámaras</option>
+                              <option value="Kits">Kits Completos</option>
+                              <option value="Redes">Redes y Switches</option>
+                              <option value="Servicios">Servicios / Mano de Obra</option>
+                          </select>
+                      </div>
+                  )}
+              </div>
 
               {/* BOM Recipe Section */}
               {(type === 'KIT' || type === 'SERVICE') && (

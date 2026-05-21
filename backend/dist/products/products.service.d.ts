@@ -25,6 +25,8 @@ export declare class ProductsService {
         currency: string;
         satProductCode: string | null;
         satUnitCode: string | null;
+        isPublishedToStore: boolean;
+        storeCategory: string | null;
         taxIncluded: boolean;
         taxRate: number;
         createdAt: Date;
@@ -53,6 +55,8 @@ export declare class ProductsService {
                 currency: string;
                 satProductCode: string | null;
                 satUnitCode: string | null;
+                isPublishedToStore: boolean;
+                storeCategory: string | null;
                 taxIncluded: boolean;
                 taxRate: number;
                 createdAt: Date;
@@ -99,11 +103,24 @@ export declare class ProductsService {
         currency: string;
         satProductCode: string | null;
         satUnitCode: string | null;
+        isPublishedToStore: boolean;
+        storeCategory: string | null;
         taxIncluded: boolean;
         taxRate: number;
         createdAt: Date;
         updatedAt: Date;
     })[]>;
+    getPublishedStoreProducts(): Promise<{
+        name: string;
+        id: string;
+        tenantId: string;
+        type: string;
+        description: string | null;
+        stock: number;
+        imageUrl: string | null;
+        price: number;
+        storeCategory: string | null;
+    }[]>;
     findOne(id: string): Promise<{
         kitComponents: ({
             childProduct: {
@@ -127,6 +144,8 @@ export declare class ProductsService {
                 currency: string;
                 satProductCode: string | null;
                 satUnitCode: string | null;
+                isPublishedToStore: boolean;
+                storeCategory: string | null;
                 taxIncluded: boolean;
                 taxRate: number;
                 createdAt: Date;
@@ -173,6 +192,8 @@ export declare class ProductsService {
         currency: string;
         satProductCode: string | null;
         satUnitCode: string | null;
+        isPublishedToStore: boolean;
+        storeCategory: string | null;
         taxIncluded: boolean;
         taxRate: number;
         createdAt: Date;
@@ -199,6 +220,8 @@ export declare class ProductsService {
         currency: string;
         satProductCode: string | null;
         satUnitCode: string | null;
+        isPublishedToStore: boolean;
+        storeCategory: string | null;
         taxIncluded: boolean;
         taxRate: number;
         createdAt: Date;
@@ -225,6 +248,8 @@ export declare class ProductsService {
         currency: string;
         satProductCode: string | null;
         satUnitCode: string | null;
+        isPublishedToStore: boolean;
+        storeCategory: string | null;
         taxIncluded: boolean;
         taxRate: number;
         createdAt: Date;

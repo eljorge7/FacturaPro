@@ -12,18 +12,47 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TaxProfilesService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const crypto_service_1 = require("../crypto/crypto.service");
 let TaxProfilesService = class TaxProfilesService {
     prisma;
-    constructor(prisma) {
+    crypto;
+    constructor(prisma, crypto) {
         this.prisma = prisma;
+        this.crypto = crypto;
+    }
+    decryptProfile(profile) {
+        if (!profile)
+            return profile;
+        return {
+            ...profile,
+            cerBase64: this.crypto.decrypt(profile.cerBase64),
+            keyBase64: this.crypto.decrypt(profile.keyBase64),
+            keyPassword: this.crypto.decrypt(profile.keyPassword),
+            fielCerBase64: this.crypto.decrypt(profile.fielCerBase64),
+            fielKeyBase64: this.crypto.decrypt(profile.fielKeyBase64),
+            fielPassword: this.crypto.decrypt(profile.fielPassword),
+        };
     }
     async create(createTaxProfileDto) {
-        return this.prisma.taxProfile.create({
-            data: createTaxProfileDto,
-        });
+        const data = { ...createTaxProfileDto };
+        if (data.cerBase64)
+            data.cerBase64 = this.crypto.encrypt(data.cerBase64);
+        if (data.keyBase64)
+            data.keyBase64 = this.crypto.encrypt(data.keyBase64);
+        if (data.keyPassword)
+            data.keyPassword = this.crypto.encrypt(data.keyPassword);
+        if (data.fielCerBase64)
+            data.fielCerBase64 = this.crypto.encrypt(data.fielCerBase64);
+        if (data.fielKeyBase64)
+            data.fielKeyBase64 = this.crypto.encrypt(data.fielKeyBase64);
+        if (data.fielPassword)
+            data.fielPassword = this.crypto.encrypt(data.fielPassword);
+        const created = await this.prisma.taxProfile.create({ data });
+        return this.decryptProfile(created);
     }
     async findAll() {
-        return this.prisma.taxProfile.findMany();
+        const profiles = await this.prisma.taxProfile.findMany();
+        return profiles.map(p => this.decryptProfile(p));
     }
     async findOne(id) {
         const profile = await this.prisma.taxProfile.findUnique({
@@ -31,7 +60,7 @@ let TaxProfilesService = class TaxProfilesService {
         });
         if (!profile)
             throw new common_1.NotFoundException('Tax Profile not found');
-        return profile;
+        return this.decryptProfile(profile);
     }
     async findMine(tenantId) {
         let profile = await this.prisma.taxProfile.findFirst({
@@ -56,7 +85,7 @@ let TaxProfilesService = class TaxProfilesService {
                 throw new common_1.NotFoundException('El sistema no está inicializado con un Tenant válido.');
             }
         }
-        return profile;
+        return this.decryptProfile(profile);
     }
     async update(id, updateTaxProfileDto) {
         const profile = await this.findOne(id);
@@ -104,10 +133,23 @@ let TaxProfilesService = class TaxProfilesService {
         if (logoUrl) {
             dataToUpdate.logoUrl = logoUrl;
         }
-        return this.prisma.taxProfile.update({
+        if (dataToUpdate.cerBase64)
+            dataToUpdate.cerBase64 = this.crypto.encrypt(dataToUpdate.cerBase64);
+        if (dataToUpdate.keyBase64)
+            dataToUpdate.keyBase64 = this.crypto.encrypt(dataToUpdate.keyBase64);
+        if (dataToUpdate.keyPassword)
+            dataToUpdate.keyPassword = this.crypto.encrypt(dataToUpdate.keyPassword);
+        if (dataToUpdate.fielCerBase64)
+            dataToUpdate.fielCerBase64 = this.crypto.encrypt(dataToUpdate.fielCerBase64);
+        if (dataToUpdate.fielKeyBase64)
+            dataToUpdate.fielKeyBase64 = this.crypto.encrypt(dataToUpdate.fielKeyBase64);
+        if (dataToUpdate.fielPassword)
+            dataToUpdate.fielPassword = this.crypto.encrypt(dataToUpdate.fielPassword);
+        const updated = await this.prisma.taxProfile.update({
             where: { id },
             data: dataToUpdate,
         });
+        return this.decryptProfile(updated);
     }
     async remove(id) {
         await this.findOne(id);
@@ -163,6 +205,7 @@ let TaxProfilesService = class TaxProfilesService {
 exports.TaxProfilesService = TaxProfilesService;
 exports.TaxProfilesService = TaxProfilesService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        crypto_service_1.CryptoService])
 ], TaxProfilesService);
 //# sourceMappingURL=tax-profiles.service.js.map

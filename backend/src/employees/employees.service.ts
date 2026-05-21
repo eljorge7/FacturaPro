@@ -256,7 +256,7 @@ export class EmployeesService {
     });
 
     if (!employee || employee.tenantId !== tenantId) {
-      throw new NotFoundException('Perfil de empleado no encontrado para este usuario');
+      return { isEmployee: false, message: 'Perfil de empleado no encontrado' };
     }
 
     const payslips = await this.prisma.payslip.findMany({

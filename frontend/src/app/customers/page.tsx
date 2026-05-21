@@ -43,15 +43,7 @@ export default function CustomersPage() {
   };
 
   const openEdit = (customer: any) => {
-    resetForm();
-    setEditingId(customer.id);
-    setLegalName(customer.legalName);
-    setRfc(customer.rfc);
-    setEmail(customer.email || "");
-    setPhone(customer.phone || "");
-    setTaxRegime(customer.taxRegime || "601");
-    setZipCode(customer.zipCode || "");
-    setIsModalOpen(true);
+    router.push(`/customers/${customer.id}/edit`);
   };
 
   const handleDelete = async (id: string, name: string) => {
@@ -279,80 +271,7 @@ export default function CustomersPage() {
            </table>
         </div>
 
-        {/* Modal Reusable for List View if needed, though typically creating is enough */}
-        {isModalOpen && (
-           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in">
-              <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg border border-slate-200 overflow-hidden scale-in-95 duration-200">
-                 <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
-                    <h3 className="text-lg font-black text-slate-800">
-                       {editingId ? "Editar Cliente" : "Nuevo Cliente"}
-                    </h3>
-                    <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors"><X className="w-5 h-5"/></button>
-                 </div>
-                 <div className="p-6 space-y-4">
-                    <div className="space-y-2">
-                       <label className="text-sm font-bold text-slate-700">Razón Social o Nombre Completo</label>
-                       <input type="text" value={legalName} onChange={e=>setLegalName(e.target.value)} placeholder="Ej. Empresa SA de CV" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 font-medium" />
-                    </div>
-                    <div className="space-y-2">
-                       <label className="text-sm font-bold text-slate-700">RFC (SAT)</label>
-                       <input type="text" value={rfc} onChange={e=>setRfc(e.target.value)} placeholder="XAXX010101000" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 font-medium uppercase" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                       <div className="space-y-2">
-                          <label className="text-sm font-bold text-slate-700">Correo (Opcional)</label>
-                          <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="contacto@empresa.com" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 font-medium" />
-                       </div>
-                       <div className="space-y-2">
-                          <label className="text-sm font-bold text-slate-700">Teléfono (Opcional)</label>
-                          <input type="text" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="123 456 7890" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 font-medium" />
-                       </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                       <div className="space-y-2">
-                          <label className="text-sm font-bold text-slate-700">Régimen Fiscal (SAT)</label>
-                          <select value={taxRegime} onChange={e=>setTaxRegime(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 font-medium">
-                             <option value="">-- Seleccionar Régimen --</option>
-                             {rfc.length === 12 ? (
-                                <>
-                                   <option value="601">601 - General de Ley Personas Morales</option>
-                                   <option value="603">603 - Personas Morales con Fines no Lucrativos</option>
-                                   <option value="626">626 - Régimen Simplificado de Confianza</option>
-                                </>
-                             ) : rfc.length === 13 ? (
-                                <>
-                                   <option value="605">605 - Sueldos y Salarios / Asimilados</option>
-                                   <option value="606">606 - Arrendamiento</option>
-                                   <option value="612">612 - Actividades Empresariales y Profesionales</option>
-                                   <option value="621">621 - Incorporación Fiscal (RIF)</option>
-                                   <option value="626">626 - Régimen Simplificado de Confianza (RESICO)</option>
-                                </>
-                             ) : (
-                                <option value="616">616 - Sin obligaciones fiscales (Extranjeros/Público en General)</option>
-                             )}
-                          </select>
-                       </div>
-                       <div className="space-y-2">
-                          <label className="text-sm font-bold text-slate-700">Código Postal (SAT)</label>
-                          <input type="text" value={zipCode} onChange={e=>setZipCode(e.target.value)} placeholder="Ej. 85860" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 font-medium" />
-                       </div>
-                    </div>
-                    {(!rfc || rfc.length < 12 || !taxRegime || !zipCode || zipCode.length < 5) && (
-                       <div className="bg-orange-50 border border-orange-200 text-orange-700 p-3 rounded-xl text-xs font-medium flex items-start gap-2">
-                          <Info className="w-4 h-4 shrink-0 mt-0.5" />
-                          <p>⚠️ <b>Faltan datos fiscales para emitir facturas:</b> Puedes guardar al cliente ahora, pero asegúrate de ingresar un RFC válido (12-13 caracteres), su Régimen Fiscal y el CP exacto de su comprobante fiscal antes de timbrar.</p>
-                       </div>
-                    )}
-                 </div>
-                 <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-                    <button onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 rounded-xl font-bold text-slate-600 hover:bg-slate-200 transition-colors">Cancelar</button>
-                    <button onClick={handleSave} disabled={isSaving} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-md active:scale-95 transition-all flex items-center gap-2">
-                       {isSaving ? <Loader2 className="w-4 h-4 animate-spin"/> : <Save className="w-4 h-4" />} {editingId ? "Actualizar" : "Guardar"}
-                    </button>
-                 </div>
-              </div>
-           </div>
-        )}
+         {/* Edit Modal has been replaced by full page edit */}
       </div>
     );
   }
@@ -476,23 +395,60 @@ export default function CustomersPage() {
                        <div className="flex items-start gap-4 mb-6">
                           <div className="mt-1"><Building className="w-4 h-4 text-slate-400" /></div>
                           <div className="w-full pr-4">
-                             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Otros Detalles</p>
-                             <div className="space-y-3">
-                                <div>
-                                   <p className="text-xs text-slate-500">RFC</p>
-                                   <p className="font-medium text-slate-800 break-all">{selectedCustomer.rfc}</p>
-                                </div>
-                                <div>
-                                   <p className="text-xs text-slate-500">Moneda</p>
-                                   <p className="font-medium text-slate-800">MXN - Peso mexicano</p>
-                                </div>
-                                <div>
-                                   <p className="text-xs text-slate-500">Portal de cliente</p>
-                                   <p className="text-xs text-slate-400 mt-1">Este cliente no ha sido invitado a su portal todavía.</p>
-                                   <button onClick={() => alert('Invitación enviada por correo (simulado)')} className="text-[#2563eb] font-medium text-xs mt-1 bg-blue-50 px-2 py-1 rounded hover:bg-blue-100 transition-colors">Invitar</button>
-                                </div>
-                             </div>
-                          </div>
+                              <div className="flex justify-between items-center mb-4">
+                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Otros Detalles</p>
+                                 <button onClick={() => alert('Expandir')} className="text-slate-400 hover:text-slate-600"><ChevronDown className="w-4 h-4" /></button>
+                              </div>
+                              <div className="space-y-4">
+                                 <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <p className="text-slate-500">Tipo de cliente</p>
+                                    <p className="font-medium text-slate-800">Empresa</p>
+                                 </div>
+                                 <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <p className="text-slate-500">Moneda predeterminada</p>
+                                    <p className="font-medium text-slate-800">MXN</p>
+                                 </div>
+                                 <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <p className="text-slate-500">Nombre legal de la empresa</p>
+                                    <p className="font-medium text-slate-800 uppercase">{selectedCustomer.legalName}</p>
+                                 </div>
+                                 <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <p className="text-slate-500">Tratamiento del IVA</p>
+                                    <p className="font-medium text-slate-800">Dentro de México</p>
+                                 </div>
+                                 <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <p className="text-slate-500">Número de registro del IVA (RFC)</p>
+                                    <p className="font-medium text-slate-800 uppercase">{selectedCustomer.rfc}</p>
+                                 </div>
+                                 <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <p className="text-slate-500">Régimen fiscal</p>
+                                    <p className="font-medium text-slate-800">
+                                       {selectedCustomer.taxRegime === '601' ? 'General de Ley Personas Morales' :
+                                        selectedCustomer.taxRegime === '626' ? 'Régimen Simplificado de Confianza (RESICO)' :
+                                        selectedCustomer.taxRegime === '612' ? 'Personas Físicas con Actividades Empresariales y Profesionales' :
+                                        selectedCustomer.taxRegime === '622' ? 'Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras' :
+                                        selectedCustomer.taxRegime}
+                                    </p>
+                                 </div>
+                                 <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <p className="text-slate-500">Estado del portal</p>
+                                    <div>
+                                       {selectedCustomer.portalEnabled ? (
+                                          <p className="font-medium text-[#10b981] flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#10b981]"></span> Habilitada</p>
+                                       ) : (
+                                          <div>
+                                             <p className="text-xs text-slate-400">No se ha invitado al portal.</p>
+                                             <button onClick={() => alert('Invitación enviada por correo (simulado)')} className="text-[#2563eb] hover:underline font-medium text-xs mt-1 transition-colors">Volver a invitar</button>
+                                          </div>
+                                       )}
+                                    </div>
+                                 </div>
+                                 <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <p className="text-slate-500">Idioma de Cliente</p>
+                                    <p className="font-medium text-slate-800">español</p>
+                                 </div>
+                              </div>
+                           </div>
                        </div>
                     </div>
 

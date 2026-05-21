@@ -74,6 +74,7 @@ export declare class InvoicesService {
         cfdiUse: string | null;
         subtotal: number;
         taxTotal: number;
+        tdsTotal: number;
         total: number;
         currency: string;
         exchangeRate: number;
@@ -148,6 +149,14 @@ export declare class InvoicesService {
             notes: string | null;
             createdAt: Date;
         }[];
+        attachments: {
+            id: string;
+            invoiceId: string;
+            fileName: string;
+            fileUrl: string;
+            fileSize: number | null;
+            createdAt: Date;
+        }[];
     } & {
         id: string;
         tenantId: string;
@@ -163,6 +172,7 @@ export declare class InvoicesService {
         cfdiUse: string | null;
         subtotal: number;
         taxTotal: number;
+        tdsTotal: number;
         total: number;
         currency: string;
         exchangeRate: number;
@@ -238,6 +248,7 @@ export declare class InvoicesService {
             cfdiUse: string | null;
             subtotal: number;
             taxTotal: number;
+            tdsTotal: number;
             total: number;
             currency: string;
             exchangeRate: number;
@@ -343,6 +354,14 @@ export declare class InvoicesService {
             notes: string | null;
             createdAt: Date;
         }[];
+        attachments: {
+            id: string;
+            invoiceId: string;
+            fileName: string;
+            fileUrl: string;
+            fileSize: number | null;
+            createdAt: Date;
+        }[];
     } & {
         id: string;
         tenantId: string;
@@ -358,6 +377,7 @@ export declare class InvoicesService {
         cfdiUse: string | null;
         subtotal: number;
         taxTotal: number;
+        tdsTotal: number;
         total: number;
         currency: string;
         exchangeRate: number;
@@ -400,6 +420,7 @@ export declare class InvoicesService {
         cfdiUse: string | null;
         subtotal: number;
         taxTotal: number;
+        tdsTotal: number;
         total: number;
         currency: string;
         exchangeRate: number;
@@ -426,6 +447,7 @@ export declare class InvoicesService {
         cfdiUse: string | null;
         subtotal: number;
         taxTotal: number;
+        tdsTotal: number;
         total: number;
         currency: string;
         exchangeRate: number;
@@ -452,6 +474,7 @@ export declare class InvoicesService {
         cfdiUse: string | null;
         subtotal: number;
         taxTotal: number;
+        tdsTotal: number;
         total: number;
         currency: string;
         exchangeRate: number;
@@ -466,6 +489,14 @@ export declare class InvoicesService {
     sendWhatsapp(id: string, phone: string): Promise<{
         success: boolean;
         message: string;
+    }>;
+    addAttachment(id: string, file: Express.Multer.File): Promise<{
+        id: string;
+        invoiceId: string;
+        fileName: string;
+        fileUrl: string;
+        fileSize: number | null;
+        createdAt: Date;
     }>;
     getArReport(tenantId: string): Promise<{
         totalAccountsReceivable: number;
@@ -514,6 +545,7 @@ export declare class InvoicesService {
             cfdiUse: string | null;
             subtotal: number;
             taxTotal: number;
+            tdsTotal: number;
             total: number;
             currency: string;
             exchangeRate: number;

@@ -14,10 +14,13 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InvoicesController = void 0;
 const common_1 = require("@nestjs/common");
+const platform_express_1 = require("@nestjs/platform-express");
 const hybrid_auth_guard_1 = require("../auth/hybrid-auth.guard");
 const invoices_service_1 = require("./invoices.service");
 const create_invoice_dto_1 = require("./dto/create-invoice.dto");
 const pdf_service_1 = require("./pdf.service");
+const multer_1 = require("multer");
+const path_1 = require("path");
 let InvoicesController = class InvoicesController {
     invoicesService;
     pdfService;
@@ -56,6 +59,11 @@ let InvoicesController = class InvoicesController {
             'Content-Length': pdfBuffer.length,
         });
         res.end(pdfBuffer);
+    }
+    uploadAttachment(id, file) {
+        if (!file)
+            throw new common_1.BadRequestException('Archivo no proveído');
+        return this.invoicesService.addAttachment(id, file);
     }
     cancelFiscal(id, body) {
         return this.invoicesService.cancelFiscal(id, body.motive, body.substitutionUuid);
@@ -124,6 +132,23 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], InvoicesController.prototype, "downloadPdf", null);
+__decorate([
+    (0, common_1.Post)(':id/attachments'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
+        storage: (0, multer_1.diskStorage)({
+            destination: './uploads/invoices',
+            filename: (req, file, cb) => {
+                const randomName = Array(32).fill(null).map(() => (Math.round(Math.random() * 16)).toString(16)).join('');
+                cb(null, `${randomName}${(0, path_1.extname)(file.originalname)}`);
+            }
+        })
+    })),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.UploadedFile)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], InvoicesController.prototype, "uploadAttachment", null);
 __decorate([
     (0, common_1.Post)(':id/cancel'),
     __param(0, (0, common_1.Param)('id')),

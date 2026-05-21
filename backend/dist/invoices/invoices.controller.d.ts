@@ -73,6 +73,7 @@ export declare class InvoicesController {
         cfdiUse: string | null;
         subtotal: number;
         taxTotal: number;
+        tdsTotal: number;
         total: number;
         currency: string;
         exchangeRate: number;
@@ -147,6 +148,14 @@ export declare class InvoicesController {
             notes: string | null;
             createdAt: Date;
         }[];
+        attachments: {
+            id: string;
+            invoiceId: string;
+            fileName: string;
+            fileUrl: string;
+            fileSize: number | null;
+            createdAt: Date;
+        }[];
     } & {
         id: string;
         tenantId: string;
@@ -162,6 +171,7 @@ export declare class InvoicesController {
         cfdiUse: string | null;
         subtotal: number;
         taxTotal: number;
+        tdsTotal: number;
         total: number;
         currency: string;
         exchangeRate: number;
@@ -237,6 +247,7 @@ export declare class InvoicesController {
             cfdiUse: string | null;
             subtotal: number;
             taxTotal: number;
+            tdsTotal: number;
             total: number;
             currency: string;
             exchangeRate: number;
@@ -326,6 +337,7 @@ export declare class InvoicesController {
             cfdiUse: string | null;
             subtotal: number;
             taxTotal: number;
+            tdsTotal: number;
             total: number;
             currency: string;
             exchangeRate: number;
@@ -411,6 +423,14 @@ export declare class InvoicesController {
             notes: string | null;
             createdAt: Date;
         }[];
+        attachments: {
+            id: string;
+            invoiceId: string;
+            fileName: string;
+            fileUrl: string;
+            fileSize: number | null;
+            createdAt: Date;
+        }[];
     } & {
         id: string;
         tenantId: string;
@@ -426,6 +446,7 @@ export declare class InvoicesController {
         cfdiUse: string | null;
         subtotal: number;
         taxTotal: number;
+        tdsTotal: number;
         total: number;
         currency: string;
         exchangeRate: number;
@@ -438,6 +459,14 @@ export declare class InvoicesController {
         updatedAt: Date;
     }>;
     downloadPdf(id: string, res: any): Promise<void>;
+    uploadAttachment(id: string, file: Express.Multer.File): Promise<{
+        id: string;
+        invoiceId: string;
+        fileName: string;
+        fileUrl: string;
+        fileSize: number | null;
+        createdAt: Date;
+    }>;
     cancelFiscal(id: string, body: {
         motive: string;
         substitutionUuid?: string;
@@ -456,6 +485,7 @@ export declare class InvoicesController {
         cfdiUse: string | null;
         subtotal: number;
         taxTotal: number;
+        tdsTotal: number;
         total: number;
         currency: string;
         exchangeRate: number;
@@ -498,6 +528,7 @@ export declare class InvoicesController {
         cfdiUse: string | null;
         subtotal: number;
         taxTotal: number;
+        tdsTotal: number;
         total: number;
         currency: string;
         exchangeRate: number;
@@ -524,6 +555,7 @@ export declare class InvoicesController {
         cfdiUse: string | null;
         subtotal: number;
         taxTotal: number;
+        tdsTotal: number;
         total: number;
         currency: string;
         exchangeRate: number;

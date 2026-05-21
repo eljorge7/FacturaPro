@@ -12,13 +12,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.QuotesService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const mail_service_1 = require("../mail/mail.service");
 let QuotesService = class QuotesService {
     prisma;
-    constructor(prisma) {
+    mailService;
+    constructor(prisma, mailService) {
         this.prisma = prisma;
+        this.mailService = mailService;
     }
     async create(createQuoteDto) {
-        let { tenantId, customerId, items, notes, expirationDate, taxIncluded } = createQuoteDto;
+        let { tenantId, customerId, items, notes, expirationDate, taxIncluded, isProposal, projectName, projectScope, projectNotes, coordinates, personnel, materials, coverImageUrl, templateId } = createQuoteDto;
         if (!tenantId) {
             const tenantFallback = await this.prisma.tenant.findFirst();
             if (!tenantFallback)
@@ -36,7 +39,7 @@ let QuotesService = class QuotesService {
             throw new common_1.NotFoundException('Cliente no encontrado');
         let subtotal = 0;
         let taxTotal = 0;
-        const quoteItemsData = items.map(item => {
+        const quoteItemsData = items.map((item) => {
             const discount = item.discount || 0;
             let lineTotal = 0;
             let lineSubtotal = 0;
@@ -63,7 +66,8 @@ let QuotesService = class QuotesService {
                 total: lineTotal
             };
         });
-        const total = subtotal + taxTotal;
+        const tdsTotal = customer.tdsEnabled ? (subtotal * 0.0125) : 0;
+        const total = subtotal + taxTotal - tdsTotal;
         let quoteNumber = createQuoteDto.quoteNumber;
         if (!quoteNumber || quoteNumber.trim() === '') {
             const series = await this.prisma.invoiceSeries.findFirst({
@@ -89,9 +93,19 @@ let QuotesService = class QuotesService {
                 status: 'DRAFT',
                 subtotal,
                 taxTotal,
+                tdsTotal,
                 total,
                 notes,
                 expirationDate: expirationDate ? new Date(expirationDate) : null,
+                isProposal: isProposal || false,
+                projectName,
+                projectScope,
+                projectNotes,
+                coordinates,
+                personnel,
+                materials,
+                coverImageUrl,
+                templateId,
                 items: {
                     create: quoteItemsData
                 }
@@ -106,18 +120,30 @@ let QuotesService = class QuotesService {
         }
         return this.prisma.quote.findMany({
             where: whereFilter,
-            include: { customer: true, items: true, taxProfile: true },
+            include: { customer: true, items: true, taxProfile: true, attachments: true },
             orderBy: { createdAt: 'desc' }
         });
     }
     async findOne(id) {
         const q = await this.prisma.quote.findUnique({
             where: { id },
-            include: { items: true, customer: true, taxProfile: true }
+            include: { items: true, customer: true, taxProfile: true, attachments: true }
         });
         if (!q)
             throw new common_1.NotFoundException('Cotización no encontrada');
         return q;
+    }
+    async sendQuote(id) {
+        const quote = await this.findOne(id);
+        if (!quote.customer?.email) {
+            throw new common_1.BadRequestException('El cliente no tiene un correo electrónico registrado.');
+        }
+        const proposalUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:3004'}/quotes/${quote.id}/proposal`;
+        await this.mailService.sendQuoteEmail(quote.customer.email, quote.quoteNumber, proposalUrl, quote.customer.legalName);
+        return this.prisma.quote.update({
+            where: { id },
+            data: { status: 'SENT' }
+        });
     }
     async updateStatus(id, updateQuoteDto) {
         return this.prisma.quote.update({
@@ -125,13 +151,104 @@ let QuotesService = class QuotesService {
             data: { status: updateQuoteDto.status }
         });
     }
+    async update(tenantId, id, data) {
+        return this.prisma.quote.update({
+            where: { id },
+            data: {
+                isProposal: data.isProposal !== undefined ? data.isProposal : undefined,
+                projectName: data.projectName !== undefined ? data.projectName : undefined,
+                projectScope: data.projectScope !== undefined ? data.projectScope : undefined,
+                projectNotes: data.projectNotes !== undefined ? data.projectNotes : undefined,
+                coordinates: data.coordinates !== undefined ? data.coordinates : undefined,
+                personnel: data.personnel !== undefined ? data.personnel : undefined,
+                materials: data.materials !== undefined ? data.materials : undefined,
+                coverImageUrl: data.coverImageUrl !== undefined ? data.coverImageUrl : undefined,
+                templateId: data.templateId !== undefined ? data.templateId : undefined,
+                notes: data.notes !== undefined ? data.notes : undefined,
+                expirationDate: data.expirationDate !== undefined ? (data.expirationDate ? new Date(data.expirationDate) : null) : undefined,
+            }
+        });
+    }
     remove(id) {
         return this.prisma.quote.delete({ where: { id } });
+    }
+    async addAttachment(id, file) {
+        const fileUrl = `/uploads/quotes/${file.filename}`;
+        return this.prisma.quoteAttachment.create({
+            data: {
+                quoteId: id,
+                fileName: file.originalname,
+                fileUrl: fileUrl,
+                fileSize: file.size,
+            }
+        });
+    }
+    async convertToInvoice(id) {
+        const quote = await this.findOne(id);
+        if (quote.status === 'INVOICED')
+            throw new common_1.BadRequestException('Esta cotización ya fue facturada.');
+        const invoice = await this.prisma.invoice.create({
+            data: {
+                tenantId: quote.tenantId,
+                taxProfileId: quote.taxProfileId,
+                customerId: quote.customerId,
+                quoteId: quote.id,
+                invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+                subtotal: quote.subtotal,
+                taxTotal: quote.taxTotal,
+                tdsTotal: quote.tdsTotal,
+                total: quote.total,
+                currency: quote.currency,
+            }
+        });
+        const invoiceItems = quote.items.map(item => ({
+            invoiceId: invoice.id,
+            productId: item.productId,
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            discount: item.discount,
+            taxRate: item.taxRate,
+            total: item.total
+        }));
+        await this.prisma.invoiceItem.createMany({ data: invoiceItems });
+        await this.prisma.quote.update({
+            where: { id: quote.id },
+            data: { status: 'INVOICED' }
+        });
+        return invoice;
+    }
+    async getDashboardStats(tenantId) {
+        const quotes = await this.prisma.quote.findMany({
+            where: { tenantId }
+        });
+        let totalSent = 0;
+        let totalWon = 0;
+        let countSent = 0;
+        let countWon = 0;
+        quotes.forEach(q => {
+            if (q.status !== 'DRAFT') {
+                totalSent += q.total;
+                countSent++;
+            }
+            if (q.status === 'ACCEPTED' || q.status === 'INVOICED') {
+                totalWon += q.total;
+                countWon++;
+            }
+        });
+        const conversionRate = countSent > 0 ? Math.round((countWon / countSent) * 100) : 0;
+        return {
+            totalSent,
+            totalWon,
+            conversionRate,
+            countSent,
+            countWon
+        };
     }
 };
 exports.QuotesService = QuotesService;
 exports.QuotesService = QuotesService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, mail_service_1.MailService])
 ], QuotesService);
 //# sourceMappingURL=quotes.service.js.map

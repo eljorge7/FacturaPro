@@ -12,5 +12,14 @@ export declare class CreateQuoteDto {
     expirationDate?: string;
     notes?: string;
     taxIncluded?: boolean;
+    isProposal?: boolean;
+    projectName?: string;
+    projectScope?: string;
+    projectNotes?: string;
+    coordinates?: string;
+    personnel?: string;
+    materials?: string;
+    coverImageUrl?: string;
+    templateId?: string;
     items: QuoteItemDto[];
 }

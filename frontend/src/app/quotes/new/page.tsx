@@ -1,18 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, Plus, X, Save, Send, Loader2, Info, Search, FileText, ChevronDown, PlusCircle, PanelRight, MessageCircle, FileEdit, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, X, Save, Send, Loader2, Info, Search, FileText, ChevronDown, PlusCircle, PanelRight, MessageCircle, FileEdit, Trash2, Globe, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 
 export default function NewQuotePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get('editId');
   const { tenantId: activeTenantId } = useAuth();
   
   const [customers, setCustomers] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
-  
+  // Syscom Integration States
+  const [isSyscomModalOpen, setIsSyscomModalOpen] = useState(false);
+  const [syscomSearch, setSyscomSearch] = useState("");
+  const [syscomResults, setSyscomResults] = useState<any[]>([]);
+  const [isSearchingSyscom, setIsSearchingSyscom] = useState(false);
+  const [addedSyscomItemId, setAddedSyscomItemId] = useState<string | null>(null);
+
   const [customerId, setCustomerId] = useState("");
   const [quoteNumber, setQuoteNumber] = useState(`EST-${Date.now().toString().slice(-5)}`);
   const [reference, setReference] = useState("");
@@ -25,6 +33,20 @@ export default function NewQuotePage() {
 
   const [taxIncluded, setTaxIncluded] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Proposal States
+  const [isProposal, setIsProposal] = useState(false);
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [proposalData, setProposalData] = useState({
+     projectName: "",
+     templateId: "",
+     projectScope: "",
+     projectNotes: "",
+     personnel: "",
+     materials: "",
+     coverImageUrl: "",
+     coordinates: ""
+  });
 
   // States para interceptar items no registrados
   const [unregisteredItems, setUnregisteredItems] = useState<any[]>([]);
@@ -46,19 +68,112 @@ export default function NewQuotePage() {
       enableTds: false
   });
 
+  // Load draft or quote on mount
   useEffect(() => {
+    if (editId) {
+       const fetchQuoteForEdit = async () => {
+         try {
+           const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
+           const res = await fetch(`${baseUrl}/quotes/${editId}`);
+           if (res.ok) {
+             const data = await res.json();
+             setQuoteNumber(data.quoteNumber);
+             setCustomerId(data.customerId);
+             setReference(data.reference || "");
+             setDate(data.createdAt.split('T')[0]);
+             setExpirationDate(data.expiresAt?.split('T')[0] || "");
+             setNotes(data.notes || "");
+             setTaxIncluded(data.taxIncluded || false);
+             if (data.items && data.items.length > 0) {
+                setItems(data.items.map((i: any) => ({
+                   productId: i.productId || "",
+                   description: i.description,
+                   quantity: i.quantity,
+                   unitPrice: i.unitPrice,
+                   taxRate: i.taxRate,
+                   discount: i.discount || 0
+                })));
+             }
+             if (data.isProposal) {
+                setIsProposal(true);
+                setProposalData({
+                   projectName: data.projectName || "",
+                   templateId: data.templateId || "",
+                   projectScope: data.projectScope || "",
+                   projectNotes: data.projectNotes || "",
+                   personnel: data.personnel || "",
+                   materials: data.materials || "",
+                   coverImageUrl: data.coverImageUrl || "",
+                   coordinates: data.coordinates || ""
+                });
+             }
+           }
+         } catch(e) {
+           console.error("Error loading quote for edit:", e);
+         }
+       };
+       fetchQuoteForEdit();
+    } else {
+       const saved = localStorage.getItem('facturapro_draft_quote');
+       if (saved) {
+         try {
+           const parsed = JSON.parse(saved);
+           if (parsed.items && parsed.items.length > 0) setItems(parsed.items);
+           if (parsed.customerId) setCustomerId(parsed.customerId);
+           if (parsed.reference) setReference(parsed.reference);
+           if (parsed.issueDate) setDate(parsed.issueDate);
+           if (parsed.dueDate) setExpirationDate(parsed.dueDate);
+           if (parsed.subject) setNotes(parsed.subject);
+         } catch(e) {}
+       }
+    }
     fetchCatalogs();
-  }, []);
+  }, [editId]);
+
+  // Autosave draft
+  useEffect(() => {
+    if (items.length > 1 || items[0].description || customerId || reference || notes) {
+      localStorage.setItem('facturapro_draft_quote', JSON.stringify({
+        items, customerId, reference, issueDate: date, dueDate: expirationDate, subject: notes
+      }));
+    }
+  }, [items, customerId, reference, date, expirationDate, notes]);
+
+  useEffect(() => {
+    const fetchSyscom = async () => {
+      if (syscomSearch.length < 3) {
+        setSyscomResults([]);
+        return;
+      }
+      setIsSearchingSyscom(true);
+      try {
+        const res = await fetch(`http://localhost:3001/store/products?search=${encodeURIComponent(syscomSearch)}`);
+        const data = await res.json();
+        setSyscomResults(data.products.slice(0, 8)); // Top 8 results
+      } catch (e) {
+        console.error("Syscom API Error:", e);
+      } finally {
+        setIsSearchingSyscom(false);
+      }
+    };
+    const timeoutId = setTimeout(fetchSyscom, 500);
+    return () => clearTimeout(timeoutId);
+  }, [syscomSearch]);
 
   const fetchCatalogs = async () => {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
-      const [custRes, prodRes] = await Promise.all([
-        fetch(`${baseUrl}/customers`),
-        fetch(`${baseUrl}/products`)
+      const token = localStorage.getItem('facturapro_token');
+      const headers = { 'x-tenant-id': activeTenantId || "", 'Authorization': `Bearer ${token}` };
+      
+      const [cusRes, prodRes, tplRes] = await Promise.all([
+        fetch(`${baseUrl}/customers`, { headers }),
+        fetch(`${baseUrl}/products`, { headers }),
+        fetch(`${baseUrl}/proposal-templates`, { headers })
       ]);
-      setCustomers(await custRes.json());
-      setProducts(await prodRes.json());
+      if (cusRes.ok) setCustomers(await cusRes.json());
+      if (prodRes.ok) setProducts(await prodRes.json());
+      if (tplRes.ok) setTemplates(await tplRes.json());
     } catch (e) {
       console.error(e);
     }
@@ -104,7 +219,12 @@ export default function NewQuotePage() {
       }
     });
 
-    return { subtotal, taxes, total: subtotal + taxes };
+    let tds = 0;
+    if (selectedCustomerObj?.tdsEnabled) {
+       tds = subtotal * 0.0125;
+    }
+
+    return { subtotal, taxes, tds, total: subtotal + taxes - tds };
   };
 
   const triggerSave = (send: boolean) => {
@@ -154,8 +274,11 @@ export default function NewQuotePage() {
          }
       }
 
-      const res = await fetch(`${baseUrl}/quotes`, {
-        method: 'POST',
+      const url = editId ? `${baseUrl}/quotes/${editId}` : `${baseUrl}/quotes`;
+      const method = editId ? 'PATCH' : 'POST';
+
+      const res = await fetch(url, {
+        method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tenantId: activeTenantId,
@@ -163,6 +286,8 @@ export default function NewQuotePage() {
           expirationDate: expirationDate || undefined,
           notes,
           taxIncluded,
+          isProposal,
+          ...proposalData,
           items: mappedItems.map(i => ({
              ...i,
              unitPrice: taxIncluded ? (i.unitPrice / (1 + i.taxRate)) : i.unitPrice,
@@ -172,6 +297,9 @@ export default function NewQuotePage() {
       });
 
       if (!res.ok) throw new Error("Error al guardar");
+
+      // Clear draft on successful save
+      localStorage.removeItem('facturapro_draft_quote');
       
       router.push('/quotes');
     } catch (e) {
@@ -195,6 +323,7 @@ export default function NewQuotePage() {
              }
          });
          cleanPayload.tdsEnabled = newCustomerData.enableTds;
+         cleanPayload.taxRegime = (newCustomerData.taxRegime || '601').substring(0, 3);
 
          const res = await fetch(`${baseUrl}/customers`, {
             method: 'POST',
@@ -207,7 +336,7 @@ export default function NewQuotePage() {
             setCustomers([...customers, customer]);
             setCustomerId(customer.id);
             setIsCustomerModalOpen(false);
-            setNewCustomerData({ legalName: "", rfc: "", taxRegime: "601", zipCode: "", email: "", phone: "", currency: "MXN", vatTreatment: "within_mexico", enableTds: false });
+            setNewCustomerData({ legalName: "", rfc: "", taxRegime: "", zipCode: "", email: "", phone: "", currency: "MXN", vatTreatment: "within_mexico", enableTds: false });
          } else {
             const errData = await res.text();
             alert(`Error del Servidor al crear cliente:\n${errData}`);
@@ -327,6 +456,90 @@ export default function NewQuotePage() {
               </div>
 
             </div>
+
+            {/* --- PROPOSAL MODE TOGGLE --- */}
+            <div className="mt-8 border border-amber-200 bg-amber-50 rounded-xl p-5">
+               <div className="flex items-center justify-between">
+                  <div>
+                     <h3 className="font-bold text-amber-900 flex items-center gap-2"><FileText className="w-5 h-5"/> Modo Propuesta Comercial</h3>
+                     <p className="text-sm text-amber-700 mt-1">Convierte esta cotización en una presentación completa para tu cliente (con imágenes, alcance, personal).</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" checked={isProposal} onChange={e=>setIsProposal(e.target.checked)} className="sr-only peer" />
+                    <div className="w-11 h-6 bg-amber-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
+                  </label>
+               </div>
+               
+               {isProposal && (
+                  <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5 pt-5 border-t border-amber-200">
+                     <div className="md:col-span-2">
+                        <div className="flex items-center justify-between mb-1">
+                           <label className="text-sm font-bold text-amber-900 block">Cargar desde Plantilla</label>
+                           <Link href="/settings/proposal-templates" target="_blank" className="text-xs font-bold text-indigo-600 hover:underline">
+                              ⚙️ Configurar Plantillas
+                           </Link>
+                        </div>
+                        <select 
+                           value={proposalData.templateId} 
+                           onChange={e => {
+                              const tpl = templates.find(t => t.id === e.target.value);
+                              if (tpl) {
+                                 setProposalData({
+                                    ...proposalData,
+                                    templateId: tpl.id,
+                                    projectScope: tpl.defaultScope || "",
+                                    projectNotes: tpl.defaultNotes || "",
+                                    personnel: tpl.defaultPersonnel || "",
+                                    materials: tpl.defaultMaterials || "",
+                                    coverImageUrl: tpl.coverImageUrl || ""
+                                 });
+                              } else {
+                                 setProposalData({...proposalData, templateId: ""});
+                              }
+                           }}
+                           className="w-full border border-amber-300 bg-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-amber-500"
+                        >
+                           <option value="">Seleccionar plantilla...</option>
+                           {templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                        </select>
+                        {templates.length === 0 && (
+                           <p className="text-xs text-amber-700 mt-1">Aún no tienes plantillas creadas. Usa el enlace de arriba para crear tu primera plantilla base.</p>
+                        )}
+                     </div>
+                     <div>
+                        <label className="text-sm font-bold text-amber-900 block mb-1">Nombre del Proyecto</label>
+                        <input type="text" value={proposalData.projectName} onChange={e=>setProposalData({...proposalData, projectName: e.target.value})} className="w-full border border-amber-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-amber-500" placeholder="Ej. Enlace PTP 5km" />
+                     </div>
+                     <div>
+                        <label className="text-sm font-bold text-amber-900 block mb-1">URL Imagen de Portada</label>
+                        <input type="text" value={proposalData.coverImageUrl} onChange={e=>setProposalData({...proposalData, coverImageUrl: e.target.value})} className="w-full border border-amber-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-amber-500" placeholder="https://" />
+                     </div>
+                     <div>
+                        <label className="text-sm font-bold text-amber-900 block mb-1">Coordenadas GPS (Opcional)</label>
+                        <input type="text" value={proposalData.coordinates} onChange={e=>setProposalData({...proposalData, coordinates: e.target.value})} className="w-full border border-amber-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-amber-500" placeholder="Ej. 19.4326, -99.1332" />
+                     </div>
+                     <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                           <label className="text-sm font-bold text-amber-900 block mb-1">Alcance del Proyecto</label>
+                           <textarea value={proposalData.projectScope} onChange={e=>setProposalData({...proposalData, projectScope: e.target.value})} rows={3} className="w-full border border-amber-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-amber-500" />
+                        </div>
+                        <div>
+                           <label className="text-sm font-bold text-amber-900 block mb-1">Personal / Ejecución</label>
+                           <textarea value={proposalData.personnel} onChange={e=>setProposalData({...proposalData, personnel: e.target.value})} rows={3} className="w-full border border-amber-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-amber-500" />
+                        </div>
+                        <div>
+                           <label className="text-sm font-bold text-amber-900 block mb-1">Listado de Materiales</label>
+                           <textarea value={proposalData.materials} onChange={e=>setProposalData({...proposalData, materials: e.target.value})} rows={3} className="w-full border border-amber-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-amber-500" />
+                        </div>
+                        <div>
+                           <label className="text-sm font-bold text-amber-900 block mb-1">Notas Comerciales (Garantía, Tiempos)</label>
+                           <textarea value={proposalData.projectNotes} onChange={e=>setProposalData({...proposalData, projectNotes: e.target.value})} rows={3} className="w-full border border-amber-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-amber-500" />
+                        </div>
+                     </div>
+                  </div>
+               )}
+            </div>
+            {/* ----------------------------- */}
 
             {/* Editor de Conceptos (Items Table) */}
             <div className="mt-12">
@@ -458,12 +671,15 @@ export default function NewQuotePage() {
                   <div className="flex gap-2">
                      <button 
                         onClick={() => setItems([...items, { productId: "", description: "", quantity: 1, unitPrice: 0, taxRate: 0.16, discount: 0 }])}
-                        className="flex items-center gap-1 text-sm bg-[#f1f5f9] text-[#2563eb] hover:bg-[#e2e8f0] font-medium px-4 py-2 rounded transition-colors"
+                        className="flex items-center gap-2 text-purple-600 bg-purple-50 hover:bg-purple-100 px-4 py-2 rounded-lg font-bold text-sm transition-colors"
                      >
-                        <Plus className="w-4 h-4 bg-[#2563eb] text-white rounded-full p-0.5" /> Añadir nueva fila
+                        <Plus className="w-4 h-4" /> Añadir nueva fila
                      </button>
-                     <button className="flex items-center gap-1 text-sm bg-[#f1f5f9] text-[#2563eb] hover:bg-[#e2e8f0] font-medium px-4 py-2 rounded transition-colors hidden sm:flex">
-                        <Plus className="w-4 h-4 bg-[#2563eb] text-white rounded-full p-0.5" /> Agregar artículos a granel
+                     <button 
+                        onClick={() => setIsSyscomModalOpen(true)}
+                        className="flex items-center gap-2 text-purple-600 bg-white border border-purple-200 hover:border-purple-600 hover:bg-purple-50 px-4 py-2 rounded-lg font-bold text-sm transition-colors"
+                     >
+                        <Globe className="w-4 h-4" /> Buscar en Syscom
                      </button>
                   </div>
 
@@ -494,6 +710,17 @@ export default function NewQuotePage() {
                         <span>Impuesto</span>
                         <span>{totals.taxes.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                      </div>
+                     {selectedCustomerObj?.tdsEnabled && (
+                        <>
+                          <div className="flex justify-between items-center px-3 text-sm font-bold text-slate-700 mt-2">
+                             <span>Impuesto retenido en origen</span>
+                          </div>
+                          <div className="flex justify-between items-center px-3 text-sm text-slate-600">
+                             <span>Impuestos retenidos ISR [1.25%]</span>
+                             <span>-{totals.tds.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                          </div>
+                        </>
+                     )}
                      <div className="flex justify-between items-center px-3 text-lg font-bold">
                         <span className="text-slate-800">Total ( MXN )</span>
                         <span className="text-slate-900 font-mono tracking-tight text-xl">{totals.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
@@ -591,13 +818,34 @@ export default function NewQuotePage() {
                      </div>
                      <div>
                         <label className="text-xs font-bold text-red-500 uppercase">Régimen Fiscal*</label>
-                        <select value={newCustomerData.taxRegime} onChange={e=>setNewCustomerData({...newCustomerData, taxRegime: e.target.value})} className="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#10b981]">
+                        <input 
+                           list="miniTaxRegimes"
+                           value={newCustomerData.taxRegime} 
+                           onChange={e=>setNewCustomerData({...newCustomerData, taxRegime: e.target.value})} 
+                           placeholder="Ej. 601"
+                           className="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#10b981]" 
+                        />
+                        <datalist id="miniTaxRegimes">
                            <option value="601">601 - General de Ley Personas Morales</option>
-                           <option value="605">605 - Sueldos y Salarios e Ingresos Asimilados</option>
-                           <option value="612">612 - Personas Físicas con Actividades Emp.</option>
+                           <option value="603">603 - Personas Morales con Fines no Lucrativos</option>
+                           <option value="605">605 - Sueldos y Salarios e Ingresos Asimilados a Salarios</option>
+                           <option value="606">606 - Arrendamiento</option>
+                           <option value="608">608 - Demás ingresos</option>
+                           <option value="609">609 - Consolidación</option>
+                           <option value="610">610 - Residentes en el Extranjero sin Establecimiento Permanente en México</option>
+                           <option value="611">611 - Ingresos por Dividendos (socios y accionistas)</option>
+                           <option value="612">612 - Personas Físicas con Actividades Empresariales y Profesionales</option>
+                           <option value="614">614 - Ingresos por intereses</option>
+                           <option value="615">615 - Régimen de los ingresos por obtención de premios</option>
                            <option value="616">616 - Sin obligaciones fiscales</option>
+                           <option value="620">620 - Sociedades Cooperativas de Producción que optan por diferir sus ingresos</option>
+                           <option value="621">621 - Incorporación Fiscal</option>
+                           <option value="622">622 - Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras</option>
+                           <option value="623">623 - Opcional para Grupos de Sociedades</option>
+                           <option value="624">624 - Coordinados</option>
+                           <option value="625">625 - Régimen de las Actividades Empresariales con ingresos a través de Plataformas Tecnológicas</option>
                            <option value="626">626 - Régimen Simplificado de Confianza (RESICO)</option>
-                        </select>
+                        </datalist>
                      </div>
                      <div>
                         <label className="text-xs font-bold text-red-500 uppercase">Código Postal*</label>
@@ -654,6 +902,95 @@ export default function NewQuotePage() {
                </div>
             </div>
          </div>
+      )}
+      {/* SYSCOM SEARCH MODAL */}
+      {isSyscomModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col border border-slate-200">
+            <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-purple-50">
+              <div className="flex items-center gap-3">
+                <Globe className="w-6 h-6 text-purple-600" />
+                <div>
+                  <h3 className="font-bold text-slate-900">Búsqueda en Red Global Syscom</h3>
+                  <p className="text-xs text-slate-500">Agrega productos directamente a tu cotización sin darlos de alta.</p>
+                </div>
+              </div>
+              <button onClick={() => setIsSyscomModalOpen(false)} className="p-2 hover:bg-purple-100 rounded-full text-slate-500">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-4 border-b border-slate-100 shrink-0">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input 
+                  autoFocus
+                  placeholder="Ej. Kit 4 Cámaras, Bobina Cat 6..." 
+                  className="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none text-slate-800 transition-all"
+                  value={syscomSearch}
+                  onChange={e => setSyscomSearch(e.target.value)}
+                />
+                {isSearchingSyscom && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-500 animate-spin" />}
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-2 bg-slate-50/50">
+              {syscomSearch.length > 0 && syscomSearch.length < 3 && (
+                <div className="p-8 text-center text-sm text-slate-500">Escribe al menos 3 letras para buscar...</div>
+              )}
+              {syscomResults.map(prod => (
+                <div key={prod.id} className="flex gap-4 p-4 hover:bg-white rounded-xl border border-transparent hover:border-slate-200 hover:shadow-sm transition-all group items-center">
+                  <div className="w-16 h-16 bg-white rounded-lg border border-slate-200 flex items-center justify-center shrink-0 p-1">
+                    {prod.imageUrl ? <img src={prod.imageUrl} className="w-full h-full object-contain" /> : <span className="text-xs text-slate-300">No Img</span>}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-slate-900 text-sm line-clamp-2">{prod.title}</h4>
+                    <div className="flex gap-3 mt-1 text-xs">
+                      <span className="font-mono text-slate-500">{prod.id}</span>
+                      <span className="font-bold text-emerald-600">${prod.price.toLocaleString('es-MX')} MXN</span>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      const newItems = [...items];
+                      // Find first empty item or add new
+                      let targetIdx = newItems.findIndex(i => !i.description && !i.productId);
+                      if (targetIdx === -1) {
+                         newItems.push({ productId: "", description: "", quantity: 1, unitPrice: 0, taxRate: 0.16, discount: 0 });
+                         targetIdx = newItems.length - 1;
+                      }
+                      newItems[targetIdx] = {
+                        productId: "", // Keep it empty so it treats it as manual/Syscom
+                        description: prod.title,
+                        quantity: 1,
+                        unitPrice: prod.price / 1.16, // Syscom API returns price with IVA, we need base price
+                        taxRate: 0.16,
+                        discount: 0
+                      };
+                      setItems(newItems);
+                      setAddedSyscomItemId(prod.id);
+                      setTimeout(() => setAddedSyscomItemId(null), 2000);
+                    }}
+                    className={`shrink-0 px-4 py-2 rounded-lg font-bold text-sm transition-colors flex items-center gap-2 ${
+                      addedSyscomItemId === prod.id 
+                      ? 'bg-emerald-100 text-emerald-700' 
+                      : 'bg-purple-100 hover:bg-purple-600 text-purple-700 hover:text-white'
+                    }`}
+                  >
+                    {addedSyscomItemId === prod.id ? <CheckCircle2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                    {addedSyscomItemId === prod.id ? 'Agregado' : 'Agregar'}
+                  </button>
+                </div>
+              ))}
+              {!isSearchingSyscom && syscomSearch.length >= 3 && syscomResults.length === 0 && (
+                 <div className="p-12 flex flex-col items-center justify-center text-slate-400">
+                    <Search className="w-12 h-12 mb-3 opacity-20" />
+                    <p>No se encontraron resultados en Syscom.</p>
+                 </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

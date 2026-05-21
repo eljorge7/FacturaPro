@@ -67,6 +67,7 @@ export declare class BankTransactionsService {
         cfdiUse: string | null;
         subtotal: number;
         taxTotal: number;
+        tdsTotal: number;
         total: number;
         currency: string;
         exchangeRate: number;

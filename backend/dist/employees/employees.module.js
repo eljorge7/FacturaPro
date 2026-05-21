@@ -10,11 +10,13 @@ exports.EmployeesModule = void 0;
 const common_1 = require("@nestjs/common");
 const employees_service_1 = require("./employees.service");
 const employees_controller_1 = require("./employees.controller");
+const jwt_1 = require("@nestjs/jwt");
 let EmployeesModule = class EmployeesModule {
 };
 exports.EmployeesModule = EmployeesModule;
 exports.EmployeesModule = EmployeesModule = __decorate([
     (0, common_1.Module)({
+        imports: [jwt_1.JwtModule.register({ secret: process.env.JWT_SECRET || 'supersecret' })],
         providers: [employees_service_1.EmployeesService],
         controllers: [employees_controller_1.EmployeesController]
     })

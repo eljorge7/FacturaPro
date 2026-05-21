@@ -14,6 +14,9 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QuotesController = void 0;
 const common_1 = require("@nestjs/common");
+const platform_express_1 = require("@nestjs/platform-express");
+const multer_1 = require("multer");
+const path_1 = require("path");
 const quotes_service_1 = require("./quotes.service");
 const create_quote_dto_1 = require("./dto/create-quote.dto");
 const update_quote_dto_1 = require("./dto/update-quote.dto");
@@ -31,6 +34,9 @@ let QuotesController = class QuotesController {
     findAll(tenantId) {
         return this.quotesService.findAll(tenantId);
     }
+    getDashboardStats(tenantId) {
+        return this.quotesService.getDashboardStats(tenantId);
+    }
     findOne(id) {
         return this.quotesService.findOne(id);
     }
@@ -44,8 +50,22 @@ let QuotesController = class QuotesController {
         });
         res.end(pdfBuffer);
     }
+    async sendQuote(id) {
+        return this.quotesService.sendQuote(id);
+    }
+    async convertToInvoice(id) {
+        return this.quotesService.convertToInvoice(id);
+    }
+    async uploadAttachment(id, file) {
+        if (!file)
+            throw new Error('No se recibió archivo');
+        return this.quotesService.addAttachment(id, file);
+    }
     updateStatus(id, updateQuoteDto) {
         return this.quotesService.updateStatus(id, updateQuoteDto);
+    }
+    update(tenantId, id, updateData) {
+        return this.quotesService.update(tenantId, id, updateData);
     }
     remove(id) {
         return this.quotesService.remove(id);
@@ -67,6 +87,13 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], QuotesController.prototype, "findAll", null);
 __decorate([
+    (0, common_1.Get)('stats/dashboard'),
+    __param(0, (0, common_1.Headers)('x-tenant-id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], QuotesController.prototype, "getDashboardStats", null);
+__decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -82,6 +109,38 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], QuotesController.prototype, "downloadPdf", null);
 __decorate([
+    (0, common_1.Post)(':id/send'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], QuotesController.prototype, "sendQuote", null);
+__decorate([
+    (0, common_1.Post)(':id/convert-to-invoice'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], QuotesController.prototype, "convertToInvoice", null);
+__decorate([
+    (0, common_1.Post)(':id/attachments'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
+        storage: (0, multer_1.diskStorage)({
+            destination: './uploads/quotes',
+            filename: (req, file, callback) => {
+                const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+                const ext = (0, path_1.extname)(file.originalname);
+                callback(null, `${uniqueSuffix}${ext}`);
+            }
+        })
+    })),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.UploadedFile)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], QuotesController.prototype, "uploadAttachment", null);
+__decorate([
     (0, common_1.Patch)(':id/status'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
@@ -89,6 +148,15 @@ __decorate([
     __metadata("design:paramtypes", [String, update_quote_dto_1.UpdateQuoteDto]),
     __metadata("design:returntype", void 0)
 ], QuotesController.prototype, "updateStatus", null);
+__decorate([
+    (0, common_1.Patch)(':id'),
+    __param(0, (0, common_1.Headers)('x-tenant-id')),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", void 0)
+], QuotesController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
