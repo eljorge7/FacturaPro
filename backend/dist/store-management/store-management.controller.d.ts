@@ -1,0 +1,95 @@
+import { StoreManagementService } from './store-management.service';
+export declare class StoreManagementController {
+    private readonly service;
+    constructor(service: StoreManagementService);
+    getSettings(tenantId: string): Promise<{
+        storeEnabled: boolean;
+        storeSlug: string | null;
+        storeCustomDomain: string | null;
+        syscomClientId: string | null;
+        syscomClientSecret: string | null;
+        mercadopagoAccessToken: string | null;
+    } | null>;
+    updateSettings(tenantId: string, data: any): Promise<{
+        id: string;
+        name: string;
+        tradeName: string | null;
+        phone: string | null;
+        domain: string | null;
+        subscriptionTier: string;
+        availableStamps: number;
+        subscriptionEndsAt: Date | null;
+        hasExpenseControl: boolean;
+        hasApiAccess: boolean;
+        hasPosAccess: boolean;
+        hasInventoryControl: boolean;
+        storeEnabled: boolean;
+        storeSlug: string | null;
+        storeCustomDomain: string | null;
+        syscomClientId: string | null;
+        syscomClientSecret: string | null;
+        mercadopagoAccessToken: string | null;
+        agencyId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    getProducts(tenantId: string): Promise<{
+        id: string;
+        tenantId: string;
+        title: string;
+        description: string | null;
+        price: number;
+        stock: number;
+        imageUrl: string | null;
+        category: string | null;
+        brand: string | null;
+        source: string;
+        syscomId: string | null;
+        satKey: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>;
+    createProduct(tenantId: string, data: any): Promise<{
+        id: string;
+        tenantId: string;
+        title: string;
+        description: string | null;
+        price: number;
+        stock: number;
+        imageUrl: string | null;
+        category: string | null;
+        brand: string | null;
+        source: string;
+        syscomId: string | null;
+        satKey: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    updateProduct(tenantId: string, id: string, data: any): Promise<import(".prisma/client").Prisma.BatchPayload>;
+    deleteProduct(tenantId: string, id: string): Promise<import(".prisma/client").Prisma.BatchPayload>;
+    getOrders(tenantId: string): Promise<({
+        items: {
+            id: string;
+            orderId: string;
+            productId: string | null;
+            syscomId: string | null;
+            title: string;
+            price: number;
+            quantity: number;
+            satKey: string | null;
+        }[];
+    } & {
+        id: string;
+        tenantId: string;
+        customerId: string | null;
+        customerName: string;
+        customerPhone: string;
+        customerAddress: string;
+        totalAmount: number;
+        status: string;
+        isFacturado: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+    })[]>;
+    updateOrderStatus(tenantId: string, id: string, status: string): Promise<import(".prisma/client").Prisma.BatchPayload>;
+}

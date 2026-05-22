@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Building2, FileText, Lock, Plus, Save, Upload, XCircle, Settings as SettingsIcon, Image as ImageIcon, Loader2, Users, Key, Hash } from "lucide-react";
+import { Building2, FileText, Lock, Plus, Save, Upload, XCircle, Settings as SettingsIcon, Image as ImageIcon, Loader2, Users, Key, Hash, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
@@ -21,6 +21,16 @@ export default function SettingsPage() {
   const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'CASHIER' });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Store Settings State
+  const [storeSettings, setStoreSettings] = useState({
+      storeEnabled: false,
+      storeSlug: "",
+      storeCustomDomain: "",
+      syscomClientId: "",
+      syscomClientSecret: "",
+      mercadopagoAccessToken: ""
+  });
 
   // Series State
   const [series, setSeries] = useState<any[]>([]);
@@ -118,6 +128,24 @@ export default function SettingsPage() {
       setIsLoading(false);
   };
 
+  const fetchStoreSettings = async () => {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
+      const res = await fetch(`${baseUrl}/store-management/settings`, { headers: { 'Authorization': `Bearer ${token}` } });
+      if (res.ok) {
+        const data = await res.json();
+        if (data) {
+          setStoreSettings({
+            storeEnabled: data.storeEnabled || false,
+            storeSlug: data.storeSlug || "",
+            storeCustomDomain: data.storeCustomDomain || "",
+            syscomClientId: data.syscomClientId || "",
+            syscomClientSecret: data.syscomClientSecret || "",
+            mercadopagoAccessToken: data.mercadopagoAccessToken || ""
+          });
+        }
+      }
+  };
+
   const handleGenerateApiKey = async () => {
      setIsGeneratingKey(true);
      setNewRawKey(null);
@@ -147,6 +175,7 @@ export default function SettingsPage() {
         fetchApiKeys();
         fetchEmployees();
         fetchSeries();
+        fetchStoreSettings();
     }
   }, [token]);
 
@@ -373,6 +402,13 @@ export default function SettingsPage() {
                   className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'api' ? 'bg-emerald-50 text-[#10b981] border-l-4 border-l-[#10b981]' : 'text-slate-600 hover:bg-slate-50 border-l-4 border-l-transparent'}`}
                 >
                    <Key className="w-5 h-5"/> Integración API
+                </button>
+                <div className="h-px bg-slate-100"></div>
+                <button 
+                  onClick={() => setActiveTab('store')} 
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'store' ? 'bg-emerald-50 text-[#10b981] border-l-4 border-l-[#10b981]' : 'text-slate-600 hover:bg-slate-50 border-l-4 border-l-transparent'}`}
+                >
+                   <ShoppingCart className="w-5 h-5"/> Tienda en Línea
                 </button>
              </div>
           </div>
@@ -1007,6 +1043,73 @@ export default function SettingsPage() {
                       <p>Authorization: Bearer <span className="text-yellow-400">api_key_generada</span></p>
                       <p className="mt-2 text-slate-500">// Payload Body</p>
                       <p className="text-blue-300">{`{ "customerId": "..." , "total": 1500.00 }`}</p>
+                   </div>
+                </div>
+             )}
+
+             {/* STORE TAB */}
+             {activeTab === 'store' && (
+                <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-8 animate-in fade-in">
+                   <div className="flex justify-between items-center border-b border-slate-100 pb-4 mb-6">
+                      <div>
+                         <h2 className="text-lg font-bold text-slate-800">Tienda en Línea</h2>
+                         <p className="text-sm text-slate-500">Configura tu portal público de ventas conectado con Syscom y MercadoPago.</p>
+                      </div>
+                      <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 px-4 py-2 rounded-lg">
+                         <span className="text-sm font-bold text-slate-700">¿Habilitar Tienda?</span>
+                         <label className="relative inline-flex items-center cursor-pointer">
+                           <input type="checkbox" checked={storeSettings.storeEnabled} onChange={e => setStoreSettings({...storeSettings, storeEnabled: e.target.checked})} className="sr-only peer" />
+                           <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10b981]"></div>
+                         </label>
+                      </div>
+                   </div>
+
+                   <div className="grid grid-cols-2 gap-8">
+                      {/* URL Settings */}
+                      <div className="col-span-2 space-y-4">
+                         <h3 className="font-bold text-slate-700">URLs Públicas</h3>
+                         <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded border border-slate-200">
+                            <div>
+                               <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Dominio Personalizado</label>
+                               <input type="text" value={storeSettings.storeCustomDomain} onChange={e => setStoreSettings({...storeSettings, storeCustomDomain: e.target.value})} placeholder="ej. store.miempresa.com" className="w-full border border-slate-300 rounded-md px-3 py-2 text-slate-800 focus:outline-none focus:border-[#10b981]" />
+                               <p className="text-[10px] text-slate-500 mt-1">Requiere apuntar tu DNS CNAME a nuestro servidor.</p>
+                            </div>
+                            <div>
+                               <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Ruta Gratuita (Slug)</label>
+                               <div className="flex items-center">
+                                  <span className="bg-slate-200 px-3 py-2 border border-r-0 border-slate-300 rounded-l-md text-slate-500 font-mono text-sm">/store/</span>
+                                  <input type="text" value={storeSettings.storeSlug} onChange={e => setStoreSettings({...storeSettings, storeSlug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')})} placeholder="miempresa" className="flex-1 border border-slate-300 rounded-r-md px-3 py-2 text-slate-800 focus:outline-none focus:border-[#10b981] font-mono" />
+                               </div>
+                            </div>
+                         </div>
+                      </div>
+
+                      {/* Syscom Keys */}
+                      <div className="space-y-4">
+                         <h3 className="font-bold text-slate-700 flex items-center gap-2">Integración Syscom</h3>
+                         <div className="space-y-3 bg-slate-50 p-4 rounded border border-slate-200">
+                            <div>
+                               <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Client ID</label>
+                               <input type="text" value={storeSettings.syscomClientId} onChange={e => setStoreSettings({...storeSettings, syscomClientId: e.target.value})} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-800 font-mono focus:outline-none focus:border-[#10b981]" placeholder="hK0bhtA1..." />
+                            </div>
+                            <div>
+                               <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Client Secret</label>
+                               <input type="password" value={storeSettings.syscomClientSecret} onChange={e => setStoreSettings({...storeSettings, syscomClientSecret: e.target.value})} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-800 font-mono focus:outline-none focus:border-[#10b981]" placeholder="••••••••••••" />
+                            </div>
+                         </div>
+                      </div>
+
+                      {/* MercadoPago Keys */}
+                      <div className="space-y-4">
+                         <h3 className="font-bold text-slate-700 flex items-center gap-2">Pagos con MercadoPago</h3>
+                         <div className="space-y-3 bg-slate-50 p-4 rounded border border-slate-200">
+                            <div>
+                               <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Access Token (PROD)</label>
+                               <input type="password" value={storeSettings.mercadopagoAccessToken} onChange={e => setStoreSettings({...storeSettings, mercadopagoAccessToken: e.target.value})} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-800 font-mono focus:outline-none focus:border-[#10b981]" placeholder="APP_USR-..." />
+                               <p className="text-[10px] text-slate-500 mt-1">Este token permite recibir los pagos directamente a tu cuenta.</p>
+                            </div>
+                         </div>
+                      </div>
                    </div>
                 </div>
              )}

@@ -30,6 +30,14 @@ model Tenant {
   hasPosAccess        Boolean   @default(false)
   hasInventoryControl Boolean   @default(false)
   
+  // Tienda en Lnea (E-Commerce)
+  storeEnabled           Boolean @default(false)
+  storeSlug              String? @unique
+  storeCustomDomain      String? @unique
+  syscomClientId         String?
+  syscomClientSecret     String?
+  mercadopagoAccessToken String?
+
   // Reloj de la Agencia / Reseller
   agencyId            String?
   agency              AccountantAgency? @relation(fields: [agencyId], references: [id])
@@ -48,6 +56,8 @@ model Tenant {
 
   suppliers            Supplier[]
   expenseCategories    ExpenseCategory[]
+  storeOrders          StoreOrder[]
+  storeProducts        StoreProduct[]
   expenses             Expense[]
   purchaseOrders       PurchaseOrder[]
   cashShifts           CashShift[]
@@ -1094,4 +1104,61 @@ model ProposalTemplate {
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ----------------------------------------------------
+// TIENDA EN LINEA (E-COMMERCE)
+// ----------------------------------------------------
+
+model StoreProduct {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+
+  title       String
+  description String?  @db.Text
+  price       Float
+  stock       Int      @default(0)
+  imageUrl    String?
+  category    String?
+  brand       String?
+  source      String   @default("local") // local, syscom
+  syscomId    String?  // Id in Syscom if applicable
+  satKey      String?  @default("43222609")
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model StoreOrder {
+  id              String   @id @default(uuid())
+  tenantId        String
+  tenant          Tenant   @relation(fields: [tenantId], references: [id])
+
+  customerId      String?
+  customerName    String
+  customerPhone   String
+  customerAddress String   @db.Text
+
+  totalAmount     Float
+  status          String   @default("PENDING") // PENDING, PAID, SHIPPED, DELIVERED, CANCELLED
+  isFacturado     Boolean  @default(false)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  items           StoreOrderItem[]
+}
+
+model StoreOrderItem {
+  id          String     @id @default(uuid())
+  orderId     String
+  order       StoreOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId   String?
+  syscomId    String?
+  title       String
+  price       Float
+  quantity    Int
+  satKey      String?
 }

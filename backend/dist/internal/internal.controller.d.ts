@@ -21,6 +21,12 @@ export declare class InternalController {
         hasApiAccess: boolean;
         hasPosAccess: boolean;
         hasInventoryControl: boolean;
+        storeEnabled: boolean;
+        storeSlug: string | null;
+        storeCustomDomain: string | null;
+        syscomClientId: string | null;
+        syscomClientSecret: string | null;
+        mercadopagoAccessToken: string | null;
         agencyId: string | null;
         createdAt: Date;
         updatedAt: Date;

@@ -38,6 +38,8 @@ import { DepartmentsModule } from './departments/departments.module';
 import { TimeOffModule } from './time-off/time-off.module';
 import { ProposalTemplatesModule } from './proposal-templates/proposal-templates.module';
 import { MailModule } from './mail/mail.module';
+import { PublicStoreModule } from './public-store/public-store.module';
+import { StoreManagementModule } from './store-management/store-management.module';
 
 import { ThrottlerModule } from '@nestjs/throttler';
 import { CryptoModule } from './crypto/crypto.module';
@@ -53,7 +55,7 @@ import { join } from 'path';
       serveRoot: '/uploads',
     }),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
-    CryptoModule, AuthModule, SatCatalogsModule, TenantsModule, TaxProfilesModule, ApiKeysModule, ProductsModule, CustomersModule, QuotesModule, InvoicesModule, PrismaModule, SuppliersModule, ExpenseCategoriesModule, ExpensesModule, DiotModule, SubscriptionRequestsModule, CfdiModule, PosModule, UsersModule, PurchasesModule, InventoryModule, BovedaSatModule, EfosModule, SatScraperModule, BankAccountsModule, BankTransactionsModule, WarehousesModule, TransfersModule, StockTakesModule, EmployeesModule, RolesModule, PayrollModule, DepartmentsModule, TimeOffModule, ProposalTemplatesModule, MailModule
+    CryptoModule, AuthModule, SatCatalogsModule, TenantsModule, TaxProfilesModule, ApiKeysModule, ProductsModule, CustomersModule, QuotesModule, InvoicesModule, PrismaModule, SuppliersModule, ExpenseCategoriesModule, ExpensesModule, DiotModule, SubscriptionRequestsModule, CfdiModule, PosModule, UsersModule, PurchasesModule, InventoryModule, BovedaSatModule, EfosModule, SatScraperModule, BankAccountsModule, BankTransactionsModule, WarehousesModule, TransfersModule, StockTakesModule, EmployeesModule, RolesModule, PayrollModule, DepartmentsModule, TimeOffModule, ProposalTemplatesModule, MailModule, PublicStoreModule, StoreManagementModule
   ],
   controllers: [AppController, InternalController],
   providers: [AppService],
