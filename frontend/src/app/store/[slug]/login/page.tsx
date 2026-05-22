@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { setToken } from "@/lib/auth";
+import { useAuth } from "@/components/AuthProvider";
 import { Building2, Mail, Lock, ArrowRight, ShieldCheck } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
@@ -12,6 +12,7 @@ export default function StoreLoginPage() {
   const router = useRouter();
   const params = useParams();
   const slug = params?.slug as string || "default";
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,7 +36,7 @@ export default function StoreLoginPage() {
         throw new Error(data.message || 'Credenciales incorrectas');
       }
 
-      setToken(data.access_token, data.user);
+      login(data.token, data.tenantId, data.user);
       
       if (data.user.role === 'CUSTOMER') {
         router.push(`/store/${slug}`);
