@@ -1,7 +1,6 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import axios from 'axios';
 import { PrismaService } from '../prisma/prisma.service';
-import { MercadopagoService } from '../mercadopago/mercadopago.service';
 
 @Injectable()
 export class PublicStoreService {
