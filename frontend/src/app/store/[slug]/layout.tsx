@@ -26,10 +26,15 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
   const [checkoutName, setCheckoutName] = useState("");
   const [checkoutPhone, setCheckoutPhone] = useState("");
   const [checkoutStreet, setCheckoutStreet] = useState("");
+  const [checkoutExteriorNum, setCheckoutExteriorNum] = useState("");
   const [checkoutColonia, setCheckoutColonia] = useState("");
   const [checkoutCity, setCheckoutCity] = useState("");
   const [checkoutState, setCheckoutState] = useState("");
   const [checkoutZip, setCheckoutZip] = useState("");
+  
+  const [billingRfc, setBillingRfc] = useState("");
+  const [billingName, setBillingName] = useState("");
+  const [wantsBilling, setWantsBilling] = useState(false);
   const [saveAddress, setSaveAddress] = useState(false);
 
   const [showConfigDropdown, setShowConfigDropdown] = useState(false);
@@ -80,10 +85,14 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
           });
           if (res.data) {
-            if (res.data.address) setCheckoutStreet(res.data.address);
+            if (res.data.street) setCheckoutStreet(res.data.street);
+            if (res.data.exteriorNum) setCheckoutExteriorNum(res.data.exteriorNum);
+            if (res.data.neighborhood) setCheckoutColonia(res.data.neighborhood);
             if (res.data.city) setCheckoutCity(res.data.city);
             if (res.data.state) setCheckoutState(res.data.state);
             if (res.data.zipCode) setCheckoutZip(res.data.zipCode);
+            if (res.data.rfc) { setBillingRfc(res.data.rfc); setWantsBilling(true); }
+            if (res.data.companyName) setBillingName(res.data.companyName);
           }
         } catch (e) {
           console.error("Error fetching profile", e);
@@ -112,12 +121,18 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
     if (cart.length === 0) return;
     
     try {
-      const fullAddress = `${checkoutStreet}, Col. ${checkoutColonia}, ${checkoutCity}, ${checkoutState}, CP: ${checkoutZip}`;
       const orderData = {
         userId: user?.id,
         customerName: checkoutName || user?.name || "Cliente Invitado",
         customerPhone: checkoutPhone || user?.phone || "0000000000",
-        customerAddress: fullAddress,
+        street: checkoutStreet,
+        exteriorNum: checkoutExteriorNum,
+        neighborhood: checkoutColonia,
+        city: checkoutCity,
+        state: checkoutState,
+        zipCode: checkoutZip,
+        billingRfc: wantsBilling ? billingRfc : null,
+        billingName: wantsBilling ? billingName : null,
         totalAmount: cart.reduce((sum, item) => sum + (getDisplayPrice(item.product) * item.quantity), 0),
         items: cart.map(item => ({
           productId: item.product.source === 'local' ? item.product.id : null,
@@ -130,8 +145,10 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
 
       if (user && saveAddress) {
         try {
-          await axios.patch(`${API_URL}/users/my-profile/address`, {
-            address: checkoutStreet,
+          await axios.patch(`${API_URL}/users/my-profile`, {
+            street: checkoutStreet,
+            exteriorNum: checkoutExteriorNum,
+            neighborhood: checkoutColonia,
             city: checkoutCity,
             state: checkoutState,
             zipCode: checkoutZip
@@ -506,9 +523,15 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
                           <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm space-y-4">
                              <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-2"><Tag className="w-4 h-4 text-slate-400" /> Dirección de Envío</h4>
                              
-                             <div className="space-y-1">
-                               <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">Calle y Número</label>
-                               <input required type="text" placeholder="Ej. Av. Reforma 123" value={checkoutStreet} onChange={e => setCheckoutStreet(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50 hover:bg-white transition-colors" />
+                             <div className="grid grid-cols-[2fr_1fr] gap-3">
+                               <div className="space-y-1">
+                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">Calle</label>
+                                 <input required type="text" placeholder="Ej. Av. Reforma" value={checkoutStreet} onChange={e => setCheckoutStreet(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50 hover:bg-white transition-colors" />
+                               </div>
+                               <div className="space-y-1">
+                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">Número</label>
+                                 <input required type="text" placeholder="Ej. 123" value={checkoutExteriorNum} onChange={e => setCheckoutExteriorNum(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50 hover:bg-white transition-colors" />
+                               </div>
                              </div>
                              
                              <div className="space-y-1">
@@ -530,6 +553,26 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
                              <div className="space-y-1">
                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">Código Postal</label>
                                <input required type="text" placeholder="Ej. 85860" value={checkoutZip} onChange={e => setCheckoutZip(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50 hover:bg-white transition-colors" />
+                             </div>
+
+                             <div className="mt-4 pt-4 border-t border-slate-100">
+                               <label className="flex items-center gap-2 cursor-pointer mb-3">
+                                 <input type="checkbox" checked={wantsBilling} onChange={e => setWantsBilling(e.target.checked)} className="w-4 h-4 text-blue-600 rounded border-slate-300" />
+                                 <span className="text-sm font-bold text-slate-700">Requiero Factura CFDI</span>
+                               </label>
+                               
+                               {wantsBilling && (
+                                 <div className="space-y-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                                   <div className="space-y-1">
+                                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">RFC</label>
+                                     <input required={wantsBilling} type="text" placeholder="ABC123456T1" value={billingRfc} onChange={e => setBillingRfc(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white uppercase transition-colors" />
+                                   </div>
+                                   <div className="space-y-1">
+                                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">Razón Social</label>
+                                     <input required={wantsBilling} type="text" placeholder="Mi Empresa S.A. de C.V." value={billingName} onChange={e => setBillingName(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white transition-colors" />
+                                   </div>
+                                 </div>
+                               )}
                              </div>
                              
                              {user && user.role === 'CUSTOMER' && (

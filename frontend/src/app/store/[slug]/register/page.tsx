@@ -11,7 +11,10 @@ export default function StoreRegisterPage() {
   const router = useRouter();
   const params = useParams();
   const slug = params?.slug as string || "default";
-  const [form, setForm] = useState({ name: "", email: "", password: "", phone: "" });
+  const [form, setForm] = useState({ 
+    name: "", email: "", password: "", phone: "",
+    companyName: "", rfc: "", street: "", exteriorNum: "", neighborhood: "", zipCode: "", city: "", state: ""
+  });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
@@ -99,14 +102,69 @@ export default function StoreRegisterPage() {
 
           <form onSubmit={handleRegister} className="space-y-5">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Empresa o Nombre Completo</label>
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Nombre Completo (Contacto)</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <User className="h-5 w-5 text-slate-400" />
                 </div>
-                <input required type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all sm:text-sm font-medium" placeholder="Ej. Soluciones WiFi S.A." />
+                <input required type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all sm:text-sm font-medium" placeholder="Ej. Juan Pérez" />
               </div>
             </div>
+
+            <div className="space-y-4 pt-4 border-t border-slate-100">
+              <h3 className="text-sm font-bold text-slate-900 uppercase">Datos de la Empresa (Opcional)</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Razón Social</label>
+                  <input type="text" value={form.companyName} onChange={e => setForm({...form, companyName: e.target.value})} className="block w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all sm:text-sm font-medium" placeholder="Ej. Soluciones WiFi S.A." />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">RFC</label>
+                  <input type="text" value={form.rfc} onChange={e => setForm({...form, rfc: e.target.value})} className="block w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all sm:text-sm font-medium uppercase" placeholder="ABC123456T1" />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 pt-4 border-t border-slate-100">
+              <h3 className="text-sm font-bold text-slate-900 uppercase">Dirección Principal</h3>
+              
+              <div className="grid grid-cols-2 gap-5">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Código Postal</label>
+                  <input required type="text" value={form.zipCode} onChange={e => setForm({...form, zipCode: e.target.value})} className="block w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 focus:ring-2 focus:ring-blue-500 transition-all sm:text-sm font-medium" placeholder="12345" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Estado</label>
+                  <input required type="text" value={form.state} onChange={e => setForm({...form, state: e.target.value})} className="block w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 focus:ring-2 focus:ring-blue-500 transition-all sm:text-sm font-medium" placeholder="Jalisco" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Ciudad / Municipio</label>
+                  <input required type="text" value={form.city} onChange={e => setForm({...form, city: e.target.value})} className="block w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 focus:ring-2 focus:ring-blue-500 transition-all sm:text-sm font-medium" placeholder="Guadalajara" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Colonia</label>
+                  <input required type="text" value={form.neighborhood} onChange={e => setForm({...form, neighborhood: e.target.value})} className="block w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 focus:ring-2 focus:ring-blue-500 transition-all sm:text-sm font-medium" placeholder="Centro" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-[2fr_1fr] gap-5">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Calle</label>
+                  <input required type="text" value={form.street} onChange={e => setForm({...form, street: e.target.value})} className="block w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 focus:ring-2 focus:ring-blue-500 transition-all sm:text-sm font-medium" placeholder="Av. Principal" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Número</label>
+                  <input required type="text" value={form.exteriorNum} onChange={e => setForm({...form, exteriorNum: e.target.value})} className="block w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 focus:ring-2 focus:ring-blue-500 transition-all sm:text-sm font-medium" placeholder="123" />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 pt-4 border-t border-slate-100">
+              <h3 className="text-sm font-bold text-slate-900 uppercase">Datos de Acceso</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-2">
@@ -138,6 +196,7 @@ export default function StoreRegisterPage() {
                 </div>
                 <input required type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all sm:text-sm font-medium" placeholder="••••••••" />
               </div>
+            </div>
             </div>
 
             <button type="submit" disabled={loading} className="w-full flex items-center justify-center py-4 px-4 border border-transparent rounded-2xl shadow-lg shadow-blue-500/20 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all mt-8 disabled:opacity-70 group">

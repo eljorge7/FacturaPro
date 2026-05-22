@@ -31,6 +31,7 @@ model Tenant {
   hasInventoryControl Boolean   @default(false)
   
   // Tienda en Lnea (E-Commerce)
+  hasStoreAccess         Boolean @default(false)
   storeEnabled           Boolean @default(false)
   storeSlug              String? @unique
   storeCustomDomain      String? @unique
@@ -162,6 +163,18 @@ model User {
   birthDate    DateTime?
   role         String    @default("OWNER") // OWNER, ADMIN, CUSTOM
   
+  // B2B E-Commerce Fields (For CUSTOMER role)
+  phone        String?
+  companyName  String?
+  rfc          String?
+  taxRegime    String?
+  street       String?
+  exteriorNum  String?
+  neighborhood String?
+  zipCode      String?
+  city         String?
+  state        String?
+
   customRoleId String?
   customRole   TenantRole? @relation(fields: [customRoleId], references: [id])
 
@@ -1138,7 +1151,19 @@ model StoreOrder {
   customerId      String?
   customerName    String
   customerPhone   String
-  customerAddress String   @db.Text
+  
+  // Structured Shipping Address
+  street          String?
+  exteriorNum     String?
+  neighborhood    String?
+  zipCode         String?
+  city            String?
+  state           String?
+  references      String?  @db.Text
+  
+  // Billing Data
+  billingRfc      String?
+  billingName     String?
 
   totalAmount     Float
   status          String   @default("PENDING") // PENDING, PAID, SHIPPED, DELIVERED, CANCELLED

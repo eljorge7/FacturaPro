@@ -26,6 +26,7 @@ export declare class PublicStoreService {
                 hasApiAccess: boolean;
                 hasPosAccess: boolean;
                 hasInventoryControl: boolean;
+                hasStoreAccess: boolean;
                 storeEnabled: boolean;
                 storeSlug: string | null;
                 storeCustomDomain: string | null;
@@ -52,7 +53,15 @@ export declare class PublicStoreService {
             customerId: string | null;
             customerName: string;
             customerPhone: string;
-            customerAddress: string;
+            street: string | null;
+            exteriorNum: string | null;
+            neighborhood: string | null;
+            zipCode: string | null;
+            city: string | null;
+            state: string | null;
+            references: string | null;
+            billingRfc: string | null;
+            billingName: string | null;
             totalAmount: number;
             status: string;
             isFacturado: boolean;
@@ -75,6 +84,7 @@ export declare class PublicStoreService {
                 hasApiAccess: boolean;
                 hasPosAccess: boolean;
                 hasInventoryControl: boolean;
+                hasStoreAccess: boolean;
                 storeEnabled: boolean;
                 storeSlug: string | null;
                 storeCustomDomain: string | null;
@@ -101,7 +111,15 @@ export declare class PublicStoreService {
             customerId: string | null;
             customerName: string;
             customerPhone: string;
-            customerAddress: string;
+            street: string | null;
+            exteriorNum: string | null;
+            neighborhood: string | null;
+            zipCode: string | null;
+            city: string | null;
+            state: string | null;
+            references: string | null;
+            billingRfc: string | null;
+            billingName: string | null;
             totalAmount: number;
             status: string;
             isFacturado: boolean;
@@ -114,4 +132,40 @@ export declare class PublicStoreService {
         checkoutUrl: string;
     }>;
     private createPreference;
+    registerCustomer(slug: string, data: any): Promise<{
+        success: boolean;
+        userId: string;
+    }>;
+    getMyOrders(slug: string, userId: string): Promise<({
+        items: {
+            id: string;
+            orderId: string;
+            productId: string | null;
+            syscomId: string | null;
+            title: string;
+            price: number;
+            quantity: number;
+            satKey: string | null;
+        }[];
+    } & {
+        id: string;
+        tenantId: string;
+        customerId: string | null;
+        customerName: string;
+        customerPhone: string;
+        street: string | null;
+        exteriorNum: string | null;
+        neighborhood: string | null;
+        zipCode: string | null;
+        city: string | null;
+        state: string | null;
+        references: string | null;
+        billingRfc: string | null;
+        billingName: string | null;
+        totalAmount: number;
+        status: string;
+        isFacturado: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+    })[]>;
 }

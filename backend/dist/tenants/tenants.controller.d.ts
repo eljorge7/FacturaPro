@@ -17,6 +17,7 @@ export declare class TenantsController {
         hasApiAccess: boolean;
         hasPosAccess: boolean;
         hasInventoryControl: boolean;
+        hasStoreAccess: boolean;
         storeEnabled: boolean;
         storeSlug: string | null;
         storeCustomDomain: string | null;
@@ -40,6 +41,7 @@ export declare class TenantsController {
         hasApiAccess: boolean;
         hasPosAccess: boolean;
         hasInventoryControl: boolean;
+        hasStoreAccess: boolean;
         storeEnabled: boolean;
         storeSlug: string | null;
         storeCustomDomain: string | null;
@@ -93,6 +95,7 @@ export declare class TenantsController {
         hasApiAccess: boolean;
         hasPosAccess: boolean;
         hasInventoryControl: boolean;
+        hasStoreAccess: boolean;
         storeEnabled: boolean;
         storeSlug: string | null;
         storeCustomDomain: string | null;
@@ -116,6 +119,7 @@ export declare class TenantsController {
         hasApiAccess: boolean;
         hasPosAccess: boolean;
         hasInventoryControl: boolean;
+        hasStoreAccess: boolean;
         storeEnabled: boolean;
         storeSlug: string | null;
         storeCustomDomain: string | null;
@@ -148,6 +152,7 @@ export declare class TenantsController {
         hasApiAccess: boolean;
         hasPosAccess: boolean;
         hasInventoryControl: boolean;
+        hasStoreAccess: boolean;
         storeEnabled: boolean;
         storeSlug: string | null;
         storeCustomDomain: string | null;

@@ -24,6 +24,7 @@ export default function SettingsPage() {
 
   // Store Settings State
   const [storeSettings, setStoreSettings] = useState({
+      hasStoreAccess: false,
       storeEnabled: false,
       storeSlug: "",
       storeCustomDomain: "",
@@ -135,6 +136,7 @@ export default function SettingsPage() {
         const data = await res.json();
         if (data) {
           setStoreSettings({
+            hasStoreAccess: data.hasStoreAccess || false,
             storeEnabled: data.storeEnabled || false,
             storeSlug: data.storeSlug || "",
             storeCustomDomain: data.storeCustomDomain || "",
@@ -1057,14 +1059,31 @@ export default function SettingsPage() {
                       </div>
                       <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 px-4 py-2 rounded-lg">
                          <span className="text-sm font-bold text-slate-700">¿Habilitar Tienda?</span>
-                         <label className="relative inline-flex items-center cursor-pointer">
-                           <input type="checkbox" checked={storeSettings.storeEnabled} onChange={e => setStoreSettings({...storeSettings, storeEnabled: e.target.checked})} className="sr-only peer" />
+                         <label className={`relative inline-flex items-center ${storeSettings.hasStoreAccess ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
+                           <input type="checkbox" disabled={!storeSettings.hasStoreAccess} checked={storeSettings.storeEnabled} onChange={e => setStoreSettings({...storeSettings, storeEnabled: e.target.checked})} className="sr-only peer" />
                            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10b981]"></div>
                          </label>
                       </div>
                    </div>
 
-                   <div className="grid grid-cols-2 gap-8">
+                   {!storeSettings.hasStoreAccess && (
+                     <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-8 flex items-start gap-4">
+                       <div className="bg-amber-100 p-3 rounded-full shrink-0">
+                         <span className="text-xl">🔒</span>
+                       </div>
+                       <div>
+                         <h3 className="text-amber-800 font-bold text-base mb-1">Módulo Exclusivo para Planes Premium</h3>
+                         <p className="text-amber-700 text-sm leading-relaxed mb-3">
+                           La Tienda en Línea B2B es una funcionalidad avanzada que te permite vender tu inventario local y el catálogo completo de Syscom en piloto automático.
+                         </p>
+                         <button className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-4 py-2 rounded-lg text-sm transition-colors shadow-sm">
+                           Contactar a Ventas para Mejorar Plan
+                         </button>
+                       </div>
+                     </div>
+                   )}
+
+                   <div className={`grid grid-cols-2 gap-8 ${!storeSettings.hasStoreAccess ? 'opacity-50 pointer-events-none grayscale-[0.5]' : ''}`}>
                       {/* URL Settings */}
                       <div className="col-span-2 space-y-4">
                          <h3 className="font-bold text-slate-700">URLs Públicas</h3>

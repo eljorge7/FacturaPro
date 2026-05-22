@@ -10,6 +10,16 @@ export declare class UsersService {
         avatar: string | null;
         birthDate: Date | null;
         role: string;
+        phone: string | null;
+        companyName: string | null;
+        rfc: string | null;
+        taxRegime: string | null;
+        street: string | null;
+        exteriorNum: string | null;
+        neighborhood: string | null;
+        zipCode: string | null;
+        city: string | null;
+        state: string | null;
         customRoleId: string | null;
         tenantId: string;
         warehouseId: string | null;
@@ -17,7 +27,6 @@ export declare class UsersService {
         updatedAt: Date;
     }>;
     findAll(tenantId: string): Promise<{
-        name: string;
         warehouse: {
             id: string;
             tenantId: string;
@@ -26,6 +35,7 @@ export declare class UsersService {
             isDefault: boolean;
         } | null;
         id: string;
+        name: string;
         createdAt: Date;
         email: string;
         role: string;
@@ -39,6 +49,16 @@ export declare class UsersService {
         avatar: string | null;
         birthDate: Date | null;
         role: string;
+        phone: string | null;
+        companyName: string | null;
+        rfc: string | null;
+        taxRegime: string | null;
+        street: string | null;
+        exteriorNum: string | null;
+        neighborhood: string | null;
+        zipCode: string | null;
+        city: string | null;
+        state: string | null;
         customRoleId: string | null;
         tenantId: string;
         warehouseId: string | null;
@@ -53,6 +73,16 @@ export declare class UsersService {
         avatar: string | null;
         birthDate: Date | null;
         role: string;
+        phone: string | null;
+        companyName: string | null;
+        rfc: string | null;
+        taxRegime: string | null;
+        street: string | null;
+        exteriorNum: string | null;
+        neighborhood: string | null;
+        zipCode: string | null;
+        city: string | null;
+        state: string | null;
         customRoleId: string | null;
         tenantId: string;
         warehouseId: string | null;

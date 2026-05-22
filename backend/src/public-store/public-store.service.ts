@@ -48,7 +48,7 @@ export class PublicStoreService {
 
   async getCombinedCatalog(slug: string, page: number = 1) {
     const tenant = await this.prisma.tenant.findFirst({ 
-      where: { storeEnabled: true, OR: [{ storeSlug: slug }, { storeCustomDomain: slug }] } 
+      where: { storeEnabled: true, hasStoreAccess: true, OR: [{ storeSlug: slug }, { storeCustomDomain: slug }] } 
     });
     if (!tenant) {
       throw new NotFoundException('Store not found or disabled');
@@ -106,7 +106,7 @@ export class PublicStoreService {
 
   async getProductDetails(slug: string, id: string) {
     const tenant = await this.prisma.tenant.findFirst({ 
-      where: { storeEnabled: true, OR: [{ storeSlug: slug }, { storeCustomDomain: slug }] } 
+      where: { storeEnabled: true, hasStoreAccess: true, OR: [{ storeSlug: slug }, { storeCustomDomain: slug }] } 
     });
     if (!tenant) throw new NotFoundException('Store not found');
 
@@ -171,18 +171,32 @@ export class PublicStoreService {
 
   async createOrder(slug: string, data: any) {
     const tenant = await this.prisma.tenant.findFirst({ 
-      where: { storeEnabled: true, OR: [{ storeSlug: slug }, { storeCustomDomain: slug }] } 
+      where: { storeEnabled: true, hasStoreAccess: true, OR: [{ storeSlug: slug }, { storeCustomDomain: slug }] } 
     });
     if (!tenant) throw new NotFoundException('Store not found');
 
-    const { customerName, customerPhone, customerAddress, totalAmount, items } = data;
+    const { 
+      customerId, customerName, customerPhone,
+      street, exteriorNum, neighborhood, zipCode, city, state, references,
+      billingRfc, billingName,
+      totalAmount, items 
+    } = data;
     
     const order = await this.prisma.storeOrder.create({
       data: {
         tenantId: tenant.id,
+        customerId,
         customerName,
         customerPhone,
-        customerAddress,
+        street,
+        exteriorNum,
+        neighborhood,
+        zipCode,
+        city,
+        state,
+        references,
+        billingRfc,
+        billingName,
         totalAmount,
         items: {
           create: items.map((item: any) => ({
@@ -213,7 +227,7 @@ export class PublicStoreService {
 
   async generatePaymentLink(slug: string, id: string) {
     const tenant = await this.prisma.tenant.findFirst({ 
-      where: { storeEnabled: true, OR: [{ storeSlug: slug }, { storeCustomDomain: slug }] } 
+      where: { storeEnabled: true, hasStoreAccess: true, OR: [{ storeSlug: slug }, { storeCustomDomain: slug }] } 
     });
     if (!tenant) throw new NotFoundException('Store not found');
 
@@ -265,5 +279,57 @@ export class PublicStoreService {
     });
 
     return res.data.init_point;
+  }
+
+  async registerCustomer(slug: string, data: any) {
+    const tenant = await this.prisma.tenant.findFirst({ 
+      where: { storeEnabled: true, hasStoreAccess: true, OR: [{ storeSlug: slug }, { storeCustomDomain: slug }] } 
+    });
+    if (!tenant) throw new NotFoundException('Store not found');
+
+    const { email, password, name, phone, companyName, rfc, street, exteriorNum, neighborhood, zipCode, city, state } = data;
+
+    // Ensure email doesn't exist for this tenant
+    const existing = await this.prisma.user.findFirst({
+      where: { email, tenantId: tenant.id }
+    });
+    if (existing) throw new BadRequestException('El correo ya está registrado en esta tienda');
+
+    const bcrypt = require('bcrypt');
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const user = await this.prisma.user.create({
+      data: {
+        email,
+        passwordHash,
+        name,
+        phone,
+        companyName,
+        rfc,
+        street,
+        exteriorNum,
+        neighborhood,
+        zipCode,
+        city,
+        state,
+        role: 'CUSTOMER',
+        tenantId: tenant.id
+      }
+    });
+
+    return { success: true, userId: user.id };
+  }
+
+  async getMyOrders(slug: string, userId: string) {
+    const tenant = await this.prisma.tenant.findFirst({ 
+      where: { storeEnabled: true, hasStoreAccess: true, OR: [{ storeSlug: slug }, { storeCustomDomain: slug }] } 
+    });
+    if (!tenant) throw new NotFoundException('Store not found');
+
+    return this.prisma.storeOrder.findMany({
+      where: { tenantId: tenant.id, customerId: userId },
+      include: { items: true },
+      orderBy: { createdAt: 'desc' }
+    });
   }
 }

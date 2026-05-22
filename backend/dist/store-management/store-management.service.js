@@ -59,6 +59,7 @@ let StoreManagementService = class StoreManagementService {
         return this.prisma.tenant.findUnique({
             where: { id: tenantId },
             select: {
+                hasStoreAccess: true,
                 storeEnabled: true,
                 storeSlug: true,
                 storeCustomDomain: true,
@@ -69,6 +70,12 @@ let StoreManagementService = class StoreManagementService {
         });
     }
     async updateSettings(tenantId, data) {
+        if (data.storeEnabled === true) {
+            const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId } });
+            if (!tenant || !tenant.hasStoreAccess) {
+                throw new common_1.NotFoundException('Tu plan actual no incluye el acceso a la Tienda en Línea.');
+            }
+        }
         return this.prisma.tenant.update({
             where: { id: tenantId },
             data

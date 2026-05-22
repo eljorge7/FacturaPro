@@ -1,9 +1,27 @@
-import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Headers, UnauthorizedException } from '@nestjs/common';
 import { PublicStoreService } from './public-store.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('public-store/:slug')
 export class PublicStoreController {
-  constructor(private readonly storeService: PublicStoreService) {}
+  constructor(
+    private readonly storeService: PublicStoreService,
+    private readonly jwtService: JwtService
+  ) {}
+
+  @Post('register')
+  async register(@Param('slug') slug: string, @Body() data: any) {
+    return this.storeService.registerCustomer(slug, data);
+  }
+
+  @Get('my-orders')
+  async getMyOrders(@Param('slug') slug: string, @Headers('Authorization') auth: string) {
+    if (!auth) throw new UnauthorizedException();
+    const token = auth.replace('Bearer ', '');
+    const decoded: any = this.jwtService.decode(token);
+    if (!decoded || !decoded.userId) throw new UnauthorizedException();
+    return this.storeService.getMyOrders(slug, decoded.userId);
+  }
 
   @Get('products')
   async getCatalog(@Param('slug') slug: string, @Query('search') search: string, @Query('page') page: string) {

@@ -53,7 +53,15 @@ export declare class StoreManagementService {
         customerId: string | null;
         customerName: string;
         customerPhone: string;
-        customerAddress: string;
+        street: string | null;
+        exteriorNum: string | null;
+        neighborhood: string | null;
+        zipCode: string | null;
+        city: string | null;
+        state: string | null;
+        references: string | null;
+        billingRfc: string | null;
+        billingName: string | null;
         totalAmount: number;
         status: string;
         isFacturado: boolean;
@@ -62,9 +70,10 @@ export declare class StoreManagementService {
     })[]>;
     updateOrderStatus(tenantId: string, id: string, status: string): Promise<import(".prisma/client").Prisma.BatchPayload>;
     getSettings(tenantId: string): Promise<{
-        storeEnabled: boolean;
         storeSlug: string | null;
         storeCustomDomain: string | null;
+        hasStoreAccess: boolean;
+        storeEnabled: boolean;
         syscomClientId: string | null;
         syscomClientSecret: string | null;
         mercadopagoAccessToken: string | null;
@@ -82,6 +91,7 @@ export declare class StoreManagementService {
         hasApiAccess: boolean;
         hasPosAccess: boolean;
         hasInventoryControl: boolean;
+        hasStoreAccess: boolean;
         storeEnabled: boolean;
         storeSlug: string | null;
         storeCustomDomain: string | null;

@@ -29,6 +29,7 @@ export default function StoreAccountPage() {
   const slug = params?.slug as string || "default";
 
   const [orders, setOrders] = useState<StoreOrder[]>([]);
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -43,6 +44,11 @@ export default function StoreAccountPage() {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) setOrders(await res.json());
+
+      const profileRes = await fetch(`${API_URL}/users/my-profile`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (profileRes.ok) setProfile(await profileRes.json());
     } catch (e) {
       console.error(e);
     } finally {
@@ -107,10 +113,35 @@ export default function StoreAccountPage() {
             <h2 className="text-xl font-black text-slate-900 mb-1">{user.name}</h2>
             <p className="text-slate-500 text-sm mb-6">{user.email}</p>
             <div className="h-px bg-slate-100 w-full mb-6"></div>
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="flex items-center gap-3 text-blue-600 bg-blue-50 px-4 py-3 rounded-xl font-bold text-sm">
                 <Package className="w-5 h-5" /> Mis Pedidos
               </div>
+              
+              {profile && (
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-sm">
+                  <h4 className="font-bold text-slate-800 mb-2 uppercase tracking-wider text-xs">Datos de Empresa</h4>
+                  {profile.companyName ? (
+                    <>
+                      <div className="font-medium text-slate-700">{profile.companyName}</div>
+                      <div className="text-slate-500 text-xs">RFC: {profile.rfc || 'No especificado'}</div>
+                    </>
+                  ) : (
+                    <div className="text-slate-500 text-xs italic">Sin datos de empresa</div>
+                  )}
+
+                  <h4 className="font-bold text-slate-800 mb-2 uppercase tracking-wider text-xs mt-4">Dirección Predeterminada</h4>
+                  {profile.street ? (
+                    <div className="text-slate-600 text-xs leading-relaxed">
+                      {profile.street} {profile.exteriorNum}<br/>
+                      Col. {profile.neighborhood}<br/>
+                      {profile.city}, {profile.state} CP: {profile.zipCode}
+                    </div>
+                  ) : (
+                    <div className="text-slate-500 text-xs italic">No has guardado una dirección</div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

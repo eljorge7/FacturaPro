@@ -11,12 +11,19 @@ const common_1 = require("@nestjs/common");
 const public_store_service_1 = require("./public-store.service");
 const public_store_controller_1 = require("./public-store.controller");
 const prisma_module_1 = require("../prisma/prisma.module");
+const jwt_1 = require("@nestjs/jwt");
 let PublicStoreModule = class PublicStoreModule {
 };
 exports.PublicStoreModule = PublicStoreModule;
 exports.PublicStoreModule = PublicStoreModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule],
+        imports: [
+            prisma_module_1.PrismaModule,
+            jwt_1.JwtModule.register({
+                secret: process.env.JWT_SECRET || 'super-secret-jwt-key',
+                signOptions: { expiresIn: '7d' },
+            })
+        ],
         controllers: [public_store_controller_1.PublicStoreController],
         providers: [public_store_service_1.PublicStoreService],
     })

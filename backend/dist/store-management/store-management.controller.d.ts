@@ -3,9 +3,10 @@ export declare class StoreManagementController {
     private readonly service;
     constructor(service: StoreManagementService);
     getSettings(tenantId: string): Promise<{
-        storeEnabled: boolean;
         storeSlug: string | null;
         storeCustomDomain: string | null;
+        hasStoreAccess: boolean;
+        storeEnabled: boolean;
         syscomClientId: string | null;
         syscomClientSecret: string | null;
         mercadopagoAccessToken: string | null;
@@ -23,6 +24,7 @@ export declare class StoreManagementController {
         hasApiAccess: boolean;
         hasPosAccess: boolean;
         hasInventoryControl: boolean;
+        hasStoreAccess: boolean;
         storeEnabled: boolean;
         storeSlug: string | null;
         storeCustomDomain: string | null;
@@ -84,7 +86,15 @@ export declare class StoreManagementController {
         customerId: string | null;
         customerName: string;
         customerPhone: string;
-        customerAddress: string;
+        street: string | null;
+        exteriorNum: string | null;
+        neighborhood: string | null;
+        zipCode: string | null;
+        city: string | null;
+        state: string | null;
+        references: string | null;
+        billingRfc: string | null;
+        billingName: string | null;
         totalAmount: number;
         status: string;
         isFacturado: boolean;

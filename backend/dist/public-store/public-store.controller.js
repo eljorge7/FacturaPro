@@ -15,10 +15,25 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PublicStoreController = void 0;
 const common_1 = require("@nestjs/common");
 const public_store_service_1 = require("./public-store.service");
+const jwt_1 = require("@nestjs/jwt");
 let PublicStoreController = class PublicStoreController {
     storeService;
-    constructor(storeService) {
+    jwtService;
+    constructor(storeService, jwtService) {
         this.storeService = storeService;
+        this.jwtService = jwtService;
+    }
+    async register(slug, data) {
+        return this.storeService.registerCustomer(slug, data);
+    }
+    async getMyOrders(slug, auth) {
+        if (!auth)
+            throw new common_1.UnauthorizedException();
+        const token = auth.replace('Bearer ', '');
+        const decoded = this.jwtService.decode(token);
+        if (!decoded || !decoded.userId)
+            throw new common_1.UnauthorizedException();
+        return this.storeService.getMyOrders(slug, decoded.userId);
     }
     async getCatalog(slug, search, page) {
         const pageNum = page ? parseInt(page, 10) : 1;
@@ -35,6 +50,22 @@ let PublicStoreController = class PublicStoreController {
     }
 };
 exports.PublicStoreController = PublicStoreController;
+__decorate([
+    (0, common_1.Post)('register'),
+    __param(0, (0, common_1.Param)('slug')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], PublicStoreController.prototype, "register", null);
+__decorate([
+    (0, common_1.Get)('my-orders'),
+    __param(0, (0, common_1.Param)('slug')),
+    __param(1, (0, common_1.Headers)('Authorization')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], PublicStoreController.prototype, "getMyOrders", null);
 __decorate([
     (0, common_1.Get)('products'),
     __param(0, (0, common_1.Param)('slug')),
@@ -70,6 +101,7 @@ __decorate([
 ], PublicStoreController.prototype, "generatePaymentLink", null);
 exports.PublicStoreController = PublicStoreController = __decorate([
     (0, common_1.Controller)('public-store/:slug'),
-    __metadata("design:paramtypes", [public_store_service_1.PublicStoreService])
+    __metadata("design:paramtypes", [public_store_service_1.PublicStoreService,
+        jwt_1.JwtService])
 ], PublicStoreController);
 //# sourceMappingURL=public-store.controller.js.map
