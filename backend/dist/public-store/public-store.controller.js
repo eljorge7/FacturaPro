@@ -35,6 +35,9 @@ let PublicStoreController = class PublicStoreController {
             throw new common_1.UnauthorizedException();
         return this.storeService.getMyOrders(slug, decoded.userId);
     }
+    async testSyscom() {
+        return this.storeService.testSyscom();
+    }
     async getCatalog(slug, search, page) {
         const pageNum = page ? parseInt(page, 10) : 1;
         return this.storeService.getCombinedCatalog(slug, pageNum);
@@ -66,6 +69,12 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], PublicStoreController.prototype, "getMyOrders", null);
+__decorate([
+    (0, common_1.Get)('test-syscom'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], PublicStoreController.prototype, "testSyscom", null);
 __decorate([
     (0, common_1.Get)('products'),
     __param(0, (0, common_1.Param)('slug')),

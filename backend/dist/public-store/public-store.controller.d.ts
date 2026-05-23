@@ -40,6 +40,35 @@ export declare class PublicStoreController {
         createdAt: Date;
         updatedAt: Date;
     })[]>;
+    testSyscom(): Promise<{
+        error: string;
+        details?: undefined;
+        client_id?: undefined;
+        success?: undefined;
+        token?: undefined;
+        productsCount?: undefined;
+    } | {
+        error: string;
+        details: any;
+        client_id: string | null;
+        success?: undefined;
+        token?: undefined;
+        productsCount?: undefined;
+    } | {
+        success: boolean;
+        token: string;
+        productsCount: any;
+        error?: undefined;
+        details?: undefined;
+        client_id?: undefined;
+    } | {
+        error: string;
+        details: any;
+        client_id?: undefined;
+        success?: undefined;
+        token?: undefined;
+        productsCount?: undefined;
+    }>;
     getCatalog(slug: string, search: string, page: string): Promise<{
         products: any[];
         page: number;

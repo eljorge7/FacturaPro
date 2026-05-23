@@ -70,10 +70,10 @@ export declare class StoreManagementService {
     })[]>;
     updateOrderStatus(tenantId: string, id: string, status: string): Promise<import(".prisma/client").Prisma.BatchPayload>;
     getSettings(tenantId: string): Promise<{
-        storeSlug: string | null;
-        storeCustomDomain: string | null;
         hasStoreAccess: boolean;
         storeEnabled: boolean;
+        storeSlug: string | null;
+        storeCustomDomain: string | null;
         syscomClientId: string | null;
         syscomClientSecret: string | null;
         mercadopagoAccessToken: string | null;

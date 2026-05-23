@@ -23,6 +23,11 @@ export class PublicStoreController {
     return this.storeService.getMyOrders(slug, decoded.userId);
   }
 
+  @Get('test-syscom')
+  async testSyscom() {
+    return this.storeService.testSyscom();
+  }
+
   @Get('products')
   async getCatalog(@Param('slug') slug: string, @Query('search') search: string, @Query('page') page: string) {
     const pageNum = page ? parseInt(page, 10) : 1;

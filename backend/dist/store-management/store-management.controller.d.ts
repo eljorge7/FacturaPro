@@ -3,10 +3,10 @@ export declare class StoreManagementController {
     private readonly service;
     constructor(service: StoreManagementService);
     getSettings(tenantId: string): Promise<{
-        storeSlug: string | null;
-        storeCustomDomain: string | null;
         hasStoreAccess: boolean;
         storeEnabled: boolean;
+        storeSlug: string | null;
+        storeCustomDomain: string | null;
         syscomClientId: string | null;
         syscomClientSecret: string | null;
         mercadopagoAccessToken: string | null;

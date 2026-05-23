@@ -27,6 +27,7 @@ export declare class UsersController {
         updatedAt: Date;
     }>;
     findAll(tenantId: string): Promise<{
+        name: string;
         warehouse: {
             id: string;
             tenantId: string;
@@ -35,7 +36,6 @@ export declare class UsersController {
             isDefault: boolean;
         } | null;
         id: string;
-        name: string;
         createdAt: Date;
         email: string;
         role: string;

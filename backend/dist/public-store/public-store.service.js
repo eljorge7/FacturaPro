@@ -36,8 +36,8 @@ let PublicStoreService = PublicStoreService_1 = class PublicStoreService {
         this.logger.log(`Solicitando nuevo token a Syscom para Tenant: ${tenant.id}...`);
         try {
             const response = await axios_1.default.post('https://developers.syscom.mx/oauth/token', new URLSearchParams({
-                client_id: tenant.syscomClientId,
-                client_secret: tenant.syscomClientSecret,
+                client_id: (tenant.syscomClientId || '').trim(),
+                client_secret: (tenant.syscomClientSecret || '').trim(),
                 grant_type: 'client_credentials'
             }).toString(), {
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
@@ -50,6 +50,34 @@ let PublicStoreService = PublicStoreService_1 = class PublicStoreService {
         catch (error) {
             this.logger.error(`Error obteniendo token de Syscom para Tenant ${tenant.id}`, error);
             return null;
+        }
+    }
+    async testSyscom() {
+        const tenant = await this.prisma.tenant.findFirst({ where: { storeSlug: 'radiotec' } });
+        if (!tenant)
+            return { error: "Tenant not found" };
+        let tokenRes;
+        try {
+            const response = await axios_1.default.post('https://developers.syscom.mx/oauth/token', new URLSearchParams({
+                client_id: (tenant.syscomClientId || '').trim(),
+                client_secret: (tenant.syscomClientSecret || '').trim(),
+                grant_type: 'client_credentials'
+            }).toString(), {
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            });
+            tokenRes = response.data.access_token;
+        }
+        catch (e) {
+            return { error: "Token error", details: e.response?.data || e.message, client_id: tenant.syscomClientId };
+        }
+        try {
+            const res = await axios_1.default.get(`https://developers.syscom.mx/api/v1/productos?pagina=1`, {
+                headers: { Authorization: `Bearer ${tokenRes}` }
+            });
+            return { success: true, token: tokenRes.substring(0, 10) + '...', productsCount: res.data?.productos?.length };
+        }
+        catch (e) {
+            return { error: "Products error", details: e.response?.data || e.message };
         }
     }
     async getCombinedCatalog(slug, page = 1) {

@@ -86,8 +86,8 @@ export declare class PosService {
     }>;
     getCurrentShift(tenantId: string): Promise<({
         openedBy: {
-            id: string;
             name: string;
+            id: string;
             email: string;
         };
     } & {

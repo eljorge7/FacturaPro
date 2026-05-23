@@ -5,8 +5,8 @@ export declare class EmployeesService {
     findAll(tenantId: string): Promise<({
         user: {
             warehouse: {
-                id: string;
                 name: string;
+                id: string;
             } | null;
             email: string;
             role: string;
@@ -19,8 +19,8 @@ export declare class EmployeesService {
             uploadedAt: Date;
         }[];
         departmentRef: {
-            id: string;
             name: string;
+            id: string;
         } | null;
     } & {
         id: string;
@@ -64,8 +64,8 @@ export declare class EmployeesService {
             uploadedAt: Date;
         }[];
         departmentRef: {
-            id: string;
             name: string;
+            id: string;
         } | null;
     } & {
         id: string;
