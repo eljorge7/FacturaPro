@@ -37,7 +37,7 @@ export default function ProposalViewPage() {
       <div className="absolute top-0 left-0 w-full z-50 px-6 py-6 flex items-center justify-between pointer-events-none">
         <div className="flex items-center gap-4 bg-slate-900/40 backdrop-blur-md px-5 py-2.5 rounded-2xl border border-white/10 pointer-events-auto shadow-2xl">
            {quote.taxProfile?.logoUrl ? (
-             <img src={quote.taxProfile.logoUrl} alt="Logo Empresa" className="h-10 w-auto object-contain drop-shadow-md" />
+             <img src={`${process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api'}${quote.taxProfile.logoUrl}`} alt="Logo Empresa" className="h-10 w-auto object-contain drop-shadow-md" />
            ) : (
              <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center shadow-inner">
                 <span className="text-white font-black text-xl">{quote.taxProfile?.legalName?.charAt(0) || 'F'}</span>

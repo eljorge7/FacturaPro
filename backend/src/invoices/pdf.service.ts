@@ -290,7 +290,7 @@ export class PdfService {
   async generateInvoicePdf(invoice: any): Promise<Buffer> {
     return new Promise((resolve, reject) => {
       try {
-        const template = invoice.taxProfile?.pdfTemplate || 'Minimalista Notion';
+        const template = invoice.templateId || invoice.taxProfile?.pdfTemplate || 'Minimalista Notion';
         const isPOS = template === 'Ticket POS Termal';
         const docOpts = isPOS ? { margin: 10, size: [226, 600] } : { margin: 50, size: 'A4' };
         
@@ -315,7 +315,7 @@ export class PdfService {
   async generateQuotePdf(quote: any): Promise<Buffer> {
     return new Promise((resolve, reject) => {
       try {
-        const template = quote.taxProfile?.pdfTemplate || 'Minimalista Notion';
+        const template = quote.templateId || quote.taxProfile?.pdfTemplate || 'Minimalista Notion';
         const isPOS = template === 'Ticket POS Termal';
         const docOpts = isPOS ? { margin: 10, size: [226, 600] } : { margin: 50, size: 'A4' };
         
