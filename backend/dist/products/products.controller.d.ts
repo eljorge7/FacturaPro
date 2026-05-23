@@ -113,13 +113,13 @@ export declare class ProductsController {
     getPublishedStoreProducts(): Promise<{
         id: string;
         name: string;
-        tenantId: string;
-        type: string;
         description: string | null;
-        imageUrl: string | null;
-        stock: number;
         price: number;
+        type: string;
+        stock: number;
+        imageUrl: string | null;
         storeCategory: string | null;
+        tenantId: string;
     }[]>;
     findOne(id: string): Promise<{
         kitComponents: ({

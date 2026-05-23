@@ -26,7 +26,7 @@ export class PdfService {
 
      let logoPath = null;
      if (data.taxProfile?.logoUrl) {
-        logoPath = path.join(__dirname, '..', '..', 'public', data.taxProfile.logoUrl);
+        logoPath = path.join(process.cwd(), data.taxProfile.logoUrl);
         if (!fs.existsSync(logoPath)) logoPath = null;
      }
      const logoWidth = (data.taxProfile?.logoWidth || 120) * 0.7;

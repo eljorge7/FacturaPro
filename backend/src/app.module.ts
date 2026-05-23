@@ -51,7 +51,7 @@ import { join } from 'path';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'public', 'uploads'),
+      rootPath: join(process.cwd(), 'uploads'),
       serveRoot: '/uploads',
     }),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),

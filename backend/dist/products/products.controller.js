@@ -113,7 +113,7 @@ __decorate([
     (0, common_1.Post)('upload-image'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
         storage: (0, multer_1.diskStorage)({
-            destination: './public/uploads/products',
+            destination: './uploads/products',
             filename: (req, file, cb) => {
                 const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
                 const ext = (0, path_1.extname)(file.originalname);

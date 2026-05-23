@@ -65,7 +65,7 @@ let PdfService = class PdfService {
         const fBold = this.getFontBold(data.taxProfile?.brandFont || 'Helvetica');
         let logoPath = null;
         if (data.taxProfile?.logoUrl) {
-            logoPath = path.join(__dirname, '..', '..', 'public', data.taxProfile.logoUrl);
+            logoPath = path.join(process.cwd(), data.taxProfile.logoUrl);
             if (!fs.existsSync(logoPath))
                 logoPath = null;
         }

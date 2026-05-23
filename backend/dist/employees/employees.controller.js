@@ -17,7 +17,6 @@ const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
 const multer_1 = require("multer");
 const path_1 = require("path");
-const fs_1 = require("fs");
 const employees_service_1 = require("./employees.service");
 const jwt_1 = require("@nestjs/jwt");
 let EmployeesController = class EmployeesController {
@@ -99,9 +98,10 @@ __decorate([
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
         storage: (0, multer_1.diskStorage)({
             destination: (req, file, cb) => {
-                const uploadPath = './public/uploads/avatars';
-                if (!(0, fs_1.existsSync)(uploadPath))
-                    (0, fs_1.mkdirSync)(uploadPath, { recursive: true });
+                const uploadPath = './uploads/avatars';
+                if (!require('fs').existsSync(uploadPath)) {
+                    require('fs').mkdirSync(uploadPath, { recursive: true });
+                }
                 cb(null, uploadPath);
             },
             filename: (req, file, cb) => {
@@ -122,9 +122,10 @@ __decorate([
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
         storage: (0, multer_1.diskStorage)({
             destination: (req, file, cb) => {
-                const uploadPath = './public/uploads/documents';
-                if (!(0, fs_1.existsSync)(uploadPath))
-                    (0, fs_1.mkdirSync)(uploadPath, { recursive: true });
+                const uploadPath = './uploads/documents';
+                if (!require('fs').existsSync(uploadPath)) {
+                    require('fs').mkdirSync(uploadPath, { recursive: true });
+                }
                 cb(null, uploadPath);
             },
             filename: (req, file, cb) => {

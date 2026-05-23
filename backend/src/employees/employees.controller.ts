@@ -27,8 +27,10 @@ export class EmployeesController {
   @UseInterceptors(FileInterceptor('file', {
     storage: diskStorage({
       destination: (req, file, cb) => {
-        const uploadPath = './public/uploads/avatars';
-        if (!existsSync(uploadPath)) mkdirSync(uploadPath, { recursive: true });
+        const uploadPath = './uploads/avatars';
+        if (!require('fs').existsSync(uploadPath)) {
+          require('fs').mkdirSync(uploadPath, { recursive: true });
+        }
         cb(null, uploadPath);
       },
       filename: (req, file, cb) => {
@@ -50,8 +52,10 @@ export class EmployeesController {
   @UseInterceptors(FileInterceptor('file', {
     storage: diskStorage({
       destination: (req, file, cb) => {
-        const uploadPath = './public/uploads/documents';
-        if (!existsSync(uploadPath)) mkdirSync(uploadPath, { recursive: true });
+        const uploadPath = './uploads/documents';
+        if (!require('fs').existsSync(uploadPath)) {
+          require('fs').mkdirSync(uploadPath, { recursive: true });
+        }
         cb(null, uploadPath);
       },
       filename: (req, file, cb) => {

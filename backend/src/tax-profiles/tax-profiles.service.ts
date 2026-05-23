@@ -109,7 +109,7 @@ export class TaxProfilesService {
        (dataToUpdate as any).logoUrl = null;
     } else if (logoBase64) {
        try {
-           const uploadsDir = path.join(__dirname, '..', '..', 'public', 'uploads');
+           const uploadsDir = path.join(process.cwd(), 'uploads');
            if (!fs.existsSync(uploadsDir)) {
               fs.mkdirSync(uploadsDir, { recursive: true });
            }
