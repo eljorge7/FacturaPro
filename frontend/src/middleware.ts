@@ -25,6 +25,10 @@ export function middleware(req: NextRequest) {
 
   // If the user visits a custom domain (e.g. store.isotec.com)
   if (!isBaseDomain) {
+    // Prevent double rewrite if the URL already contains the rewritten path (e.g. from a client-side transition)
+    if (url.pathname.startsWith(`/store/${hostname}`)) {
+      return NextResponse.next();
+    }
     // We rewrite the request to the dynamic route `/store/[domain]`
     // The backend will treat `store.isotec.com` as the "slug" and look it up in `storeCustomDomain`
     return NextResponse.rewrite(new URL(`/store/${hostname}${url.pathname}`, req.url));

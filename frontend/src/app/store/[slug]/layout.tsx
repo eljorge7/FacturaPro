@@ -21,6 +21,9 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
      globalSearchTerm, setGlobalSearchTerm, currency, setCurrency, includeIva, setIncludeIva
   } = useStore();
 
+  const isCustomDomain = typeof window !== 'undefined' && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('facturapro.radiotecpro.com');
+  const storeHomeUrl = isCustomDomain ? '/' : `/store/${slug}`;
+
   const { user, logout } = useAuth();
 
   const [checkoutName, setCheckoutName] = useState("");
@@ -176,7 +179,7 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
          setCheckoutZip("");
          alert("¡Pedido guardado! (Hubo un problema generando el enlace de pago, te contactaremos pronto).");
       }
-      router.push(`/store/${slug}`);
+      router.push(storeHomeUrl);
     } catch (error) {
       console.error(error);
       alert("Error al procesar el pedido");
@@ -189,11 +192,11 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
         <div className="container mx-auto px-4">
           <div className="h-20 flex items-center justify-between gap-4 md:gap-8">
-            <Link href={`/store/${slug}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity shrink-0">
+            <Link href={storeHomeUrl} className="flex items-center gap-2 hover:opacity-80 transition-opacity shrink-0">
               <img src="/logo-transparent.png" alt="RadioTec Pro" className="h-[32px] md:h-[40px] object-contain" />
             </Link>
 
-            <form onSubmit={(e) => { e.preventDefault(); setSearchDropdownOpen(false); router.push(`/store/${slug}`); }} className="flex-1 max-w-4xl relative hidden md:flex items-center gap-4">
+            <form onSubmit={(e) => { e.preventDefault(); setSearchDropdownOpen(false); router.push(storeHomeUrl); }} className="flex-1 max-w-4xl relative hidden md:flex items-center gap-4">
               <div className="relative flex-1 flex items-center">
                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                  <input 
@@ -354,7 +357,7 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
                            <Link href={`/store/${slug}/account`} onClick={() => setShowAuthDropdown(false)} className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 text-sm font-medium text-slate-700">
                              <Package className="w-4 h-4 text-blue-500" /> Mis Compras
                            </Link>
-                           <button onClick={() => { logout(); setShowAuthDropdown(false); router.push(`/store/${slug}`); }} className="w-full flex items-center gap-3 px-4 py-2 hover:bg-red-50 text-sm font-medium text-red-600 mt-2 border-t border-slate-100 pt-3">
+                           <button onClick={() => { logout(); setShowAuthDropdown(false); router.push(storeHomeUrl); }} className="w-full flex items-center gap-3 px-4 py-2 hover:bg-red-50 text-sm font-medium text-red-600 mt-2 border-t border-slate-100 pt-3">
                              <LogOut className="w-4 h-4" /> Cerrar Sesión
                            </button>
                          </div>
@@ -623,10 +626,10 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
                    <div>
                       <h4 className="text-white font-bold mb-6">Herramientas</h4>
                       <ul className="space-y-3 text-sm text-slate-400">
-                         <li><Link href={`/store/${slug}`} className="hover:text-blue-400 transition-colors">Cotizador Rápido</Link></li>
+                         <li><Link href={storeHomeUrl} className="hover:text-blue-400 transition-colors">Cotizador Rápido</Link></li>
                          <li><a href="https://facturapro.radiotecpro.com" target="_blank" className="hover:text-blue-400 transition-colors">Facturación Electrónica</a></li>
-                         <li><Link href={`/store/${slug}`} className="hover:text-blue-400 transition-colors">Garantías y Soporte</Link></li>
-                         <li><Link href={`/store/${slug}`} className="hover:text-blue-400 transition-colors">Guías Técnicas</Link></li>
+                         <li><Link href={storeHomeUrl} className="hover:text-blue-400 transition-colors">Garantías y Soporte</Link></li>
+                         <li><Link href={storeHomeUrl} className="hover:text-blue-400 transition-colors">Guías Técnicas</Link></li>
                       </ul>
                    </div>
 

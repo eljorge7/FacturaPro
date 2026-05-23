@@ -85,7 +85,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } else {
       // Not authenticated
-      if (!pathname.startsWith('/login') && !pathname.startsWith('/register') && !pathname.startsWith('/sso') && !pathname.startsWith('/portal') && !pathname.startsWith('/store')) {
+      let isStoreOrPublic = pathname.startsWith('/login') || pathname.startsWith('/register') || pathname.startsWith('/sso') || pathname.startsWith('/portal') || pathname.startsWith('/store');
+      
+      // If we are on a custom domain, the root path '/' is the store home.
+      if (typeof window !== 'undefined') {
+         const hostname = window.location.hostname;
+         const isBaseDomain = hostname.includes('localhost') || hostname.includes('facturapro.radiotecpro.com');
+         if (!isBaseDomain) {
+            isStoreOrPublic = true; // Everything on the custom domain is public (the store) unless explicitly guarded
+         }
+      }
+
+      if (!isStoreOrPublic) {
         router.push('/login');
       }
     }
@@ -135,7 +146,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   // Prevent rendering protected routes until fully checked
-  if (!token && !pathname.startsWith('/login') && !pathname.startsWith('/register') && !pathname.startsWith('/sso') && !pathname.startsWith('/portal')) {
+  let isStoreOrPublicRender = pathname.startsWith('/login') || pathname.startsWith('/register') || pathname.startsWith('/sso') || pathname.startsWith('/portal') || pathname.startsWith('/store');
+  if (typeof window !== 'undefined') {
+     const hostname = window.location.hostname;
+     const isBaseDomain = hostname.includes('localhost') || hostname.includes('facturapro.radiotecpro.com');
+     if (!isBaseDomain) isStoreOrPublicRender = true;
+  }
+
+  if (!token && !isStoreOrPublicRender) {
     return null; 
   }
 
