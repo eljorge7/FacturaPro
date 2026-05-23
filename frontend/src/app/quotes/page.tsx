@@ -523,8 +523,11 @@ export default function QuotesPage() {
                     <button className="border-b-2 border-transparent text-slate-500 hover:text-slate-700 pb-2 text-sm font-medium">Registros de actividad</button>
                  </div>
 
-                 {/* Document Preview Imitation */}
-                 <div className="bg-white mx-auto shadow-sm border border-slate-200 p-12 relative min-h-[600px] mt-4 mb-12">
+                  {/* Document Preview Imitation */}
+                  <div className="bg-white mx-auto shadow-sm border border-slate-200 p-12 relative min-h-[600px] mt-4 mb-12">
+                     <div className="absolute top-0 right-0 bg-amber-100 text-amber-700 text-[10px] font-bold px-3 py-1 rounded-bl-lg z-10 shadow-sm border-b border-l border-amber-200">
+                        VISTA PREVIA DE DATOS (El diseño final se aplica en el PDF)
+                     </div>
                     
                     {/* Ribbon */}
                     <div className="absolute top-0 left-0 overflow-hidden w-28 h-28">
