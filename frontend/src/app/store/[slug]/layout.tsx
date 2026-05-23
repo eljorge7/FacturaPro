@@ -648,7 +648,7 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
                          <p className="text-xs text-slate-400 leading-relaxed mb-4">
                             Esta tienda está potenciada por <strong>MAGIA OS</strong>, el ecosistema inteligente de Grupo Hurtado para la gestión de negocios de alto rendimiento.
                          </p>
-                         <Link href="/">
+                         <Link href="https://radiotecpro.com" target="_blank" rel="noopener noreferrer">
                            <button className="text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors w-full">
                               Conocer más sobre MAGIA OS
                            </button>

@@ -30,6 +30,19 @@ export default function ProductDetailPage() {
         .then(res => {
            setProductData(res.data);
            setActiveImage(res.data.imageUrl || null);
+           
+           if (!res.data.alternativas || res.data.alternativas.length === 0) {
+              const query = res.data.brand && res.data.brand !== 'Local' ? res.data.brand : res.data.category;
+              if (query) {
+                 axios.get(`${API_URL}/public-store/${slug}/products?search=${encodeURIComponent(query)}&page=1`, { signal: controller.signal })
+                   .then(altRes => {
+                      if (altRes.data && altRes.data.products) {
+                         const alts = altRes.data.products.filter((p: any) => String(p.id) !== String(productId)).slice(0, 4);
+                         setProductData((prev: any) => ({ ...prev, alternativas: alts }));
+                      }
+                   }).catch(() => {});
+              }
+           }
         })
         .catch(err => {
            if (err.name !== 'CanceledError' && err.code !== 'ERR_CANCELED') {
