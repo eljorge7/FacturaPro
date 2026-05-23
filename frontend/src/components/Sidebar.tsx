@@ -27,7 +27,8 @@ import {
   Landmark,
   ChevronDown,
   Banknote,
-  Truck
+  Truck,
+  MessageSquare
 } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 
