@@ -65,7 +65,7 @@ export class PublicStoreService {
     }
 
     try {
-      const res = await axios.get(`https://developers.syscom.mx/api/v1/productos?pagina=1`, {
+      const res = await axios.get(`https://developers.syscom.mx/api/v1/productos?pagina=1&busqueda=a`, {
         headers: { Authorization: `Bearer ${tokenRes}` }
       });
       return { success: true, token: tokenRes.substring(0,10) + '...', productsCount: res.data?.productos?.length };
@@ -74,7 +74,7 @@ export class PublicStoreService {
     }
   }
 
-  async getCombinedCatalog(slug: string, page: number = 1) {
+  async getCombinedCatalog(slug: string, page: number = 1, search: string = "") {
     const tenant = await this.prisma.tenant.findFirst({ 
       where: { storeEnabled: true, hasStoreAccess: true, OR: [{ storeSlug: slug }, { storeCustomDomain: slug }] } 
     });
@@ -82,30 +82,33 @@ export class PublicStoreService {
       throw new NotFoundException('Store not found or disabled');
     }
 
-    // 1. Fetch Local Store Products
-    const localProductsRaw = await this.prisma.storeProduct.findMany({
+    // 1. Fetch Local Products
+    const localProducts = await this.prisma.storeProduct.findMany({
       where: { tenantId: tenant.id },
-      orderBy: { createdAt: 'desc' } // Just all of them for now
+      take: 20,
+      skip: (page - 1) * 20
     });
-    
-    const localProducts = localProductsRaw.map(p => ({
+
+    const localMapped = localProducts.map(p => ({
       id: p.id,
       title: p.title,
       price: p.price,
       stock: p.stock,
-      brand: p.brand || 'Local',
       imageUrl: p.imageUrl,
+      brand: p.brand || 'Local',
       category: p.category,
       source: 'local'
     }));
 
     // 2. Fetch Syscom Products if configured
     let syscomProducts: any[] = [];
+    let totalPages = 1;
     const token = await this.getSyscomToken(tenant);
 
     if (token) {
       try {
-        const res = await axios.get(`https://developers.syscom.mx/api/v1/productos?pagina=${page}`, {
+        const busqueda = search ? search : 'cctv';
+        const res = await axios.get(`https://developers.syscom.mx/api/v1/productos?pagina=${page}&busqueda=${encodeURIComponent(busqueda)}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -115,11 +118,12 @@ export class PublicStoreService {
             title: p.titulo,
             price: parseFloat(p.precios?.precio_descuento || p.precios?.precio_lista || '0'),
             stock: parseInt(p.existencia?.nuevo || '0', 10),
-            brand: p.marca,
             imageUrl: p.img_portada,
+            brand: p.marca,
             category: p.categorias?.[0]?.nombre || 'General',
             source: 'syscom'
           }));
+          totalPages = res.data.paginas || 1;
         }
       } catch (e) {
         this.logger.error("Error fetching syscom products", e);
@@ -127,8 +131,8 @@ export class PublicStoreService {
     }
 
     return {
-      products: [...localProducts, ...syscomProducts],
-      page
+      products: [...localMapped, ...syscomProducts],
+      paginas: totalPages
     };
   }
 

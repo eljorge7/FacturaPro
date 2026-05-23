@@ -40,7 +40,7 @@ let PublicStoreController = class PublicStoreController {
     }
     async getCatalog(slug, search, page) {
         const pageNum = page ? parseInt(page, 10) : 1;
-        return this.storeService.getCombinedCatalog(slug, pageNum);
+        return this.storeService.getCombinedCatalog(slug, pageNum, search);
     }
     async getProductDetails(slug, id) {
         return this.storeService.getProductDetails(slug, id);

@@ -31,7 +31,7 @@ export class PublicStoreController {
   @Get('products')
   async getCatalog(@Param('slug') slug: string, @Query('search') search: string, @Query('page') page: string) {
     const pageNum = page ? parseInt(page, 10) : 1;
-    return this.storeService.getCombinedCatalog(slug, pageNum);
+    return this.storeService.getCombinedCatalog(slug, pageNum, search);
   }
 
   @Get('products/:id')

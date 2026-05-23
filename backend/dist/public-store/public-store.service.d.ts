@@ -35,9 +35,9 @@ export declare class PublicStoreService {
         token?: undefined;
         productsCount?: undefined;
     }>;
-    getCombinedCatalog(slug: string, page?: number): Promise<{
+    getCombinedCatalog(slug: string, page?: number, search?: string): Promise<{
         products: any[];
-        page: number;
+        paginas: number;
     }>;
     getProductDetails(slug: string, id: string): Promise<any>;
     createOrder(slug: string, data: any): Promise<{

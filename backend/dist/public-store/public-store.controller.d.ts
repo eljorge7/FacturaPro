@@ -71,7 +71,7 @@ export declare class PublicStoreController {
     }>;
     getCatalog(slug: string, search: string, page: string): Promise<{
         products: any[];
-        page: number;
+        paginas: number;
     }>;
     getProductDetails(slug: string, id: string): Promise<any>;
     createOrder(slug: string, data: any): Promise<{
