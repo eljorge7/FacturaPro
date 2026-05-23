@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } else {
       // Not authenticated
-      if (!pathname.startsWith('/login') && !pathname.startsWith('/register') && !pathname.startsWith('/sso') && !pathname.startsWith('/portal')) {
+      if (!pathname.startsWith('/login') && !pathname.startsWith('/register') && !pathname.startsWith('/sso') && !pathname.startsWith('/portal') && !pathname.startsWith('/store')) {
         router.push('/login');
       }
     }

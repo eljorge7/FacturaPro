@@ -71,7 +71,7 @@ export function Sidebar() {
         }).catch(e => console.error(e));
   }, [user, token, tier]);
 
-  if (pathname === '/login' || pathname === '/register' || pathname.startsWith('/portal')) return null;
+  if (pathname === '/login' || pathname === '/register' || pathname.startsWith('/portal') || pathname.startsWith('/store')) return null;
 
   const isStarter = tier === 'STARTER';
   const isPro = tier === 'PRO' || tier === 'ENTERPRISE' || tier === 'AGENCY' || !tier;
