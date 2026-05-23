@@ -8,4 +8,11 @@ export class CreateTenantDto {
   @IsOptional()
   @IsString()
   domain?: string;
+
+  @IsOptional()
+  hasStoreAccess?: boolean;
+
+  @IsOptional()
+  @IsString()
+  subscriptionTier?: string;
 }

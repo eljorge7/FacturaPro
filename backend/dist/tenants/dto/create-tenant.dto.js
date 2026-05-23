@@ -14,6 +14,8 @@ const class_validator_1 = require("class-validator");
 class CreateTenantDto {
     name;
     domain;
+    hasStoreAccess;
+    subscriptionTier;
 }
 exports.CreateTenantDto = CreateTenantDto;
 __decorate([
@@ -26,4 +28,13 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateTenantDto.prototype, "domain", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], CreateTenantDto.prototype, "hasStoreAccess", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateTenantDto.prototype, "subscriptionTier", void 0);
 //# sourceMappingURL=create-tenant.dto.js.map
