@@ -92,6 +92,7 @@ export class PublicStoreService {
     const localMapped = localProducts.map(p => ({
       id: p.id,
       title: p.title,
+      model: (p as any).sku || p.id,
       price: p.price,
       stock: p.stock,
       imageUrl: p.imageUrl,
@@ -116,6 +117,7 @@ export class PublicStoreService {
           syscomProducts = res.data.productos.map((p: any) => ({
             id: p.producto_id,
             title: p.titulo,
+            model: p.modelo,
             price: parseFloat(p.precios?.precio_descuento || p.precios?.precio_lista || '0'),
             stock: parseInt(p.existencia?.nuevo || '0', 10),
             imageUrl: p.img_portada,
@@ -158,6 +160,7 @@ export class PublicStoreService {
       const data = {
         id: localP.id,
         title: localP.title,
+        model: (localP as any).sku || localP.id,
         description: localP.description,
         price: localP.price,
         stock: localP.stock,
@@ -183,6 +186,7 @@ export class PublicStoreService {
       const data = {
         id: p.producto_id,
         title: p.titulo,
+        model: p.modelo,
         description: p.descripcion,
         price: parseFloat(p.precios?.precio_descuento || p.precios?.precio_lista || '0'),
         stock: parseInt(p.existencia?.nuevo || '0', 10),
