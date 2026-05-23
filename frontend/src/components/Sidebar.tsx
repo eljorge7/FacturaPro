@@ -28,7 +28,8 @@ import {
   ChevronDown,
   Banknote,
   Truck,
-  MessageSquare
+  MessageSquare,
+  ShoppingBag
 } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 
