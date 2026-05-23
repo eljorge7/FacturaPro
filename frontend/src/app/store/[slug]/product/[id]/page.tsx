@@ -7,7 +7,7 @@ import { ArrowLeft, Package, Check, X, Tag, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
 
 export default function ProductDetailPage() {
   const router = useRouter();
@@ -44,12 +44,17 @@ export default function ProductDetailPage() {
 
   const getDisplayPrice = (product: any) => {
     let price = product.price;
-    if (currency === 'USD') {
-      const exRate = product.exchangeRate || 18.0;
-      price = price / exRate;
+    const exRate = product.exchangeRate || 18.0;
+
+    if (product.source === 'syscom') {
+       price = price * exRate; // Syscom price is USD without IVA. Convert to MXN.
+       if (includeIva) price = price * 1.16; // Add IVA if requested
+    } else {
+       if (!includeIva) price = price / 1.16; // Local price is MXN with IVA. Remove if requested.
     }
-    if (!includeIva) {
-      price = price / 1.16;
+    
+    if (currency === 'USD') {
+      price = price / exRate;
     }
     return price;
   };

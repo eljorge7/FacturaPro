@@ -74,16 +74,19 @@ export default function StorePage() {
 
   const getDisplayPrice = (product: any) => {
     let price = product.price;
-    // If currency is USD, divide by the actual exchange rate from the API, default to 18.0
+    const exRate = product.exchangeRate || 18.0;
+
+    if (product.source === 'syscom') {
+       price = price * exRate; // Syscom price is USD without IVA. Convert to MXN.
+       if (includeIva) price = price * 1.16; // Add IVA if requested
+    } else {
+       if (!includeIva) price = price / 1.16; // Local price is MXN with IVA. Remove if requested.
+    }
+    
     if (currency === 'USD') {
-      const exRate = product.exchangeRate || 18.0;
       price = price / exRate;
     }
-    // Backend returns price WITH IVA. If includeIva is false, remove it.
-    if (!includeIva) {
-      price = price / 1.16;
-    }
-    return price; 
+    return price;
   };
 
   const FilterContent = () => (

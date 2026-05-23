@@ -147,7 +147,8 @@ export default function NewQuotePage() {
       }
       setIsSearchingSyscom(true);
       try {
-        const res = await fetch(`http://localhost:3001/store/products?search=${encodeURIComponent(syscomSearch)}`);
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
+        const res = await fetch(`${baseUrl}/public-store/radiotec/products?busqueda=${encodeURIComponent(syscomSearch)}`);
         const data = await res.json();
         setSyscomResults(data.products.slice(0, 8)); // Top 8 results
       } catch (e) {

@@ -109,12 +109,17 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
 
   const getDisplayPrice = (product: any) => {
     let price = product.price;
-    if (currency === 'USD') {
-      const exRate = product.exchangeRate || 18.0;
-      price = price / exRate;
+    const exRate = product.exchangeRate || 18.0;
+
+    if (product.source === 'syscom') {
+       price = price * exRate; // Syscom price is USD without IVA. Convert to MXN.
+       if (includeIva) price = price * 1.16; // Add IVA if requested
+    } else {
+       if (!includeIva) price = price / 1.16; // Local price is MXN with IVA. Remove if requested.
     }
-    if (!includeIva) {
-      price = price / 1.16;
+    
+    if (currency === 'USD') {
+      price = price / exRate;
     }
     return price;
   };
@@ -440,12 +445,12 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
                                       </td>
                                       <td className="p-4 align-top text-center">
                                          <div className="text-xs text-slate-400 line-through mt-2 font-medium">
-                                            ${(getDisplayPrice(item.product) * 1.15).toLocaleString('es-MX', {minimumFractionDigits: 2})} <span className="text-[9px]">MXN</span>
+                                            ${(getDisplayPrice(item.product) * 1.15).toLocaleString('es-MX', {minimumFractionDigits: 2})} <span className="text-[9px]">{currency}</span>
                                          </div>
                                       </td>
                                       <td className="p-4 align-top text-center">
                                          <div className="text-sm font-bold text-slate-900 mt-1">
-                                            ${getDisplayPrice(item.product).toLocaleString('es-MX', {minimumFractionDigits: 2})} <span className="text-[9px]">MXN</span>
+                                            ${(includeIva ? getDisplayPrice(item.product) / 1.16 : getDisplayPrice(item.product)).toLocaleString('es-MX', {minimumFractionDigits: 2})} <span className="text-[9px]">{currency}</span>
                                          </div>
                                       </td>
                                       <td className="p-4 align-top">
@@ -459,8 +464,8 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
                                       </td>
                                       <td className="p-4 align-top text-right">
                                          <div className="text-base font-black text-slate-900 mt-1">
-                                            ${(getDisplayPrice(item.product) * item.quantity).toLocaleString('es-MX', {minimumFractionDigits: 2})}
-                                            <span className="text-[10px] text-slate-500 block">MXN</span>
+                                            ${((includeIva ? getDisplayPrice(item.product) / 1.16 : getDisplayPrice(item.product)) * item.quantity).toLocaleString('es-MX', {minimumFractionDigits: 2})}
+                                            <span className="text-[10px] text-slate-500 block">{currency}</span>
                                          </div>
                                       </td>
                                       <td className="p-4 align-top text-right">
@@ -485,17 +490,21 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
                        <div className="space-y-4 mb-6">
                           <div className="flex justify-between text-sm">
                              <span className="text-slate-500 font-medium">Subtotal</span>
-                             <span className="font-bold text-slate-700">${cart.reduce((sum, item) => sum + (getDisplayPrice(item.product) * item.quantity), 0).toLocaleString('es-MX', {minimumFractionDigits: 2})} MXN</span>
+                             <span className="font-bold text-slate-700">${(cart.reduce((sum, item) => sum + (getDisplayPrice(item.product) * item.quantity), 0) / (includeIva ? 1.16 : 1)).toLocaleString('es-MX', {minimumFractionDigits: 2})} {currency}</span>
                           </div>
                           <div className="flex justify-between text-sm">
-                             <span className="text-slate-500 font-medium">Envo Nacional</span>
+                             <span className="text-slate-500 font-medium">IVA (16%)</span>
+                             <span className="font-bold text-slate-700">${(cart.reduce((sum, item) => sum + (getDisplayPrice(item.product) * item.quantity), 0) / (includeIva ? 1.16 : 1) * 0.16).toLocaleString('es-MX', {minimumFractionDigits: 2})} {currency}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                             <span className="text-slate-500 font-medium">Envío Nacional</span>
                              <span className="font-bold text-emerald-500">GRATIS! 🚚</span>
                           </div>
                           <div className="border-t border-slate-100 pt-4 flex justify-between items-end">
                              <span className="text-lg font-black text-slate-900">TOTAL</span>
                              <div className="text-right">
-                                <span className="text-2xl font-black text-blue-600">${cart.reduce((sum, item) => sum + (getDisplayPrice(item.product) * item.quantity), 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>
-                                <span className="text-xs font-bold text-blue-600/60 ml-1">MXN</span>
+                                <span className="text-2xl font-black text-blue-600">${(cart.reduce((sum, item) => sum + (getDisplayPrice(item.product) * item.quantity), 0) / (includeIva ? 1 : (1/1.16))).toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>
+                                <span className="text-xs font-bold text-blue-600/60 ml-1">{currency}</span>
                              </div>
                           </div>
                        </div>
