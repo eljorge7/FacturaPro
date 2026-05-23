@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import api from "@/lib/api";
 import { Users, CheckCircle, Clock, Search, UserCheck, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -18,6 +17,7 @@ export default function StoreCustomersPage() {
   const [customers, setCustomers] = useState<StoreCustomer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
 
   useEffect(() => {
     fetchCustomers();
@@ -25,8 +25,14 @@ export default function StoreCustomersPage() {
 
   const fetchCustomers = async () => {
     try {
-      const res = await api.get("/users/store-customers");
-      setCustomers(res.data);
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${baseUrl}/users/store-customers`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCustomers(data);
+      }
     } catch (e) {
       console.error("Error fetching customers", e);
     } finally {
@@ -37,8 +43,18 @@ export default function StoreCustomersPage() {
   const handleUpdateStatus = async (id: string, isActive: boolean) => {
     if (!confirm(`¿Estás seguro de que deseas ${isActive ? 'aprobar' : 'desactivar'} a este cliente?`)) return;
     try {
-      await api.patch(`/users/${id}/activate`, { isActive });
-      fetchCustomers();
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${baseUrl}/users/${id}/activate`, {
+        method: "PATCH",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ isActive })
+      });
+      if (res.ok) {
+        fetchCustomers();
+      }
     } catch (error) {
       alert("Error al actualizar estado.");
     }
