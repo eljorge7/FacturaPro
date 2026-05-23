@@ -33,6 +33,8 @@ export default function NewQuotePage() {
 
   const [taxIncluded, setTaxIncluded] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [currency, setCurrency] = useState("MXN");
+  const [exchangeRate, setExchangeRate] = useState(18.0);
 
   // Proposal States
   const [isProposal, setIsProposal] = useState(false);
@@ -84,6 +86,8 @@ export default function NewQuotePage() {
              setExpirationDate(data.expiresAt?.split('T')[0] || "");
              setNotes(data.notes || "");
              setTaxIncluded(data.taxIncluded || false);
+             setCurrency(data.currency || "MXN");
+             setExchangeRate(data.exchangeRate || 18.0);
              if (data.items && data.items.length > 0) {
                 setItems(data.items.map((i: any) => ({
                    productId: i.productId || "",
@@ -134,10 +138,10 @@ export default function NewQuotePage() {
   useEffect(() => {
     if (items.length > 1 || items[0].description || customerId || reference || notes) {
       localStorage.setItem('facturapro_draft_quote', JSON.stringify({
-        items, customerId, reference, issueDate: date, dueDate: expirationDate, subject: notes
+        items, customerId, reference, issueDate: date, dueDate: expirationDate, subject: notes, currency, exchangeRate
       }));
     }
-  }, [items, customerId, reference, date, expirationDate, notes]);
+  }, [items, customerId, reference, date, expirationDate, notes, currency, exchangeRate]);
 
   useEffect(() => {
     const fetchSyscom = async () => {
@@ -288,6 +292,8 @@ export default function NewQuotePage() {
           notes,
           taxIncluded,
           isProposal,
+          currency,
+          exchangeRate,
           ...proposalData,
           items: mappedItems.map(i => ({
              ...i,
@@ -432,12 +438,21 @@ export default function NewQuotePage() {
                 </div>
               </div>
 
-              {/* Fechas */}
+              {/* Fechas y Moneda */}
               <div className="grid grid-cols-1 md:grid-cols-[200px_1fr_150px_1fr] items-center gap-4">
                 <label className="text-sm font-medium text-red-500">Fecha del Estimación*</label>
                 <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-indigo-500" />
                 <label className="text-sm font-medium text-slate-700 md:text-right pr-4">Fecha de vencimiento</label>
                 <input type="date" value={expirationDate} onChange={e => setExpirationDate(e.target.value)} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 text-slate-500" placeholder="dd MMM yyyy" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-[200px_1fr_150px_1fr] items-center gap-4 mt-4">
+                <label className="text-sm font-medium text-slate-700">Moneda</label>
+                <select value={currency} onChange={e=>setCurrency(e.target.value)} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-indigo-500">
+                   <option value="MXN">MXN - Pesos Mexicanos</option>
+                   <option value="USD">USD - Dólares</option>
+                </select>
+                <label className="text-sm font-medium text-slate-700 md:text-right pr-4" title="Tasa usada para convertir equipos de Syscom (USD) a MXN">T. Cambio Syscom</label>
+                <input type="number" step="0.01" value={exchangeRate} onChange={e=>setExchangeRate(Number(e.target.value))} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-indigo-500" />
               </div>
 
               {/* Asunto */}
@@ -723,7 +738,7 @@ export default function NewQuotePage() {
                         </>
                      )}
                      <div className="flex justify-between items-center px-3 text-lg font-bold">
-                        <span className="text-slate-800">Total ( MXN )</span>
+                        <span className="text-slate-800">Total ( {currency} )</span>
                         <span className="text-slate-900 font-mono tracking-tight text-xl">{totals.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                      </div>
                   </div>
@@ -960,11 +975,16 @@ export default function NewQuotePage() {
                          newItems.push({ productId: "", description: "", quantity: 1, unitPrice: 0, taxRate: 0.16, discount: 0 });
                          targetIdx = newItems.length - 1;
                       }
+                      let finalPrice = prod.price;
+                      if (currency === 'MXN') {
+                         finalPrice = prod.price * exchangeRate;
+                      }
+
                       newItems[targetIdx] = {
                         productId: "", // Keep it empty so it treats it as manual/Syscom
                         description: prod.title,
                         quantity: 1,
-                        unitPrice: prod.price / 1.16, // Syscom API returns price with IVA, we need base price
+                        unitPrice: finalPrice / 1.16, // Syscom API returns price with IVA, we need base price
                         taxRate: 0.16,
                         discount: 0
                       };

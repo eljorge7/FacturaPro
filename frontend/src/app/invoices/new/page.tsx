@@ -24,6 +24,7 @@ export default function NewInvoicePage() {
   const [cfdiUse, setCfdiUse] = useState("G03");
   const [currency, setCurrency] = useState("MXN");
   const [exchangeRate, setExchangeRate] = useState(1.0);
+  const [syscomExchangeRate, setSyscomExchangeRate] = useState(18.0);
   
   const [items, setItems] = useState<any[]>([
     { productId: "", description: "", quantity: 1, unitPrice: 0, taxRate: 0.16, discount: 0 }
@@ -63,6 +64,15 @@ export default function NewInvoicePage() {
 
   useEffect(() => {
      fetchCatalogs();
+     // Fetch default Syscom exchange rate
+     fetch('https://open.er-api.com/v6/latest/USD')
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.rates && data.rates.MXN) {
+               setSyscomExchangeRate(data.rates.MXN);
+            }
+        })
+        .catch(err => console.error('Error fetching syscom exchange rate', err));
   }, []);
 
   useEffect(() => {
@@ -1108,11 +1118,17 @@ export default function NewInvoicePage() {
                                  onClick={() => {
                                     const newItems = [...items];
                                     const lastItem = newItems[newItems.length - 1];
+                                    
+                                    let finalPrice = parseFloat(p.price);
+                                    if (currency === 'MXN') {
+                                       finalPrice = finalPrice * syscomExchangeRate;
+                                    }
+
                                     const payload = {
                                        productId: "",
                                        description: p.title,
                                        quantity: 1,
-                                       unitPrice: parseFloat(p.price),
+                                       unitPrice: finalPrice / 1.16, // Remove IVA
                                        taxRate: 0.16,
                                        discount: 0
                                     };
