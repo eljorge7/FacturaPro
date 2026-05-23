@@ -27,7 +27,6 @@ export declare class UsersService {
         updatedAt: Date;
     }>;
     findAll(tenantId: string): Promise<{
-        name: string;
         warehouse: {
             id: string;
             tenantId: string;
@@ -36,6 +35,7 @@ export declare class UsersService {
             isDefault: boolean;
         } | null;
         id: string;
+        name: string;
         createdAt: Date;
         email: string;
         role: string;

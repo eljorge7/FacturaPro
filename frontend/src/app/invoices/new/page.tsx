@@ -27,7 +27,7 @@ export default function NewInvoicePage() {
   const [syscomExchangeRate, setSyscomExchangeRate] = useState(18.0);
   
   const [items, setItems] = useState<any[]>([
-    { productId: "", description: "", quantity: 1, unitPrice: 0, taxRate: 0.16, discount: 0 }
+    { productId: "", description: "", imageUrl: "", quantity: 1, unitPrice: 0, taxRate: 0.16, discount: 0 }
   ]);
 
   const [taxIncluded, setTaxIncluded] = useState(false);
@@ -114,6 +114,7 @@ export default function NewInvoicePage() {
                   setItems(quote.items.map((i: any) => ({
                      productId: i.productId || "",
                      description: i.description || "",
+                     imageUrl: i.imageUrl || "",
                      quantity: i.quantity || 1,
                      unitPrice: i.unitPrice || 0,
                      taxRate: i.taxRate || 0.16,
@@ -159,16 +160,21 @@ export default function NewInvoicePage() {
       newItems[index] = {
         ...newItems[index],
         productId: product.id,
-        description: product.name + (product.description ? ` - ${product.description}` : ''),
-        unitPrice: product.price,
+        description: product.description || product.title,
+        imageUrl: product.imageUrl || "",
+        quantity: 1,
+        unitPrice: Number(product.price),
         taxRate: product.taxRate
       };
     } else {
        newItems[index] = {
-         ...newItems[index],
          productId: "",
          description: "",
-         unitPrice: 0
+         imageUrl: "",
+         quantity: 1,
+         unitPrice: 0,
+         taxRate: 0.16,
+         discount: 0
        };
     }
     setItems(newItems);
@@ -559,8 +565,13 @@ export default function NewInvoicePage() {
                         {items.map((item, index) => (
                            <tr key={index} className="group hover:bg-slate-50 transition-colors">
                               <td className="p-0 border-r border-slate-50 group-hover:border-slate-200">
-                                 <div className="flex flex-col h-full relative">
-                                    <div className="relative">
+                                 <div className="flex h-full relative items-start p-1.5 gap-2">
+                                    {item.imageUrl && (
+                                       <div className="w-12 h-12 bg-white border border-slate-200 rounded shrink-0 p-1 flex items-center justify-center overflow-hidden">
+                                          <img src={item.imageUrl} className="w-full h-full object-contain" />
+                                       </div>
+                                    )}
+                                    <div className="flex-1 relative h-full">
                                        <textarea 
                                           value={item.description}
                                           onChange={(e) => {
@@ -583,12 +594,10 @@ export default function NewInvoicePage() {
                                           >
                                              <option value="">-- Catálogo --</option>
                                              {products.map(p => (
-                                                <option key={p.id} value={p.id}>{p.name}</option>
+                                                <option key={p.id} value={p.id}>{p.title}</option>
                                              ))}
                                           </select>
-                                          <button className="p-1 text-slate-400 hover:text-blue-500 bg-slate-100 rounded pointer-events-none">
-                                             <Search className="w-3 h-3" />
-                                          </button>
+                                          <Search className="w-4 h-4 text-slate-300 pointer-events-none" />
                                        </div>
                                     </div>
                                  </div>
@@ -665,7 +674,7 @@ export default function NewInvoicePage() {
                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mt-4 px-1 gap-4">
                   <div className="flex gap-2">
                      <button 
-                        onClick={() => setItems([...items, { productId: "", description: "", quantity: 1, unitPrice: 0, taxRate: 0.16, discount: 0 }])}
+                        onClick={() => setItems([...items, { productId: "", description: "", imageUrl: "", quantity: 1, unitPrice: 0, taxRate: 0.16, discount: 0 }])}
                         className="flex items-center gap-1 text-sm bg-[#fcf5ff] text-[#a855f7] hover:bg-[#f3e8ff] font-medium px-4 py-2 rounded transition-colors"
                      >
                         <Plus className="w-4 h-4 text-[#a855f7]" /> Añadir nueva fila
@@ -1137,6 +1146,7 @@ export default function NewInvoicePage() {
                                     const payload = {
                                        productId: "",
                                        description: `[${p.model}] ${p.title}`,
+                                       imageUrl: p.imageUrl || "",
                                        quantity: 1,
                                        unitPrice: finalPrice / 1.16, // Remove IVA
                                        taxRate: 0.16,

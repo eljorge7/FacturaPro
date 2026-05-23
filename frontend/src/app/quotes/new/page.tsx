@@ -28,7 +28,7 @@ export default function NewQuotePage() {
   const [expirationDate, setExpirationDate] = useState("");
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<any[]>([
-    { productId: "", description: "", quantity: 1, unitPrice: 0, taxRate: 0.16, discount: 0 }
+    { productId: "", description: "", imageUrl: "", quantity: 1, unitPrice: 0, taxRate: 0.16, discount: 0 }
   ]);
 
   const [taxIncluded, setTaxIncluded] = useState(false);
@@ -92,6 +92,7 @@ export default function NewQuotePage() {
                 setItems(data.items.map((i: any) => ({
                    productId: i.productId || "",
                    description: i.description,
+                   imageUrl: i.imageUrl || "",
                    quantity: i.quantity,
                    unitPrice: i.unitPrice,
                    taxRate: i.taxRate,
@@ -191,16 +192,21 @@ export default function NewQuotePage() {
       newItems[index] = {
         ...newItems[index],
         productId: product.id,
-        description: product.name + (product.description ? ` - ${product.description}` : ''),
-        unitPrice: product.price,
+        description: product.description || product.title,
+        imageUrl: product.imageUrl || "",
+        quantity: 1,
+        unitPrice: Number(product.price),
         taxRate: product.taxRate
       };
     } else {
        newItems[index] = {
-         ...newItems[index],
          productId: "",
          description: "",
-         unitPrice: 0
+         imageUrl: "",
+         quantity: 1,
+         unitPrice: 0,
+         taxRate: 0.16,
+         discount: 0
        };
     }
     setItems(newItems);
@@ -580,8 +586,13 @@ export default function NewQuotePage() {
                         {items.map((item, index) => (
                            <tr key={index} className="group hover:bg-slate-50 transition-colors">
                               <td className="p-0 border-r border-slate-50 group-hover:border-slate-200">
-                                 <div className="flex flex-col h-full relative">
-                                    <div className="relative">
+                                 <div className="flex h-full relative items-start p-1.5 gap-2">
+                                    {item.imageUrl && (
+                                       <div className="w-12 h-12 bg-white border border-slate-200 rounded shrink-0 p-1 flex items-center justify-center overflow-hidden">
+                                          <img src={item.imageUrl} className="w-full h-full object-contain" />
+                                       </div>
+                                    )}
+                                    <div className="flex-1 relative h-full">
                                        <textarea 
                                           value={item.description}
                                           onChange={(e) => {
@@ -686,7 +697,7 @@ export default function NewQuotePage() {
                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mt-4 px-1 gap-4">
                   <div className="flex gap-2">
                      <button 
-                        onClick={() => setItems([...items, { productId: "", description: "", quantity: 1, unitPrice: 0, taxRate: 0.16, discount: 0 }])}
+                        onClick={() => setItems([...items, { productId: "", description: "", imageUrl: "", quantity: 1, unitPrice: 0, taxRate: 0.16, discount: 0 }])}
                         className="flex items-center gap-2 text-purple-600 bg-purple-50 hover:bg-purple-100 px-4 py-2 rounded-lg font-bold text-sm transition-colors"
                      >
                         <Plus className="w-4 h-4" /> Añadir nueva fila
@@ -980,7 +991,7 @@ export default function NewQuotePage() {
                       // Find first empty item or add new
                       let targetIdx = newItems.findIndex(i => !i.description && !i.productId);
                       if (targetIdx === -1) {
-                         newItems.push({ productId: "", description: "", quantity: 1, unitPrice: 0, taxRate: 0.16, discount: 0 });
+                         newItems.push({ productId: "", description: "", imageUrl: "", quantity: 1, unitPrice: 0, taxRate: 0.16, discount: 0 });
                          targetIdx = newItems.length - 1;
                       }
                       let finalPrice = prod.price;
@@ -991,6 +1002,7 @@ export default function NewQuotePage() {
                       newItems[targetIdx] = {
                         productId: "", // Keep it empty so it treats it as manual/Syscom
                         description: `[${prod.model}] ${prod.title}`,
+                        imageUrl: prod.imageUrl || "",
                         quantity: 1,
                         unitPrice: finalPrice / 1.16, // Syscom API returns price with IVA, we need base price
                         taxRate: 0.16,

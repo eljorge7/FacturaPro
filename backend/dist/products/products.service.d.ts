@@ -111,13 +111,13 @@ export declare class ProductsService {
         updatedAt: Date;
     })[]>;
     getPublishedStoreProducts(): Promise<{
-        name: string;
         id: string;
+        name: string;
         tenantId: string;
         type: string;
         description: string | null;
-        stock: number;
         imageUrl: string | null;
+        stock: number;
         price: number;
         storeCategory: string | null;
     }[]>;

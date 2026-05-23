@@ -155,8 +155,17 @@ export default function ProposalViewPage() {
                    {quote.items?.map((item: any) => (
                       <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
                          <td className="py-4 px-4">
-                            <p className="font-bold text-slate-800">{item.description}</p>
-                            {item.product?.sku && <p className="text-xs text-slate-400 mt-1">SKU: {item.product.sku}</p>}
+                            <div className="flex items-center gap-3">
+                               {item.imageUrl && (
+                                  <div className="w-12 h-12 bg-white border border-slate-200 rounded shrink-0 p-1 flex items-center justify-center overflow-hidden">
+                                     <img src={item.imageUrl} className="w-full h-full object-contain" />
+                                  </div>
+                               )}
+                               <div>
+                                  <p className="font-bold text-slate-800">{item.description}</p>
+                                  {item.product?.sku && <p className="text-xs text-slate-400 mt-1">SKU: {item.product.sku}</p>}
+                               </div>
+                            </div>
                          </td>
                          <td className="py-4 px-4 text-center font-medium text-slate-600">{item.quantity}</td>
                          <td className="py-4 px-4 text-right font-medium text-slate-600">${item.unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>

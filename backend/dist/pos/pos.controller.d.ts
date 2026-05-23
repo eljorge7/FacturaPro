@@ -49,6 +49,7 @@ export declare class PosController {
             invoiceId: string;
             productId: string | null;
             description: string;
+            imageUrl: string | null;
             quantity: number;
             unitPrice: number;
             discount: number;
@@ -84,9 +85,9 @@ export declare class PosController {
     }>;
     getCurrentShift(req: any): Promise<({
         openedBy: {
-            name: string;
             id: string;
             email: string;
+            name: string;
         };
     } & {
         id: string;

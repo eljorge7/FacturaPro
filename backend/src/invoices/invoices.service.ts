@@ -77,6 +77,7 @@ export class InvoicesService {
       return {
         productId: item.productId,
         description: item.description,
+        imageUrl: item.imageUrl,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         discount: discount,

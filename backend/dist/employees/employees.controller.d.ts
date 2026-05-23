@@ -173,8 +173,8 @@ export declare class EmployeesController {
     findAll(tenantId: string): Promise<({
         user: {
             warehouse: {
-                name: string;
                 id: string;
+                name: string;
             } | null;
             email: string;
             role: string;
@@ -187,8 +187,8 @@ export declare class EmployeesController {
             uploadedAt: Date;
         }[];
         departmentRef: {
-            name: string;
             id: string;
+            name: string;
         } | null;
     } & {
         id: string;
@@ -232,8 +232,8 @@ export declare class EmployeesController {
             uploadedAt: Date;
         }[];
         departmentRef: {
-            name: string;
             id: string;
+            name: string;
         } | null;
     } & {
         id: string;

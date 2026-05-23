@@ -65,17 +65,17 @@ export declare class AuthService {
     }>;
     getMemberships(userId: string): Promise<{
         primaryTenant: {
-            name: string;
-            subscriptionTier: string;
             id: string;
+            name: string;
             tradeName: string | null;
+            subscriptionTier: string;
             agencyId: string | null;
         } | undefined;
         agencyMemberships: {
-            name: string;
-            subscriptionTier: string;
             id: string;
+            name: string;
             tradeName: string | null;
+            subscriptionTier: string;
             agencyId: string | null;
         }[];
         isAgencyAdmin: boolean;
@@ -94,8 +94,8 @@ export declare class AuthService {
         id: string;
         role: string;
         user: {
-            name: string;
             id: string;
+            name: string;
             email: string;
             avatar: string | null;
         };
@@ -181,16 +181,16 @@ export declare class AuthService {
     }>;
     getAgencyTasks(userId: string): Promise<({
         tenant: {
-            name: string;
             id: string;
+            name: string;
             tradeName: string | null;
         } | null;
         agency: {
             name: string;
         };
         assignedTo: {
-            name: string;
             id: string;
+            name: string;
             avatar: string | null;
         } | null;
     } & {

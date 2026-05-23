@@ -53,6 +53,7 @@ export declare class InvoicesService {
             invoiceId: string;
             productId: string | null;
             description: string;
+            imageUrl: string | null;
             quantity: number;
             unitPrice: number;
             discount: number;
@@ -133,6 +134,7 @@ export declare class InvoicesService {
             invoiceId: string;
             productId: string | null;
             description: string;
+            imageUrl: string | null;
             quantity: number;
             unitPrice: number;
             discount: number;
@@ -338,6 +340,7 @@ export declare class InvoicesService {
             invoiceId: string;
             productId: string | null;
             description: string;
+            imageUrl: string | null;
             quantity: number;
             unitPrice: number;
             discount: number;

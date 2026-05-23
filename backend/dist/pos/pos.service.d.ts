@@ -51,6 +51,7 @@ export declare class PosService {
             invoiceId: string;
             productId: string | null;
             description: string;
+            imageUrl: string | null;
             quantity: number;
             unitPrice: number;
             discount: number;
@@ -86,9 +87,9 @@ export declare class PosService {
     }>;
     getCurrentShift(tenantId: string): Promise<({
         openedBy: {
-            name: string;
             id: string;
             email: string;
+            name: string;
         };
     } & {
         id: string;

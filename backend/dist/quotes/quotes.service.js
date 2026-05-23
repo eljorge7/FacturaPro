@@ -59,6 +59,7 @@ let QuotesService = class QuotesService {
             return {
                 productId: item.productId || null,
                 description: item.description,
+                imageUrl: item.imageUrl,
                 quantity: item.quantity,
                 unitPrice: item.unitPrice,
                 discount: discount,
@@ -205,6 +206,7 @@ let QuotesService = class QuotesService {
             invoiceId: invoice.id,
             productId: item.productId,
             description: item.description,
+            imageUrl: item.imageUrl,
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             discount: item.discount,
