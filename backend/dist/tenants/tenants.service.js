@@ -119,7 +119,8 @@ let TenantsService = class TenantsService {
             data: {
                 subscriptionTier: req.tier,
                 availableStamps: stamps,
-                subscriptionEndsAt: null
+                subscriptionEndsAt: null,
+                hasStoreAccess: req.tier === 'CORPORATIVO' || req.tier === 'CUSTOM'
             }
         });
         if (req.phone) {

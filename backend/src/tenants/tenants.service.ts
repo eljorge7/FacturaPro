@@ -128,7 +128,8 @@ export class TenantsService {
       data: {
         subscriptionTier: req.tier,
         availableStamps: stamps,
-        subscriptionEndsAt: null
+        subscriptionEndsAt: null,
+        hasStoreAccess: req.tier === 'CORPORATIVO' || req.tier === 'CUSTOM'
       } as any
     });
 
