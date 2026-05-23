@@ -148,7 +148,7 @@ export default function NewQuotePage() {
       setIsSearchingSyscom(true);
       try {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
-        const res = await fetch(`${baseUrl}/public-store/radiotec/products?busqueda=${encodeURIComponent(syscomSearch)}`);
+        const res = await fetch(`${baseUrl}/public-store/radiotec/products?search=${encodeURIComponent(syscomSearch)}`);
         const data = await res.json();
         setSyscomResults(data.products.slice(0, 8)); // Top 8 results
       } catch (e) {
