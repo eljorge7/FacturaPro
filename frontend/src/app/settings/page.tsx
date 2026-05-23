@@ -326,6 +326,24 @@ export default function SettingsPage() {
             body: JSON.stringify(payload)
          });
 
+         if (activeTab === 'store') {
+            await fetch(`${baseUrl}/store-management/settings`, {
+               method: 'PATCH',
+               headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+               },
+               body: JSON.stringify({
+                  storeEnabled: storeSettings.storeEnabled,
+                  storeSlug: storeSettings.storeSlug,
+                  storeCustomDomain: storeSettings.storeCustomDomain,
+                  syscomClientId: storeSettings.syscomClientId,
+                  syscomClientSecret: storeSettings.syscomClientSecret,
+                  mercadopagoAccessToken: storeSettings.mercadopagoAccessToken
+               })
+            });
+         }
+
          if (res.ok) {
             alert('¡Configuración guardada exitosamente!');
             window.location.reload();
