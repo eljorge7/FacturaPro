@@ -956,14 +956,22 @@ export default function NewQuotePage() {
               )}
               {syscomResults.map(prod => (
                 <div key={prod.id} className="flex gap-4 p-4 hover:bg-white rounded-xl border border-transparent hover:border-slate-200 hover:shadow-sm transition-all group items-center">
-                  <div className="w-16 h-16 bg-white rounded-lg border border-slate-200 flex items-center justify-center shrink-0 p-1">
+                  <div className="w-24 h-24 bg-white rounded-lg border border-slate-200 flex items-center justify-center shrink-0 p-2">
                     {prod.imageUrl ? <img src={prod.imageUrl} className="w-full h-full object-contain" /> : <span className="text-xs text-slate-300">No Img</span>}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-slate-900 text-sm line-clamp-2">{prod.title}</h4>
-                    <div className="flex gap-3 mt-1 text-xs">
-                      <span className="font-mono text-slate-500">{prod.id}</span>
-                      <span className="font-bold text-emerald-600">${prod.price.toLocaleString('es-MX')} MXN</span>
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    <div className="flex justify-between items-start mb-1.5">
+                      <span className="text-[#3b82f6] font-black tracking-tight text-lg leading-none">{prod.model}</span>
+                      {prod.stock !== undefined && (
+                        <div className="bg-[#1f2937] text-white text-xs font-bold px-2 py-0.5 rounded flex items-center gap-1.5">
+                          Inventario <span className="bg-white text-slate-900 px-1.5 py-0.5 rounded-sm text-[10px] leading-none">{prod.stock > 500 ? '500+' : prod.stock}</span>
+                        </div>
+                      )}
+                    </div>
+                    <h4 className="font-medium text-slate-600 text-sm line-clamp-2 leading-snug">{prod.title}</h4>
+                    <div className="flex gap-3 mt-2 text-xs items-center">
+                      <span className="font-bold text-emerald-600 text-base">${prod.price.toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-[10px] font-normal text-slate-500 uppercase">USD</span></span>
+                      <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded uppercase">{prod.brand}</span>
                     </div>
                   </div>
                   <button 
@@ -982,7 +990,7 @@ export default function NewQuotePage() {
 
                       newItems[targetIdx] = {
                         productId: "", // Keep it empty so it treats it as manual/Syscom
-                        description: prod.title,
+                        description: `[${prod.model}] ${prod.title}`,
                         quantity: 1,
                         unitPrice: finalPrice / 1.16, // Syscom API returns price with IVA, we need base price
                         taxRate: 0.16,

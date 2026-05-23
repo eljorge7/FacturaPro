@@ -1104,14 +1104,24 @@ export default function NewInvoicePage() {
                ) : syscomResults.length > 0 ? (
                   <div className="grid grid-cols-1 gap-3">
                      {syscomResults.map((p, idx) => (
-                        <div key={idx} className="bg-white border border-slate-200 rounded-xl p-4 flex gap-4 hover:border-purple-300 transition-colors group">
-                           <div className="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center shrink-0 overflow-hidden">
-                              {p.imageUrl ? <img src={p.imageUrl} className="w-full h-full object-cover" /> : <Search className="w-6 h-6 text-slate-300" />}
+                        <div key={idx} className="bg-white border border-slate-200 rounded-xl p-4 flex gap-4 hover:border-purple-300 transition-colors group items-center">
+                           <div className="w-24 h-24 bg-white rounded-lg border border-slate-200 flex items-center justify-center shrink-0 p-2">
+                              {p.imageUrl ? <img src={p.imageUrl} className="w-full h-full object-contain" /> : <Search className="w-6 h-6 text-slate-300" />}
                            </div>
-                           <div className="flex-1">
-                              <h4 className="font-bold text-slate-800 text-sm group-hover:text-purple-700">{p.title}</h4>
-                              <p className="text-xs text-slate-500 mt-1 font-mono">{p.model} | {p.brand}</p>
-                              <p className="text-[#10b981] font-bold text-sm mt-1">${parseFloat(p.price).toLocaleString()} <span className="text-xs text-slate-400 font-medium line-through ml-1">${(parseFloat(p.price) * 1.3).toLocaleString()}</span></p>
+                           <div className="flex-1 min-w-0 flex flex-col justify-center">
+                              <div className="flex justify-between items-start mb-1.5">
+                                 <span className="text-[#3b82f6] font-black tracking-tight text-lg leading-none">{p.model}</span>
+                                 {p.stock !== undefined && (
+                                   <div className="bg-[#1f2937] text-white text-xs font-bold px-2 py-0.5 rounded flex items-center gap-1.5">
+                                     Inventario <span className="bg-white text-slate-900 px-1.5 py-0.5 rounded-sm text-[10px] leading-none">{p.stock > 500 ? '500+' : p.stock}</span>
+                                   </div>
+                                 )}
+                              </div>
+                              <h4 className="font-medium text-slate-600 text-sm line-clamp-2 leading-snug">{p.title}</h4>
+                              <div className="flex gap-3 mt-2 text-xs items-center">
+                                 <span className="font-bold text-emerald-600 text-base">${parseFloat(p.price).toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-[10px] font-normal text-slate-500 uppercase">USD</span></span>
+                                 <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded uppercase">{p.brand}</span>
+                              </div>
                            </div>
                            <div className="flex items-center">
                               <button 
@@ -1123,10 +1133,10 @@ export default function NewInvoicePage() {
                                     if (currency === 'MXN') {
                                        finalPrice = finalPrice * syscomExchangeRate;
                                     }
-
+  
                                     const payload = {
                                        productId: "",
-                                       description: p.title,
+                                       description: `[${p.model}] ${p.title}`,
                                        quantity: 1,
                                        unitPrice: finalPrice / 1.16, // Remove IVA
                                        taxRate: 0.16,
