@@ -69,10 +69,7 @@ export declare class PublicStoreController {
         token?: undefined;
         productsCount?: undefined;
     }>;
-    getCatalog(slug: string, search: string, page: string): Promise<{
-        products: any[];
-        paginas: number;
-    }>;
+    getCatalog(slug: string, search: string, page: string): Promise<any>;
     getProductDetails(slug: string, id: string): Promise<any>;
     createOrder(slug: string, data: any): Promise<{
         order: {

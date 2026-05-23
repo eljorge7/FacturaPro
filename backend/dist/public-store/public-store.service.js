@@ -22,6 +22,7 @@ let PublicStoreService = PublicStoreService_1 = class PublicStoreService {
     logger = new common_1.Logger(PublicStoreService_1.name);
     syscomTokens = new Map();
     productsCache = new Map();
+    catalogCache = new Map();
     constructor(prisma) {
         this.prisma = prisma;
     }
@@ -87,6 +88,12 @@ let PublicStoreService = PublicStoreService_1 = class PublicStoreService {
         if (!tenant) {
             throw new common_1.NotFoundException('Store not found or disabled');
         }
+        const cacheKey = `${tenant.id}_${page}_${search}`;
+        const cached = this.catalogCache.get(cacheKey);
+        const now = Date.now();
+        if (cached && cached.expiresAt > now) {
+            return cached.data;
+        }
         const localProducts = await this.prisma.storeProduct.findMany({
             where: { tenantId: tenant.id },
             take: 20,
@@ -131,10 +138,12 @@ let PublicStoreService = PublicStoreService_1 = class PublicStoreService {
                 this.logger.error("Error fetching syscom products", e);
             }
         }
-        return {
+        const data = {
             products: [...localMapped, ...syscomProducts],
             paginas: totalPages
         };
+        this.catalogCache.set(cacheKey, { data, expiresAt: now + 2 * 60 * 1000 });
+        return data;
     }
     async getProductDetails(slug, id) {
         const tenant = await this.prisma.tenant.findFirst({

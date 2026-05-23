@@ -4,6 +4,7 @@ export declare class PublicStoreService {
     private readonly logger;
     private syscomTokens;
     private productsCache;
+    private catalogCache;
     constructor(prisma: PrismaService);
     private getSyscomToken;
     testSyscom(): Promise<{
@@ -35,10 +36,7 @@ export declare class PublicStoreService {
         token?: undefined;
         productsCount?: undefined;
     }>;
-    getCombinedCatalog(slug: string, page?: number, search?: string): Promise<{
-        products: any[];
-        paginas: number;
-    }>;
+    getCombinedCatalog(slug: string, page?: number, search?: string): Promise<any>;
     getProductDetails(slug: string, id: string): Promise<any>;
     createOrder(slug: string, data: any): Promise<{
         order: {

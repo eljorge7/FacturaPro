@@ -9,6 +9,8 @@ export class PublicStoreService {
   private syscomTokens: Map<string, { token: string, expiresAt: number }> = new Map();
   // Simple in-memory cache for product details
   private productsCache: Map<string, { data: any, expiresAt: number }> = new Map();
+  // Cache for catalog search results
+  private catalogCache: Map<string, { data: any, expiresAt: number }> = new Map();
 
   constructor(
     private prisma: PrismaService
@@ -82,6 +84,13 @@ export class PublicStoreService {
       throw new NotFoundException('Store not found or disabled');
     }
 
+    const cacheKey = `${tenant.id}_${page}_${search}`;
+    const cached = this.catalogCache.get(cacheKey);
+    const now = Date.now();
+    if (cached && cached.expiresAt > now) {
+      return cached.data;
+    }
+
     // 1. Fetch Local Products
     const localProducts = await this.prisma.storeProduct.findMany({
       where: { tenantId: tenant.id },
@@ -132,10 +141,12 @@ export class PublicStoreService {
       }
     }
 
-    return {
+    const data = {
       products: [...localMapped, ...syscomProducts],
       paginas: totalPages
     };
+    this.catalogCache.set(cacheKey, { data, expiresAt: now + 2 * 60 * 1000 }); // 2 minute cache
+    return data;
   }
 
   async getProductDetails(slug: string, id: string) {

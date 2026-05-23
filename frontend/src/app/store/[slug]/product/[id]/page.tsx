@@ -203,15 +203,15 @@ export default function ProductDetailPage() {
 
              <div className="w-full md:w-1/3 p-6 md:p-10 bg-slate-50">
                 <h3 className="text-xl font-black text-slate-900 mb-6">Recursos y Descargas</h3>
-                {productData.recursos && productData.recursos.length > 0 ? (
+                {productData.resources && productData.resources.length > 0 ? (
                    <div className="space-y-3">
-                      {productData.recursos.map((r:any, idx:number) => (
+                      {productData.resources.map((r:any, idx:number) => (
                          <a key={idx} href={r.path} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl hover:border-blue-300 hover:shadow-sm transition-all group">
                             <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center shrink-0">
                                <Tag className="w-5 h-5 text-red-500" />
                             </div>
                             <div className="flex-1">
-                               <div className="text-xs font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{r.descripcion || 'Documento PDF'}</div>
+                               <div className="text-xs font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{r.recurso || 'Documento PDF'}</div>
                                <div className="text-[10px] text-slate-400">Ver / Descargar</div>
                             </div>
                          </a>
