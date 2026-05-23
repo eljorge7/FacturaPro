@@ -74,7 +74,7 @@ export function Sidebar() {
   }, [user, token, tier]);
 
   // Prevent rendering on public routes or store routes
-  if (pathname === '/login' || pathname === '/register' || pathname.startsWith('/portal') || pathname.startsWith('/store')) return null;
+  if (pathname === '/login' || pathname === '/register' || pathname.startsWith('/portal') || pathname.startsWith('/store/')) return null;
 
   // Prevent rendering on custom store domains entirely
   if (typeof window !== 'undefined') {
@@ -176,7 +176,7 @@ export function Sidebar() {
       <div className={`h-16 flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-4'} border-b border-slate-700/50 bg-[#0f172a] overflow-visible shrink-0 relative`}>
          {isCollapsed && (
             logoUrl ? (
-               <img src={logoUrl} alt="Logo" className="max-h-8 max-w-[40px] object-contain shrink-0" />
+               <img src={logoUrl} alt="Logo" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src='/logo-transparent.png'; }} className="max-h-8 max-w-[40px] object-contain shrink-0" />
             ) : (
                <ShieldCheck className="w-6 h-6 text-emerald-400 shrink-0" />
             )
@@ -185,7 +185,7 @@ export function Sidebar() {
            <div className="flex items-center ml-2 cursor-pointer hover:bg-slate-800/50 p-2 flex-1 rounded-lg transition-colors border border-transparent hover:border-slate-700" onClick={() => memberships.length > 0 && setShowSwitcher(!showSwitcher)}>
              <div className="flex items-center flex-1">
                {logoUrl ? (
-                  <img src={logoUrl} alt="Logo" className="max-h-8 max-w-[100px] object-contain shrink-0" />
+                  <img src={logoUrl} alt="Logo" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src='/logo-transparent.png'; }} className="max-h-8 max-w-[100px] object-contain shrink-0" />
                ) : (
                  <>
                    <span className="font-bold text-white text-lg tracking-tight">FacturaPro</span>
