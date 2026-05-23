@@ -71,7 +71,15 @@ export function Sidebar() {
         }).catch(e => console.error(e));
   }, [user, token, tier]);
 
+  // Prevent rendering on public routes or store routes
   if (pathname === '/login' || pathname === '/register' || pathname.startsWith('/portal') || pathname.startsWith('/store')) return null;
+
+  // Prevent rendering on custom store domains entirely
+  if (typeof window !== 'undefined') {
+     const hostname = window.location.hostname;
+     const isBaseDomain = hostname.includes('localhost') || hostname.includes('facturapro.radiotecpro.com');
+     if (!isBaseDomain) return null;
+  }
 
   const isStarter = tier === 'STARTER';
   const isPro = tier === 'PRO' || tier === 'ENTERPRISE' || tier === 'AGENCY' || !tier;
