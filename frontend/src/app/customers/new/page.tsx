@@ -161,13 +161,13 @@ export default function NewCustomerPage() {
                  Tipo de cliente <Info className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 transition-colors" />
                </label>
                <div className="flex items-center gap-6">
-                 <label className="flex items-center gap-2 cursor-pointer group">
+                 <label className="flex items-center gap-2 cursor-pointer group" onClick={() => setCustomerType('empresarial')}>
                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${customerType === 'empresarial' ? 'border-[#2563eb] bg-[#2563eb]' : 'border-slate-300 group-hover:border-blue-400'}`}>
                      {customerType === 'empresarial' && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
                    </div>
                    <span className="text-sm font-medium text-slate-700">Empresarial</span>
                  </label>
-                 <label className="flex items-center gap-2 cursor-pointer group">
+                 <label className="flex items-center gap-2 cursor-pointer group" onClick={() => setCustomerType('individuo')}>
                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${customerType === 'individuo' ? 'border-[#2563eb] bg-[#2563eb]' : 'border-slate-300 group-hover:border-blue-400'}`}>
                      {customerType === 'individuo' && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
                    </div>
@@ -261,13 +261,13 @@ export default function NewCustomerPage() {
                  Canales de comunicación
                </label>
                <div className="flex gap-6">
-                  <label className="flex items-center gap-2 cursor-pointer group">
+                  <label className="flex items-center gap-2 cursor-pointer group" onClick={() => setFormData({...formData, communicationEmail: !formData.communicationEmail})}>
                      <div className={`w-4 h-4 rounded flex items-center justify-center border transition-colors ${formData.communicationEmail ? 'bg-[#2563eb] border-[#2563eb]' : 'bg-white border-slate-300 group-hover:border-blue-400'}`}>
                         {formData.communicationEmail && <Check className="w-3 h-3 text-white stroke-[3]"/>}
                      </div>
                      <span className="text-sm font-medium text-slate-700">Correo electrónico</span>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer group">
+                  <label className="flex items-center gap-2 cursor-pointer group" onClick={() => setFormData({...formData, communicationWhatsapp: !formData.communicationWhatsapp})}>
                      <div className={`w-4 h-4 rounded flex items-center justify-center border transition-colors ${formData.communicationWhatsapp ? 'bg-[#10b981] border-[#10b981]' : 'bg-white border-slate-300 group-hover:border-emerald-400'}`}>
                         {formData.communicationWhatsapp && <Check className="w-3 h-3 text-white stroke-[3]"/>}
                      </div>

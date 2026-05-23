@@ -16,6 +16,33 @@ export default function EditCustomerPage() {
   const [customerType, setCustomerType] = useState('empresarial');
   const [activeTab, setActiveTab] = useState('otros');
 
+  const getFullRegime = (code: string | null) => {
+    if (!code) return '601 - General de Ley Personas Morales';
+    const c = code.substring(0,3);
+    const regimes: Record<string, string> = {
+      "601": "601 - General de Ley Personas Morales",
+      "603": "603 - Personas Morales con Fines no Lucrativos",
+      "605": "605 - Sueldos y Salarios e Ingresos Asimilados a Salarios",
+      "606": "606 - Arrendamiento",
+      "608": "608 - Demás ingresos",
+      "609": "609 - Consolidación",
+      "610": "610 - Residentes en el Extranjero sin Establecimiento Permanente en México",
+      "611": "611 - Ingresos por Dividendos (socios y accionistas)",
+      "612": "612 - Personas Físicas con Actividades Empresariales y Profesionales",
+      "614": "614 - Ingresos por intereses",
+      "615": "615 - Régimen de los ingresos por obtención de premios",
+      "616": "616 - Sin obligaciones fiscales",
+      "620": "620 - Sociedades Cooperativas de Producción que optan por diferir sus ingresos",
+      "621": "621 - Incorporación Fiscal",
+      "622": "622 - Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras",
+      "623": "623 - Opcional para Grupos de Sociedades",
+      "624": "624 - Coordinados",
+      "625": "625 - Régimen de las Actividades Empresariales con ingresos a través de Plataformas Tecnológicas",
+      "626": "626 - Régimen Simplificado de Confianza (RESICO)",
+    };
+    return regimes[c] || c;
+  };
+
   // Form State
   const [formData, setFormData] = useState({
     saludo: '',
@@ -61,7 +88,7 @@ export default function EditCustomerPage() {
                  email: data.email || '',
                  phoneWork: data.phone ? data.phone.replace('+52 ', '') : '',
                  rfc: data.rfc || '',
-                 regimenFiscal: data.taxRegime || '601',
+                 regimenFiscal: getFullRegime(data.taxRegime),
                  zipCode: data.zipCode || '',
                  street: data.street || '',
                  city: data.city || '',
@@ -203,13 +230,13 @@ export default function EditCustomerPage() {
                  Tipo de cliente <Info className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 transition-colors" />
                </label>
                <div className="flex items-center gap-6">
-                 <label className="flex items-center gap-2 cursor-pointer group">
+                 <label className="flex items-center gap-2 cursor-pointer group" onClick={() => setCustomerType('empresarial')}>
                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${customerType === 'empresarial' ? 'border-[#2563eb] bg-[#2563eb]' : 'border-slate-300 group-hover:border-blue-400'}`}>
                      {customerType === 'empresarial' && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
                    </div>
                    <span className="text-sm font-medium text-slate-700">Empresarial</span>
                  </label>
-                 <label className="flex items-center gap-2 cursor-pointer group">
+                 <label className="flex items-center gap-2 cursor-pointer group" onClick={() => setCustomerType('individuo')}>
                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${customerType === 'individuo' ? 'border-[#2563eb] bg-[#2563eb]' : 'border-slate-300 group-hover:border-blue-400'}`}>
                      {customerType === 'individuo' && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
                    </div>
@@ -303,13 +330,13 @@ export default function EditCustomerPage() {
                  Canales de comunicación
                </label>
                <div className="flex gap-6">
-                  <label className="flex items-center gap-2 cursor-pointer group">
+                  <label className="flex items-center gap-2 cursor-pointer group" onClick={() => setFormData({...formData, communicationEmail: !formData.communicationEmail})}>
                      <div className={`w-4 h-4 rounded flex items-center justify-center border transition-colors ${formData.communicationEmail ? 'bg-[#2563eb] border-[#2563eb]' : 'bg-white border-slate-300 group-hover:border-blue-400'}`}>
                         {formData.communicationEmail && <Check className="w-3 h-3 text-white stroke-[3]"/>}
                      </div>
                      <span className="text-sm font-medium text-slate-700">Correo electrónico</span>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer group">
+                  <label className="flex items-center gap-2 cursor-pointer group" onClick={() => setFormData({...formData, communicationWhatsapp: !formData.communicationWhatsapp})}>
                      <div className={`w-4 h-4 rounded flex items-center justify-center border transition-colors ${formData.communicationWhatsapp ? 'bg-[#10b981] border-[#10b981]' : 'bg-white border-slate-300 group-hover:border-emerald-400'}`}>
                         {formData.communicationWhatsapp && <Check className="w-3 h-3 text-white stroke-[3]"/>}
                      </div>
