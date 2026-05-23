@@ -461,7 +461,7 @@ export default function SettingsPage() {
                    <div className="mb-8 flex items-start gap-6">
                       <div className="w-32 h-32 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center bg-slate-50 overflow-hidden relative group">
                          {logoPreview ? (
-                            <img src={logoPreview} alt="Logo" className="w-full h-full object-contain" />
+                            <img src={logoPreview} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src='/logo-transparent.png'; }} alt="Logo" className="w-full h-full object-contain" />
                          ) : (
                             <div className="text-center text-slate-400">
                                <ImageIcon className="w-8 h-8 mx-auto mb-1 opacity-50"/>

@@ -297,23 +297,18 @@ export function Sidebar() {
             {!isCollapsed && <span>Migración Masiva</span>}
           </Link>
           
-          <Link href="/admin/announcements" className="flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-slate-200 mx-2 text-indigo-700 bg-indigo-50/50">
-            <MessageSquare className="mr-3 h-5 w-5 flex-shrink-0 text-indigo-500" />
-            {!isCollapsed && <span className="font-bold">Avisos a Unidades (Broadcast)</span>}
-          </Link>
-          
           <div className="pt-4 pb-2 h-10">
             {!isCollapsed && <p className="px-5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Tienda Pública</p>}
           </div>
-          <a href="/store/radiotec" target="_blank" rel="noopener noreferrer" className="flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-slate-200 mx-2 mt-1">
-            <ShoppingBag className="mr-3 h-5 w-5 flex-shrink-0 text-purple-500" />
-            {!isCollapsed && <span className="font-bold text-purple-700">Ir a mi Tienda</span>}
+          <a href="/store/radiotec" target="_blank" rel="noopener noreferrer" className="flex items-center rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-slate-800 text-slate-300 hover:text-slate-100 transition-all mx-2 mt-1">
+            <ShoppingBag className="mr-3 h-5 w-5 flex-shrink-0 text-purple-400" />
+            {!isCollapsed && <span className="font-bold text-purple-300">Ir a mi Tienda</span>}
           </a>
-          <Link href="/store-orders" className={`flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-slate-200 mx-2 mt-1 ${pathname.startsWith('/store-orders') ? 'bg-slate-200 text-slate-900' : 'text-slate-700'}`}>
+          <Link href="/store-orders" className={`flex items-center rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-slate-800 hover:text-slate-100 transition-all mx-2 mt-1 ${pathname.startsWith('/store-orders') ? 'bg-[#2563eb] text-white shadow-lg shadow-blue-900/20' : 'text-slate-300'}`}>
             <ShoppingCart className="mr-3 h-5 w-5 flex-shrink-0" />
             {!isCollapsed && <span>Órdenes de Tienda</span>}
           </Link>
-          <Link href="/store-customers" className={`flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-slate-200 mx-2 mt-1 ${pathname.startsWith('/store-customers') ? 'bg-slate-200 text-slate-900' : 'text-slate-700'}`}>
+          <Link href="/store-customers" className={`flex items-center rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-slate-800 hover:text-slate-100 transition-all mx-2 mt-1 ${pathname.startsWith('/store-customers') ? 'bg-[#2563eb] text-white shadow-lg shadow-blue-900/20' : 'text-slate-300'}`}>
             <Users className="mr-3 h-5 w-5 flex-shrink-0" />
             {!isCollapsed && <span>Clientes de Tienda</span>}
           </Link>
