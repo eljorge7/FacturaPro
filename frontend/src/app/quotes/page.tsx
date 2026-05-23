@@ -20,12 +20,24 @@ export default function QuotesPage() {
   // Template Modal
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [currentTemplate, setCurrentTemplate] = useState("Estándar - Estilo europeo");
+  const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
-     if (selectedQuote && selectedQuote.taxProfile?.pdfTemplate) {
-        setCurrentTemplate(selectedQuote.taxProfile.pdfTemplate);
+     if (selectedQuote) {
+        setCurrentTemplate(selectedQuote.templateId || selectedQuote.taxProfile?.pdfTemplate || 'Estándar - Estilo europeo');
      }
   }, [selectedQuote]);
+
+  useEffect(() => {
+     setMounted(true);
+     fetchQuotes();
+     const u = localStorage.getItem('facturapro_user');
+     if (u) {
+        try {
+           setUserEmail(JSON.parse(u).email);
+        } catch(e){}
+     }
+  }, []);
 
   const fetchQuotes = async () => {
     try {
@@ -60,10 +72,35 @@ export default function QuotesPage() {
     }
   };
 
-  useEffect(() => {
-    setMounted(true);
-    fetchQuotes();
-  }, []);
+
+  const handleTemplateChange = async (templateName: string) => {
+     setCurrentTemplate(templateName);
+     setIsTemplateModalOpen(false);
+     
+     if (!selectedQuote) return;
+     
+     try {
+        const tenantId = typeof window !== 'undefined' ? localStorage.getItem('tenantId') || 'demo-tenant' : 'demo-tenant';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
+        
+        const res = await fetch(`${baseUrl}/quotes/${selectedQuote.id}`, {
+           method: 'PATCH',
+           headers: {
+              'Content-Type': 'application/json',
+              'x-tenant-id': tenantId
+           },
+           body: JSON.stringify({ templateId: templateName })
+        });
+        
+        if(res.ok) {
+           setSelectedQuote({...selectedQuote, templateId: templateName});
+           // update quote in list
+           setQuotes(quotes.map(q => q.id === selectedQuote.id ? {...q, templateId: templateName} : q));
+        }
+     } catch(e) {
+        console.error(e);
+     }
+  };
 
   if (!mounted) return null;
 
@@ -521,7 +558,7 @@ export default function QuotesPage() {
                              Mexico{"\n"}
                              RFC: {selectedQuote.taxProfile?.rfc || 'XAXX010101000'}{"\n"}
                              Régimen fiscal: {selectedQuote.taxProfile?.taxRegime || '601 - General de Ley Personas Morales'}{"\n"}
-                             jorge.hurtadoc@live.com.mx
+                             {userEmail}
                           </div>
                        </div>
                     </div>
@@ -666,7 +703,7 @@ export default function QuotesPage() {
                     <div className="grid grid-cols-3 gap-8">
                        {/* Option 1 */}
                        <div 
-                          onClick={() => {setCurrentTemplate('Estándar - Estilo europeo'); setIsTemplateModalOpen(false);}}
+                          onClick={() => handleTemplateChange('Estándar - Estilo europeo')}
                           className={`group bg-white border-2 rounded-lg cursor-pointer transition-all overflow-hidden p-2
                              ${currentTemplate === 'Estándar - Estilo europeo' ? 'border-[#10b981] shadow-md ring-4 ring-emerald-50' : 'border-slate-200 hover:border-[#2563eb] hover:shadow-lg'}`}
                        >
@@ -688,7 +725,7 @@ export default function QuotesPage() {
 
                        {/* Option 2 */}
                        <div 
-                          onClick={() => {setCurrentTemplate('Elegante - Dark Header'); setIsTemplateModalOpen(false);}}
+                          onClick={() => handleTemplateChange('Elegante - Dark Header')}
                           className={`group bg-white border-2 rounded-lg cursor-pointer transition-all overflow-hidden p-2
                              ${currentTemplate === 'Elegante - Dark Header' ? 'border-[#10b981] shadow-md ring-4 ring-emerald-50' : 'border-slate-200 hover:border-[#2563eb] hover:shadow-lg'}`}
                        >
@@ -709,7 +746,7 @@ export default function QuotesPage() {
 
                        {/* Option 3 */}
                        <div 
-                          onClick={() => {setCurrentTemplate('Hoja de Cálculo Financiera'); setIsTemplateModalOpen(false);}}
+                          onClick={() => handleTemplateChange('Hoja de Cálculo Financiera')}
                           className={`group bg-white border-2 rounded-lg cursor-pointer transition-all overflow-hidden p-2
                              ${currentTemplate === 'Hoja de Cálculo Financiera' ? 'border-[#10b981] shadow-md ring-4 ring-emerald-50' : 'border-slate-200 hover:border-[#2563eb] hover:shadow-lg'}`}
                        >

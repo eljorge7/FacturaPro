@@ -18,13 +18,26 @@ export default function InvoicesPage() {
 
   // Template Modal
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
-  const [currentTemplate, setCurrentTemplate] = useState("EstÃ¡ndar - Estilo europeo");
+  const [currentTemplate, setCurrentTemplate] = useState("Estándar - Estilo europeo");
+  const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
      if (selectedInvoice && selectedInvoice.taxProfile?.pdfTemplate) {
         setCurrentTemplate(selectedInvoice.taxProfile.pdfTemplate);
      }
   }, [selectedInvoice]);
+
+  useEffect(() => {
+     setMounted(true);
+     fetchInvoices();
+     fetchStats();
+     const u = localStorage.getItem('facturapro_user');
+     if (u) {
+        try {
+           setUserEmail(JSON.parse(u).email);
+        } catch(e){}
+     }
+  }, []);
 
   // Payment Modal
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -104,11 +117,7 @@ export default function InvoicesPage() {
     }
   };
 
-  useEffect(() => {
-    setMounted(true);
-    fetchInvoices();
-    fetchStats();
-  }, []);
+
 
   if (!mounted) return null;
 
@@ -203,14 +212,14 @@ export default function InvoicesPage() {
       alert("La factura ha sido cancelada exitosamente ante el SAT.");
     } catch (e: any) {
       console.error('Error canceling invoice', e);
-      alert(e.message || "OcurriÃ³ un error cancelando el CFDI.");
+      alert(e.message || "Ocurrió un error cancelando el CFDI.");
     } finally {
       setIsCanceling(false);
     }
   };
 
   const handleStamp = async (id: string) => {
-    if (!confirm('Â¿Deseas mandar a timbrar este comprobante? Esto consumirÃ¡ 1 saldo de tus Timbres Disponibles.')) return;
+    if (!confirm('¿Deseas mandar a timbrar este comprobante? Esto consumirá 1 saldo de tus Timbres Disponibles.')) return;
     try {
        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
        const res = await fetch(`${baseUrl}/invoices/${id}/stamp`, { method: "PATCH" });
@@ -221,7 +230,7 @@ export default function InvoicesPage() {
        const updated = await res.json();
        fetchInvoices();
        if(selectedInvoice && selectedInvoice.id === id) setSelectedInvoice(updated);
-       alert("Â¡Factura Timbrada Ã‰xitosamente!");
+       alert("¡Factura Timbrada Éxitosamente!");
     } catch (e: any) {
        console.error(e);
        alert(e.message || "Error al timbrar.");
@@ -229,7 +238,7 @@ export default function InvoicesPage() {
   };
 
   const handleSendWhatsapp = async (id: string, defaultPhone?: string) => {
-     const phone = window.prompt('Ingresa el nÃºmero de WhatsApp (10 dÃ­gitos) para enviar esta factura al cliente:', defaultPhone || '');
+     const phone = window.prompt('Ingresa el número de WhatsApp (10 dígitos) para enviar esta factura al cliente:', defaultPhone || '');
      if (!phone) return;
      
      try {
@@ -243,7 +252,7 @@ export default function InvoicesPage() {
           const errorData = await res.json().catch(() => null);
           throw new Error(errorData?.message || "Error al enviar WhatsApp");
        }
-       alert("ðŸš€ Â¡Comprobante enviado por WhatsApp a la cola de salida con Ã©xito!");
+       alert("🚀 ¡Comprobante enviado por WhatsApp a la cola de salida con éxito!");
      } catch (e: any) {
        console.error(e);
        alert(e.message || "Error al enviar WhatsApp.");
@@ -269,7 +278,7 @@ export default function InvoicesPage() {
 
   const handleBulkAction = async (action: string) => {
      if (action === 'Eliminar') {
-        if (!confirm(`Â¿EstÃ¡s seguro de que quieres eliminar ${selectedIds.length} elemento(s)?`)) return;
+        if (!confirm(`¿Estás seguro de que quieres eliminar ${selectedIds.length} elemento(s)?`)) return;
         try {
            const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
            await Promise.all(selectedIds.map(id => 
@@ -279,14 +288,14 @@ export default function InvoicesPage() {
            setSelectedIds([]);
         } catch (e) {
            console.error("Error al eliminar", e);
-           alert("Hubo un problema al eliminar. Es posible que el servidor no tenga esta ruta habilitada aÃºn, pero se simulÃ³ en frontend.");
+           alert("Hubo un problema al eliminar. Es posible que el servidor no tenga esta ruta habilitada aún, pero se simuló en frontend.");
            setInvoices(invoices.filter(i => !selectedIds.includes(i.id))); // Fallback simulation
            setSelectedIds([]);
         }
         return;
      }
      
-     alert(`Ejecutando acciÃ³n masiva: ${action} sobre ${selectedIds.length} facturas.`);
+     alert(`Ejecutando acción masiva: ${action} sobre ${selectedIds.length} facturas.`);
      setSelectedIds([]);
   };
 
@@ -306,7 +315,7 @@ export default function InvoicesPage() {
        window.URL.revokeObjectURL(url);
      } catch (e) {
        console.error("Error al descargar:", e);
-       alert("OcurriÃ³ un error al intentar generar la RepresentaciÃ³n Impresa (PDF).");
+       alert("Ocurrió un error al intentar generar la Representación Impresa (PDF).");
      }
   };
 
@@ -413,14 +422,14 @@ export default function InvoicesPage() {
         {/* Bulk Action Toolbar Overlay */}
         {selectedIds.length > 0 && (
            <div className="absolute top-[175px] left-0 right-0 bg-white border-b border-slate-200 shadow-sm z-20 px-6 py-2 flex items-center gap-4 animate-in fade-in slide-in-from-top-2">
-              <button onClick={() => handleBulkAction('ActualizaciÃ³n masiva')} className="text-sm font-medium border border-slate-200 bg-[#f9fafb] hover:bg-[#f1f5f9] px-3 py-1.5 rounded transition-colors text-slate-700">ActualizaciÃ³n masiva</button>
+              <button onClick={() => handleBulkAction('Actualización masiva')} className="text-sm font-medium border border-slate-200 bg-[#f9fafb] hover:bg-[#f1f5f9] px-3 py-1.5 rounded transition-colors text-slate-700">Actualización masiva</button>
               <button onClick={() => handleBulkAction('Imprimir')} className="border border-slate-200 bg-[#f9fafb] hover:bg-[#f1f5f9] px-2 py-1.5 rounded transition-colors text-slate-600"><Printer className="w-4 h-4" /></button>
               <button onClick={() => handleBulkAction('Descargar')} className="border border-slate-200 bg-[#f9fafb] hover:bg-[#f1f5f9] px-2 py-1.5 rounded transition-colors text-slate-600"><Download className="w-4 h-4" /></button>
               <button onClick={() => handleBulkAction('Email')} className="border border-slate-200 bg-[#f9fafb] hover:bg-[#f1f5f9] px-2 py-1.5 rounded transition-colors text-slate-600"><Mail className="w-4 h-4" /></button>
               
               <div className="h-6 w-px bg-slate-200 mx-1"></div>
               
-              <button onClick={() => handleBulkAction('Disociar')} className="text-sm border border-slate-200 bg-white hover:bg-slate-50 px-3 py-1.5 rounded transition-colors text-slate-700 font-medium">Disociar Ã³rdenes de venta</button>
+              <button onClick={() => handleBulkAction('Disociar')} className="text-sm border border-slate-200 bg-white hover:bg-slate-50 px-3 py-1.5 rounded transition-colors text-slate-700 font-medium">Disociar órdenes de venta</button>
               <button onClick={() => handleBulkAction('MarcarEnviado')} className="text-sm border border-slate-200 bg-white hover:bg-slate-50 px-3 py-1.5 rounded transition-colors text-slate-700 font-medium">Marcar como enviado</button>
               <button onClick={() => handleBulkAction('Eliminar')} className="text-sm border border-slate-200 bg-white hover:bg-slate-50 px-3 py-1.5 rounded transition-colors text-red-600 font-medium">Eliminar</button>
 
@@ -444,7 +453,7 @@ export default function InvoicesPage() {
                  <tr className="border-b border-slate-200 text-[#64748b] text-[11px] font-bold uppercase tracking-wider bg-[#f8fafc]">
                     <th className="py-3 px-6"><input type="checkbox" onChange={toggleSelectAll} checked={selectedIds.length === filteredInvoices.length && filteredInvoices.length > 0} className="rounded border-slate-300" /></th>
                     <th className="py-3 px-2 whitespace-nowrap">Fecha</th>
-                    <th className="py-3 px-2">N.Âº de factura</th>
+                    <th className="py-3 px-2">N.º de factura</th>
                     <th className="py-3 px-2">Nombre del cliente</th>
                     <th className="py-3 px-2">Estado CFDI</th>
                     <th className="py-3 px-2">Estado Pago</th>
@@ -472,7 +481,7 @@ export default function InvoicesPage() {
                     </tr>
                  ))}
                  {invoices.length === 0 && !isLoading && (
-                    <tr><td colSpan={8} className="py-10 text-center text-slate-400">No hay facturas aÃºn. Haz clic en el botÃ³n '+' para crear una nueva.</td></tr>
+                    <tr><td colSpan={8} className="py-10 text-center text-slate-400">No hay facturas aún. Haz clic en el botón '+' para crear una nueva.</td></tr>
                  )}
               </tbody>
            </table>
@@ -519,7 +528,7 @@ export default function InvoicesPage() {
                        <p className="text-sm font-medium text-slate-800 truncate">{inv.customer?.legalName}</p>
                        <p className="text-xs text-slate-500 flex items-center gap-1">
                           <span className={selectedInvoice.id === inv.id ? 'text-[#2563eb]' : ''}>{inv.invoiceNumber}</span>
-                          <FileText className="w-3 h-3 text-[#10b981] opacity-0 group-hover:opacity-100" /> â€¢ {new Date(inv.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric'})}
+                          <FileText className="w-3 h-3 text-[#10b981] opacity-0 group-hover:opacity-100" /> • {new Date(inv.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric'})}
                        </p>
                        <p className={`text-[10px] font-bold uppercase tracking-wider ${getStatusColor(inv.status)}`}>{inv.status}</p>
                     </div>
@@ -537,7 +546,7 @@ export default function InvoicesPage() {
                  {/* Action Bar */}
                  <div className="bg-white rounded-md shadow-sm border border-slate-200 px-4 py-2.5 flex items-center justify-between text-sm font-medium text-slate-600 overflow-x-auto gap-2">
                     <div className="flex items-center gap-1">
-                       <button className="flex items-center gap-1.5 hover:bg-slate-100 px-3 py-1.5 rounded transition-colors whitespace-nowrap" title="Enviar WhatsApp AutomÃ¡tico" onClick={() => handleSendWhatsapp(selectedInvoice.id, selectedInvoice.customer?.phone)}><MessageCircle className="w-4 h-4 text-emerald-500 font-bold"/> Enviar WhatsApp</button>
+                       <button className="flex items-center gap-1.5 hover:bg-slate-100 px-3 py-1.5 rounded transition-colors whitespace-nowrap" title="Enviar WhatsApp Automático" onClick={() => handleSendWhatsapp(selectedInvoice.id, selectedInvoice.customer?.phone)}><MessageCircle className="w-4 h-4 text-emerald-500 font-bold"/> Enviar WhatsApp</button>
                        <button onClick={() => { const baseUrl = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}` : 'http://localhost:3000'; const portalLink = `${baseUrl}/portal/${selectedInvoice.id}`; navigator.clipboard.writeText(portalLink); alert('¡Liga Mágica copiada al portapapeles! Envíala a tu cliente.'); }} className="flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded transition-colors whitespace-nowrap border border-indigo-200 shadow-sm font-bold"><Globe className="w-4 h-4 text-indigo-500 font-bold" /> Liga Mágica</button>
                        <button onClick={() => alert("El envío de correo electrónico se procesará mediante el SMTP de MAJIA OS. Próximamente.")} className="flex items-center gap-1.5 hover:bg-slate-100 px-3 py-1.5 rounded transition-colors whitespace-nowrap"><Mail className="w-4 h-4 text-slate-500"/> Correos <ChevronDown className="w-3 h-3"/></button>
                        <button onClick={() => router.push(`/invoices/new?id=${selectedInvoice.id}`)} className="flex items-center gap-1.5 hover:bg-slate-100 px-3 py-1.5 rounded transition-colors whitespace-nowrap"><FileEdit className="w-4 h-4 text-slate-500"/> Editar</button>
@@ -568,7 +577,7 @@ export default function InvoicesPage() {
                        <div className="flex items-center justify-between">
                           <p className="text-sm font-bold flex items-center gap-2">
                              <CheckCircle2 className="w-4 h-4 text-blue-500" />
-                             Â¡Timbre pendiente! Factura guardada, lista para ser certificada ante el PAC.
+                             ¡Timbre pendiente! Factura guardada, lista para ser certificada ante el PAC.
                           </p>
                           <div className="flex gap-2">
                              <button onClick={() => handleStamp(selectedInvoice.id)} className="bg-[#2563eb] text-white hover:bg-blue-700 font-bold px-3 py-1 text-xs rounded shadow-sm">Timbrar CFDI 4.0</button>
@@ -579,7 +588,7 @@ export default function InvoicesPage() {
                     <div className="bg-emerald-50 text-emerald-800 rounded-md border border-emerald-200 p-4 shadow-sm flex items-center justify-between">
                        <p className="text-sm font-bold flex items-center gap-2">
                           <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                          Â¡Factura Pagada en su totalidad!
+                          ¡Factura Pagada en su totalidad!
                        </p>
                        <div className="flex gap-2 items-center">
                            <span className="text-slate-500 text-xs font-bold mr-2 border-r border-emerald-200 pr-2">Saldo Adeudado: $0.00</span>
@@ -628,11 +637,11 @@ export default function InvoicesPage() {
                              )}
                           </div>
                           <div className="text-right">
-                             <h1 className="text-2xl font-black tracking-widest text-emerald-400">{selectedInvoice.status === 'DRAFT' ? 'COTIZACIÃ“N' : 'FACTURA COMERCIAL'}</h1>
-                             <p className="text-base font-bold text-indigo-200 mt-1">N.Âº {selectedInvoice.invoiceNumber}</p>
+                             <h1 className="text-2xl font-black tracking-widest text-emerald-400">{selectedInvoice.status === 'DRAFT' ? 'COTIZACIÓN' : 'FACTURA COMERCIAL'}</h1>
+                             <p className="text-base font-bold text-indigo-200 mt-1">N.º {selectedInvoice.invoiceNumber}</p>
                           </div>
                        </div>
-                    ) : selectedInvoice.taxProfile?.pdfTemplate === 'Hoja de CÃ¡lculo Fiscal' ? (
+                    ) : selectedInvoice.taxProfile?.pdfTemplate === 'Hoja de Cálculo Fiscal' ? (
                        <div className="p-8 border-b-2 border-green-600 mb-8 bg-[#f1f5f9] -mx-10 -mt-2">
                           <div className="flex justify-between items-end pb-4 border-b border-slate-300">
                              {selectedInvoice.taxProfile?.logoUrl ? (
@@ -640,7 +649,7 @@ export default function InvoicesPage() {
                              ) : (
                                 <div className="font-mono text-xl font-bold text-slate-800" style={{ width: `${selectedInvoice.taxProfile?.logoWidth || 120}px` }}>{selectedInvoice.taxProfile?.legalName || 'SIN NOMBRE'}</div>
                              )}
-                             <h1 className="font-mono text-xl font-bold text-slate-800">{selectedInvoice.status === 'DRAFT' ? 'EstimaciÃ³n' : 'CFDI v4.0 (Ingreso)'}</h1>
+                             <h1 className="font-mono text-xl font-bold text-slate-800">{selectedInvoice.status === 'DRAFT' ? 'Estimación' : 'CFDI v4.0 (Ingreso)'}</h1>
                           </div>
                        </div>
                     ) : (
@@ -668,8 +677,8 @@ export default function InvoicesPage() {
                                 {selectedInvoice.taxProfile?.zipCode ? `C.P. ${selectedInvoice.taxProfile.zipCode}` : 'Avenida Sinaloa, Navojoa Sonora'}{"\n"}
                                 Mexico{"\n"}
                                 RFC: {selectedInvoice.taxProfile?.rfc || 'XAXX010101000'}{"\n"}
-                                RÃ©gimen fiscal: {selectedInvoice.taxProfile?.taxRegime || '601 - General de Ley Personas Morales'}{"\n"}
-                                jorge.hurtadoc@live.com.mx
+                                Régimen fiscal: {selectedInvoice.taxProfile?.taxRegime || '601 - General de Ley Personas Morales'}{"\n"}
+                                {userEmail}
                              </div>
                           </div>
                        </div>

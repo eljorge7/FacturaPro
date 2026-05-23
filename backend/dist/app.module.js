@@ -61,7 +61,7 @@ exports.AppModule = AppModule = __decorate([
         imports: [
             config_1.ConfigModule.forRoot({ isGlobal: true }),
             serve_static_1.ServeStaticModule.forRoot({
-                rootPath: (0, path_1.join)(process.cwd(), 'uploads'),
+                rootPath: (0, path_1.join)(process.cwd(), 'public', 'uploads'),
                 serveRoot: '/uploads',
             }),
             throttler_1.ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
