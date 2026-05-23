@@ -310,12 +310,28 @@ export default function SettingsPage() {
       try {
          const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
          
-         const payload: any = { ...formData, logoWidth: Number(formData.logoWidth) };
+         const payload: any = { 
+            ...formData, 
+            logoWidth: Number(formData.logoWidth),
+            legalName: formData.businessName,
+            taxRegime: formData.regime
+         };
+         delete payload.businessName;
+         delete payload.regime;
+
          if (logoPreview && logoPreview.startsWith('data:image')) {
             payload.logoBase64 = logoPreview;
          } else if (logoPreview === "") {
             payload.removeLogo = true;
          }
+
+         // Prevent wiping existing certificates if the inputs are empty
+         if (!payload.cerBase64) delete payload.cerBase64;
+         if (!payload.keyBase64) delete payload.keyBase64;
+         if (!payload.keyPassword) delete payload.keyPassword;
+         if (!payload.fielCerBase64) delete payload.fielCerBase64;
+         if (!payload.fielKeyBase64) delete payload.fielKeyBase64;
+         if (!payload.fielPassword) delete payload.fielPassword;
 
          const res = await fetch(`${baseUrl}/tax-profiles/${profile.id}`, {
             method: 'PATCH',
