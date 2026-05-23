@@ -307,6 +307,14 @@ export function Sidebar() {
             <ShoppingBag className="mr-3 h-5 w-5 flex-shrink-0 text-purple-500" />
             {!isCollapsed && <span className="font-bold text-purple-700">Ir a mi Tienda</span>}
           </a>
+          <Link href="/store-orders" className={`flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-slate-200 mx-2 mt-1 ${pathname.startsWith('/store-orders') ? 'bg-slate-200 text-slate-900' : 'text-slate-700'}`}>
+            <ShoppingCart className="mr-3 h-5 w-5 flex-shrink-0" />
+            {!isCollapsed && <span>Órdenes de Tienda</span>}
+          </Link>
+          <Link href="/store-customers" className={`flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-slate-200 mx-2 mt-1 ${pathname.startsWith('/store-customers') ? 'bg-slate-200 text-slate-900' : 'text-slate-700'}`}>
+            <Users className="mr-3 h-5 w-5 flex-shrink-0" />
+            {!isCollapsed && <span>Clientes de Tienda</span>}
+          </Link>
 
           <Link 
             href="/settings"
