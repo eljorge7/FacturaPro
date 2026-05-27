@@ -196,12 +196,12 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
       {/* Navbar (Header) */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
         <div className="container mx-auto px-4">
-          <div className="h-20 flex items-center justify-between gap-4 md:gap-8">
-            <Link href={storeHomeUrl} className="flex items-center gap-2 hover:opacity-80 transition-opacity shrink-0">
+          <div className="flex flex-wrap items-center justify-between gap-y-3 gap-x-4 md:gap-8 py-3 md:h-20 md:py-0">
+            <Link href={storeHomeUrl} className="flex items-center gap-2 hover:opacity-80 transition-opacity shrink-0 order-1">
               <img src="/logo-transparent.png" alt="RadioTec Pro" className="h-[32px] md:h-[40px] object-contain" />
             </Link>
 
-            <form onSubmit={(e) => { e.preventDefault(); setSearchDropdownOpen(false); router.push(storeHomeUrl); }} className="flex-1 max-w-4xl relative hidden md:flex items-center gap-4">
+            <form onSubmit={(e) => { e.preventDefault(); setSearchDropdownOpen(false); router.push(storeHomeUrl); }} className="w-full md:flex-1 max-w-4xl relative flex items-center gap-2 md:gap-4 order-3 md:order-2">
               <div className="relative flex-1 flex items-center">
                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                  <input 
@@ -284,7 +284,7 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
               </button>
             </form>
 
-            <div className="flex items-center gap-3 md:gap-6 shrink-0 relative">
+            <div className="flex items-center gap-3 md:gap-6 shrink-0 relative order-2 md:order-3">
                {/* Currency & Tax Configurator */}
                <div className="relative">
                  <button 
