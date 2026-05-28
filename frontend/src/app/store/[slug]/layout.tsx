@@ -333,9 +333,6 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
                    </>
                  )}
               </div>
-              <button type="button" className="h-11 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm shrink-0">
-                 AI
-              </button>
             </form>
 
             <div className="flex items-center gap-3 md:gap-6 shrink-0 relative order-2 md:order-3">
