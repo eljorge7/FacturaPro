@@ -44,6 +44,12 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
   const [showAuthDropdown, setShowAuthDropdown] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
+  const [showQuoteModal, setShowQuoteModal] = useState(false);
+  const [quoteProjectName, setQuoteProjectName] = useState("");
+  const [quoteClientName, setQuoteClientName] = useState("");
+  const [quoteMarkup, setQuoteMarkup] = useState("30");
+  const [isGeneratingQuote, setIsGeneratingQuote] = useState(false);
+
   // New states for Syscom dropdown
   const [searchDropdownOpen, setSearchDropdownOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -193,6 +199,7 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
 
   const handleDownloadQuote = async () => {
     if (cart.length === 0) return;
+    setIsGeneratingQuote(true);
     try {
       const orderData = {
         customerName: checkoutName || user?.name || "Cliente Invitado",
@@ -201,7 +208,11 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
           title: item.product.title,
           price: getDisplayPrice(item.product),
           quantity: item.quantity
-        }))
+        })),
+        clientName: quoteClientName,
+        projectName: quoteProjectName,
+        markupPercentage: quoteMarkup,
+        senderName: user?.name || checkoutName || 'Instalador Independiente'
       };
       
       const res = await axios.post(`${API_URL}/public-store/${slug}/quote-pdf`, orderData, {
@@ -215,9 +226,12 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
+      setShowQuoteModal(false);
     } catch (e) {
       console.error(e);
       alert("Error al generar la cotización");
+    } finally {
+      setIsGeneratingQuote(false);
     }
   };
 
@@ -631,8 +645,8 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
                           <Button type="button" variant="outline" onClick={() => setIsCartOpen(false)} className="w-full h-12 mt-2 font-bold text-slate-600">
                              Guardar Carrito (Seguir)
                           </Button>
-                          <Button type="button" onClick={handleDownloadQuote} className="w-full h-12 mt-2 font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border-none flex items-center justify-center gap-2">
-                             <FileText className="w-4 h-4" /> Descargar Cotización PDF
+                          <Button type="button" onClick={() => setShowQuoteModal(true)} className="w-full h-12 mt-2 font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border-none flex items-center justify-center gap-2">
+                             <FileText className="w-4 h-4" /> Generar Cotización B2B
                           </Button>
                        </form>
                     </div>
@@ -805,8 +819,88 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
                   <ArrowUp className="w-6 h-6" />
                </button>
             )}
-         </div>
       </div>
+
+      {/* Quote Modal */}
+      {showQuoteModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowQuoteModal(false)}></div>
+          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="bg-blue-600 p-6 text-white flex justify-between items-center">
+              <div>
+                <h3 className="text-xl font-black flex items-center gap-2"><FileText className="w-5 h-5" /> Cotizador B2B</h3>
+                <p className="text-blue-100 text-sm mt-1">Genera una cotización elegante para tu cliente</p>
+              </div>
+              <button onClick={() => setShowQuoteModal(false)} className="text-blue-200 hover:text-white transition-colors bg-blue-700/50 p-2 rounded-full"><X className="w-5 h-5"/></button>
+            </div>
+            
+            <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">Título del Proyecto (Opcional)</label>
+                  <input type="text" value={quoteProjectName} onChange={e => setQuoteProjectName(e.target.value)} placeholder="Ej: Proyecto CCTV Residencial" className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50 hover:bg-white transition-colors" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">Cotizar a (Nombre del cliente final)</label>
+                  <input type="text" value={quoteClientName} onChange={e => setQuoteClientName(e.target.value)} placeholder="Nombre o empresa de TU cliente" className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50 hover:bg-white transition-colors" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-2">Tu Margen de Ganancia (%) <span className="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full font-bold">Sugerido: 30%</span></label>
+                  <div className="relative">
+                    <input type="number" min="0" max="500" value={quoteMarkup} onChange={e => setQuoteMarkup(e.target.value)} className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50 hover:bg-white transition-colors text-lg font-black text-blue-600" />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-slate-400">%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 mt-2">
+                <div className="flex justify-between items-center text-sm mb-2">
+                  <span className="text-slate-500">Costo Subtotal (Tienda)</span>
+                  <span className="font-bold text-slate-700">${(cart.reduce((sum, item) => sum + (getDisplayPrice(item.product) * item.quantity), 0) / (includeIva ? 1.16 : 1)).toLocaleString('es-MX', {minimumFractionDigits: 2})} {currency}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm mb-3">
+                  <span className="text-emerald-600 font-bold">Tu Ganancia Estimada</span>
+                  <span className="font-bold text-emerald-600">+ ${( (cart.reduce((sum, item) => sum + (getDisplayPrice(item.product) * item.quantity), 0) / (includeIva ? 1.16 : 1)) * (parseFloat(quoteMarkup||'0')/100) ).toLocaleString('es-MX', {minimumFractionDigits: 2})} {currency}</span>
+                </div>
+                <div className="border-t border-slate-200 pt-3 flex justify-between items-center">
+                  <span className="font-black text-slate-900">Total sugerido para el cliente</span>
+                  <span className="text-xl font-black text-blue-600">${( (cart.reduce((sum, item) => sum + (getDisplayPrice(item.product) * item.quantity), 0) / (includeIva ? 1.16 : 1)) * (1 + parseFloat(quoteMarkup||'0')/100) ).toLocaleString('es-MX', {minimumFractionDigits: 2})} {currency}</span>
+                </div>
+              </div>
+
+              {!user && (
+                <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 flex gap-3 items-start">
+                  <UserCircle className="w-6 h-6 text-indigo-500 shrink-0 mt-0.5" />
+                  <div className="text-xs text-indigo-900 leading-relaxed">
+                    <strong>¿Sabías que puedes poner tu propio logo?</strong> Regístrate o inicia sesión para que las cotizaciones salgan con tus datos reales, guardar tu historial y recibir notificaciones de envíos.
+                  </div>
+                </div>
+              )}
+              {user && (
+                <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl p-4 flex gap-3 items-center border border-slate-700 shadow-lg shadow-slate-900/20">
+                  <div className="bg-blue-500/20 p-2 rounded-lg shrink-0">
+                    <Check className="w-6 h-6 text-blue-400" />
+                  </div>
+                  <div className="text-xs text-slate-300 leading-relaxed flex-1">
+                    <strong className="text-white block mb-0.5">Lleva tu negocio al siguiente nivel con FacturaPro</strong>
+                    ¿Necesitas facturar y administrar tus proyectos? Tenemos planes desde $299 MXN al mes con integración total.
+                  </div>
+                  <Button variant="outline" className="shrink-0 text-[10px] h-8 bg-transparent border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700" onClick={() => window.open('https://facturapro.radiotecpro.com', '_blank')}>
+                    Ver Planes
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+              <Button variant="ghost" onClick={() => setShowQuoteModal(false)} className="text-slate-500 hover:bg-slate-200">Cancelar</Button>
+              <Button onClick={handleDownloadQuote} disabled={isGeneratingQuote} className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 shadow-md shadow-blue-500/30">
+                {isGeneratingQuote ? 'Generando PDF...' : 'Generar PDF Elegante'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

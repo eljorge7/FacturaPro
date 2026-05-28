@@ -388,29 +388,58 @@ export class PublicStoreService {
     });
     if (!tenant) throw new NotFoundException('Store not found');
 
-    const taxProfile = tenant.taxProfiles[0] || { legalName: tenant.name, brandColor: '#10b981', pdfTemplate: 'Minimalista Notion' };
+    const { customerName, items, totalAmount, clientName, projectName, markupPercentage, senderName } = data;
 
-    const { customerName, items, totalAmount } = data;
+    // Use a blue Bold Accent template by default for the beautiful B2B design
+    const taxProfile = tenant.taxProfiles[0] || { 
+      legalName: tenant.name, 
+      brandColor: '#1d4ed8', 
+      pdfTemplate: 'Bold Accent' 
+    };
 
-    const subtotal = totalAmount / 1.16;
-    const taxTotal = totalAmount - subtotal;
+    // Override the sender (De:) to be the installer's name instead of the store
+    if (senderName) {
+      taxProfile.legalName = senderName;
+    }
+    // Ensure we use the right template
+    taxProfile.pdfTemplate = 'Bold Accent';
+    // If no brand color, force the blue one
+    if (!taxProfile.brandColor) taxProfile.brandColor = '#1d4ed8';
+
+    const markup = parseFloat(markupPercentage || '0');
+    const multiplier = 1 + (markup / 100);
+
+    let newTotalAmount = 0;
+    const finalItems = items.map((item: any) => {
+      const originalPrice = item.price;
+      const newPrice = originalPrice * multiplier;
+      const itemTotal = newPrice * item.quantity;
+      newTotalAmount += itemTotal;
+      return {
+        quantity: item.quantity,
+        description: item.title,
+        unitPrice: newPrice / 1.16, // Assuming base prices have IVA inside if includeIva was true, but wait, the totalAmount from frontend is already determined. We'll divide by 1.16 to get the subtotal before taxes if we consider standard MX tax.
+        discount: 0
+      };
+    });
+
+    const subtotal = newTotalAmount / 1.16;
+    const taxTotal = newTotalAmount - subtotal;
 
     const dummyQuote = {
       tenant: tenant,
       taxProfile: taxProfile,
-      customer: { legalName: customerName || 'Público General', rfc: 'XAXX010101000' },
+      customer: { 
+        legalName: clientName || 'Público General', 
+        rfc: 'XAXX010101000' 
+      },
       quoteNumber: 'STORE-' + Math.floor(Math.random() * 10000),
       createdAt: new Date(),
       subtotal: subtotal,
       taxTotal: taxTotal,
-      total: totalAmount,
-      items: items.map((item: any) => ({
-        quantity: item.quantity,
-        description: item.title,
-        unitPrice: item.price / 1.16,
-        discount: 0
-      })),
-      notes: 'Cotización generada automáticamente desde tienda en línea.'
+      total: newTotalAmount,
+      items: finalItems,
+      notes: projectName ? `Proyecto: ${projectName}\nCotización generada automáticamente.` : 'Cotización generada automáticamente.'
     };
 
     const pdfService = new PdfService();
