@@ -888,7 +888,7 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
                   </div>
                   <div className="text-xs sm:text-sm text-slate-300 leading-relaxed flex-1 text-center sm:text-left">
                     <strong className="text-white block mb-1 text-base">Personaliza tu Logo con FacturaPro</strong>
-                    Esta es una cotización rápida. Si quieres incluir tu <strong>logotipo</strong>, guardar el historial de tus clientes y emitir facturas oficiales, adquiere tu cuenta de FacturaPro desde $299 MXN.
+                    Esta es una cotización rápida. Si quieres incluir tu <strong>logotipo</strong>, guardar el historial de tus clientes y emitir facturas oficiales, adquiere tu cuenta de FacturaPro desde $399 MXN.
                   </div>
                   <Button variant="outline" className="w-full sm:w-auto shrink-0 text-xs h-10 px-6 bg-blue-600/20 border-blue-500/50 text-blue-300 hover:text-white hover:bg-blue-600 transition-all font-bold" onClick={() => window.open('https://facturapro.radiotecpro.com', '_blank')}>
                     Ver Planes
