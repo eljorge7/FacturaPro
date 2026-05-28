@@ -30,8 +30,9 @@ export default function SettingsPage() {
       storeCustomDomain: "",
       syscomClientId: "",
       syscomClientSecret: "",
-      mercadopagoAccessToken: ""
-  });
+      mercadopagoAccessToken: "",
+      enableSyscomDropship: false
+   });
 
   // Series State
   const [series, setSeries] = useState<any[]>([]);
@@ -142,8 +143,9 @@ export default function SettingsPage() {
             storeCustomDomain: data.storeCustomDomain || "",
             syscomClientId: data.syscomClientId || "",
             syscomClientSecret: data.syscomClientSecret || "",
-            mercadopagoAccessToken: data.mercadopagoAccessToken || ""
-          });
+            mercadopagoAccessToken: data.mercadopagoAccessToken || "",
+            enableSyscomDropship: data.enableSyscomDropship || false
+         });
         }
       }
   };
@@ -312,12 +314,8 @@ export default function SettingsPage() {
          
          const payload: any = { 
             ...formData, 
-            logoWidth: Number(formData.logoWidth),
-            legalName: formData.businessName,
-            taxRegime: formData.regime
+            logoWidth: Number(formData.logoWidth)
          };
-         delete payload.businessName;
-         delete payload.regime;
 
          if (logoPreview && logoPreview.startsWith('data:image')) {
             payload.logoBase64 = logoPreview;
@@ -355,7 +353,8 @@ export default function SettingsPage() {
                   storeCustomDomain: storeSettings.storeCustomDomain,
                   syscomClientId: storeSettings.syscomClientId,
                   syscomClientSecret: storeSettings.syscomClientSecret,
-                  mercadopagoAccessToken: storeSettings.mercadopagoAccessToken
+                  mercadopagoAccessToken: storeSettings.mercadopagoAccessToken,
+                  enableSyscomDropship: storeSettings.enableSyscomDropship
                })
             });
          }
@@ -1147,7 +1146,16 @@ export default function SettingsPage() {
                             </div>
                             <div>
                                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Client Secret</label>
-                               <input type="password" value={storeSettings.syscomClientSecret} onChange={e => setStoreSettings({...storeSettings, syscomClientSecret: e.target.value})} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-800 font-mono focus:outline-none focus:border-[#10b981]" placeholder="••••••••••••" />
+                               <input type="password" value={storeSettings.syscomClientSecret} onChange={e => setStoreSettings({...storeSettings, syscomClientSecret: e.target.value})} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-800 font-mono focus:outline-none focus:border-[#10b981]" placeholder="••••••••••••••••••••" />
+                            </div>
+                            <div className="pt-2 border-t border-slate-200 mt-2">
+                               <label className="flex items-center gap-2 cursor-pointer">
+                                  <input type="checkbox" checked={storeSettings.enableSyscomDropship} onChange={e => setStoreSettings({...storeSettings, enableSyscomDropship: e.target.checked})} className="w-4 h-4 accent-[#10b981] rounded" />
+                                  <span className="font-bold text-sm text-slate-700">Activar Dropshipping Automático Syscom</span>
+                               </label>
+                               <p className="text-[10px] text-slate-500 mt-1 ml-6 leading-relaxed">
+                                 Si está activado, el sistema intentará enviar la orden directamente a Syscom cuando la marques como PAGADA y el total sea mayor a $5,000 MXN. De lo contrario, solo te notificará por OmniChat.
+                               </p>
                             </div>
                          </div>
                       </div>

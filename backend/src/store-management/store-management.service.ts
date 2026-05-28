@@ -1,9 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { SyscomDropshipService } from './syscom-dropship.service';
 
 @Injectable()
 export class StoreManagementService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly syscomDropship: SyscomDropshipService
+  ) {}
 
   async getProducts(tenantId: string) {
     return this.prisma.storeProduct.findMany({
@@ -43,10 +47,19 @@ export class StoreManagementService {
   }
 
   async updateOrderStatus(tenantId: string, id: string, status: string) {
-    return this.prisma.storeOrder.updateMany({
+    const updated = await this.prisma.storeOrder.updateMany({
       where: { id, tenantId },
       data: { status }
     });
+
+    if (status === 'PAID') {
+      // Execute without awaiting to not block the response
+      this.syscomDropship.processOrder(tenantId, id).catch(e => {
+        console.error("Error in SyscomDropship process:", e);
+      });
+    }
+
+    return updated;
   }
 
   async getSettings(tenantId: string) {

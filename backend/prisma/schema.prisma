@@ -38,6 +38,7 @@ model Tenant {
   syscomClientId         String?
   syscomClientSecret     String?
   mercadopagoAccessToken String?
+  enableSyscomDropship   Boolean @default(false)
 
   // Reloj de la Agencia / Reseller
   agencyId            String?
