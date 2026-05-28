@@ -268,7 +268,11 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
                    className="w-full h-11 bg-white border-2 border-blue-600 rounded-lg pl-10 pr-20 text-sm font-medium transition-all outline-none focus:ring-4 focus:ring-blue-100 shadow-sm"
                  />
                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-slate-400">
-                    <Search className="w-4 h-4 text-blue-600" />
+                    {globalSearchTerm && (
+                      <button type="button" onClick={() => { setGlobalSearchTerm(""); setSearchDropdownOpen(false); }} className="hover:text-slate-600 transition-colors">
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
                  </div>
 
                  {/* Syscom Dropdown Overlay */}
