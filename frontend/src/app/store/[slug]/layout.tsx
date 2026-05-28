@@ -826,7 +826,7 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
       {showQuoteModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowQuoteModal(false)}></div>
-          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="bg-blue-600 p-6 text-white flex justify-between items-center">
               <div>
                 <h3 className="text-xl font-black flex items-center gap-2"><FileText className="w-5 h-5" /> Cotizador B2B</h3>
@@ -846,10 +846,14 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
                   <input type="text" value={quoteClientName} onChange={e => setQuoteClientName(e.target.value)} placeholder="Nombre o empresa de TU cliente" className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50 hover:bg-white transition-colors" />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-2">Tu Margen de Ganancia (%) <span className="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full font-bold">Sugerido: 30%</span></label>
-                  <div className="relative">
-                    <input type="number" min="0" max="500" value={quoteMarkup} onChange={e => setQuoteMarkup(e.target.value)} className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50 hover:bg-white transition-colors text-lg font-black text-blue-600" />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-slate-400">%</span>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">Tu Margen de Ganancia (%) <span className="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full font-bold">Sugerido: 30%</span></label>
+                  <div className="flex items-center gap-3">
+                    <button type="button" onClick={() => setQuoteMarkup(String(Math.max(0, parseInt(quoteMarkup||'0') - 5)))} className="w-12 h-12 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 flex items-center justify-center font-black text-2xl transition-colors shadow-sm border border-slate-200">-</button>
+                    <div className="relative flex-1">
+                      <input type="number" min="0" max="500" value={quoteMarkup} onChange={e => setQuoteMarkup(e.target.value)} className="w-full border-2 border-blue-100 rounded-xl px-4 py-3 text-center text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-blue-50/50 hover:bg-white transition-colors text-xl font-black text-blue-600" />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-blue-300">%</span>
+                    </div>
+                    <button type="button" onClick={() => setQuoteMarkup(String(parseInt(quoteMarkup||'0') + 5))} className="w-12 h-12 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 flex items-center justify-center font-black text-2xl transition-colors shadow-sm border border-slate-200">+</button>
                   </div>
                 </div>
               </div>
@@ -870,23 +874,23 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
               </div>
 
               {!user && (
-                <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 flex gap-3 items-start">
-                  <UserCircle className="w-6 h-6 text-indigo-500 shrink-0 mt-0.5" />
-                  <div className="text-xs text-indigo-900 leading-relaxed">
-                    <strong>¿Sabías que puedes poner tu propio logo?</strong> Regístrate o inicia sesión para que las cotizaciones salgan con tus datos reales, guardar tu historial y recibir notificaciones de envíos.
+                <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex gap-4 items-start">
+                  <UserCircle className="w-8 h-8 text-indigo-500 shrink-0 mt-0.5" />
+                  <div className="text-sm text-indigo-900 leading-relaxed">
+                    <strong>¿Quieres profesionalizar más tus cotizaciones?</strong> Regístrate o inicia sesión en la tienda para llevar el control de tus compras. Y si necesitas agregar tu propio logo y administrar clientes, ¡con FacturaPro lo resolvemos!
                   </div>
                 </div>
               )}
               {user && (
-                <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl p-4 flex gap-3 items-center border border-slate-700 shadow-lg shadow-slate-900/20">
-                  <div className="bg-blue-500/20 p-2 rounded-lg shrink-0">
+                <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl p-5 flex flex-col sm:flex-row gap-4 items-center border border-slate-700 shadow-lg shadow-slate-900/20">
+                  <div className="bg-blue-500/20 p-3 rounded-xl shrink-0 hidden sm:block">
                     <Check className="w-6 h-6 text-blue-400" />
                   </div>
-                  <div className="text-xs text-slate-300 leading-relaxed flex-1">
-                    <strong className="text-white block mb-0.5">Lleva tu negocio al siguiente nivel con FacturaPro</strong>
-                    ¿Necesitas facturar y administrar tus proyectos? Tenemos planes desde $299 MXN al mes con integración total.
+                  <div className="text-xs sm:text-sm text-slate-300 leading-relaxed flex-1 text-center sm:text-left">
+                    <strong className="text-white block mb-1 text-base">Personaliza tu Logo con FacturaPro</strong>
+                    Esta es una cotización rápida. Si quieres incluir tu <strong>logotipo</strong>, guardar el historial de tus clientes y emitir facturas oficiales, adquiere tu cuenta de FacturaPro desde $299 MXN.
                   </div>
-                  <Button variant="outline" className="shrink-0 text-[10px] h-8 bg-transparent border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700" onClick={() => window.open('https://facturapro.radiotecpro.com', '_blank')}>
+                  <Button variant="outline" className="w-full sm:w-auto shrink-0 text-xs h-10 px-6 bg-blue-600/20 border-blue-500/50 text-blue-300 hover:text-white hover:bg-blue-600 transition-all font-bold" onClick={() => window.open('https://facturapro.radiotecpro.com', '_blank')}>
                     Ver Planes
                   </Button>
                 </div>
