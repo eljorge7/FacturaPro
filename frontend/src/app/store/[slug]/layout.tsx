@@ -819,6 +819,7 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
                   <ArrowUp className="w-6 h-6" />
                </button>
             )}
+         </div>
       </div>
 
       {/* Quote Modal */}
