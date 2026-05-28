@@ -51,6 +51,15 @@ let PublicStoreController = class PublicStoreController {
     async generatePaymentLink(slug, id) {
         return this.storeService.generatePaymentLink(slug, id);
     }
+    async generateQuotePdf(slug, data, res) {
+        const buffer = await this.storeService.generateQuotePdf(slug, data);
+        res.set({
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `attachment; filename="Cotizacion_${slug}.pdf"`,
+            'Content-Length': buffer.length,
+        });
+        res.end(buffer);
+    }
 };
 exports.PublicStoreController = PublicStoreController;
 __decorate([
@@ -108,6 +117,15 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], PublicStoreController.prototype, "generatePaymentLink", null);
+__decorate([
+    (0, common_1.Post)('quote-pdf'),
+    __param(0, (0, common_1.Param)('slug')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], PublicStoreController.prototype, "generateQuotePdf", null);
 exports.PublicStoreController = PublicStoreController = __decorate([
     (0, common_1.Controller)('public-store/:slug'),
     __metadata("design:paramtypes", [public_store_service_1.PublicStoreService,

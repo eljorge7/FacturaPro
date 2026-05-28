@@ -60,6 +60,7 @@ export declare class PublicStoreService {
                 syscomClientId: string | null;
                 syscomClientSecret: string | null;
                 mercadopagoAccessToken: string | null;
+                enableSyscomDropship: boolean;
                 agencyId: string | null;
                 createdAt: Date;
                 updatedAt: Date;
@@ -92,6 +93,7 @@ export declare class PublicStoreService {
             totalAmount: number;
             status: string;
             isFacturado: boolean;
+            reminderSent: boolean;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -118,6 +120,7 @@ export declare class PublicStoreService {
                 syscomClientId: string | null;
                 syscomClientSecret: string | null;
                 mercadopagoAccessToken: string | null;
+                enableSyscomDropship: boolean;
                 agencyId: string | null;
                 createdAt: Date;
                 updatedAt: Date;
@@ -150,6 +153,7 @@ export declare class PublicStoreService {
             totalAmount: number;
             status: string;
             isFacturado: boolean;
+            reminderSent: boolean;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -192,7 +196,9 @@ export declare class PublicStoreService {
         totalAmount: number;
         status: string;
         isFacturado: boolean;
+        reminderSent: boolean;
         createdAt: Date;
         updatedAt: Date;
     })[]>;
+    generateQuotePdf(slug: string, data: any): Promise<Buffer>;
 }

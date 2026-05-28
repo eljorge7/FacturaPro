@@ -10,6 +10,7 @@ exports.PublicStoreModule = void 0;
 const common_1 = require("@nestjs/common");
 const public_store_service_1 = require("./public-store.service");
 const public_store_controller_1 = require("./public-store.controller");
+const store_cron_service_1 = require("./store-cron.service");
 const prisma_module_1 = require("../prisma/prisma.module");
 const jwt_1 = require("@nestjs/jwt");
 let PublicStoreModule = class PublicStoreModule {
@@ -25,7 +26,7 @@ exports.PublicStoreModule = PublicStoreModule = __decorate([
             })
         ],
         controllers: [public_store_controller_1.PublicStoreController],
-        providers: [public_store_service_1.PublicStoreService],
+        providers: [public_store_service_1.PublicStoreService, store_cron_service_1.StoreCronService],
     })
 ], PublicStoreModule);
 //# sourceMappingURL=public-store.module.js.map

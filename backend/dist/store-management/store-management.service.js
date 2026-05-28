@@ -12,10 +12,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.StoreManagementService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const syscom_dropship_service_1 = require("./syscom-dropship.service");
 let StoreManagementService = class StoreManagementService {
     prisma;
-    constructor(prisma) {
+    syscomDropship;
+    constructor(prisma, syscomDropship) {
         this.prisma = prisma;
+        this.syscomDropship = syscomDropship;
     }
     async getProducts(tenantId) {
         return this.prisma.storeProduct.findMany({
@@ -50,10 +53,16 @@ let StoreManagementService = class StoreManagementService {
         });
     }
     async updateOrderStatus(tenantId, id, status) {
-        return this.prisma.storeOrder.updateMany({
+        const updated = await this.prisma.storeOrder.updateMany({
             where: { id, tenantId },
             data: { status }
         });
+        if (status === 'PAID') {
+            this.syscomDropship.processOrder(tenantId, id).catch(e => {
+                console.error("Error in SyscomDropship process:", e);
+            });
+        }
+        return updated;
     }
     async getSettings(tenantId) {
         return this.prisma.tenant.findUnique({
@@ -85,6 +94,7 @@ let StoreManagementService = class StoreManagementService {
 exports.StoreManagementService = StoreManagementService;
 exports.StoreManagementService = StoreManagementService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        syscom_dropship_service_1.SyscomDropshipService])
 ], StoreManagementService);
 //# sourceMappingURL=store-management.service.js.map

@@ -17,6 +17,7 @@ exports.PublicStoreService = void 0;
 const common_1 = require("@nestjs/common");
 const axios_1 = __importDefault(require("axios"));
 const prisma_service_1 = require("../prisma/prisma.service");
+const pdf_service_1 = require("../invoices/pdf.service");
 let PublicStoreService = PublicStoreService_1 = class PublicStoreService {
     prisma;
     logger = new common_1.Logger(PublicStoreService_1.name);
@@ -83,7 +84,8 @@ let PublicStoreService = PublicStoreService_1 = class PublicStoreService {
     }
     async getCombinedCatalog(slug, page = 1, search = "") {
         const tenant = await this.prisma.tenant.findFirst({
-            where: { storeEnabled: true, hasStoreAccess: true, OR: [{ storeSlug: slug }, { storeCustomDomain: slug }] }
+            where: { storeEnabled: true, hasStoreAccess: true, OR: [{ storeSlug: slug }, { storeCustomDomain: slug }] },
+            include: { taxProfiles: true }
         });
         if (!tenant) {
             throw new common_1.NotFoundException('Store not found or disabled');
@@ -124,7 +126,7 @@ let PublicStoreService = PublicStoreService_1 = class PublicStoreService {
                         id: p.producto_id,
                         title: p.titulo,
                         model: p.modelo,
-                        price: parseFloat(p.precios?.precio_descuento || p.precios?.precio_lista || '0'),
+                        price: parseFloat(p.precios?.precio_descuento || p.precios?.precio_lista || '0') * 1.30,
                         stock: parseInt(p.existencia?.nuevo || '0', 10),
                         imageUrl: p.img_portada,
                         brand: p.marca,
@@ -138,9 +140,11 @@ let PublicStoreService = PublicStoreService_1 = class PublicStoreService {
                 this.logger.error("Error fetching syscom products", e);
             }
         }
+        const logoUrl = tenant.taxProfiles && tenant.taxProfiles.length > 0 ? tenant.taxProfiles[0].logoUrl : null;
         const data = {
             products: [...localMapped, ...syscomProducts],
-            paginas: totalPages
+            paginas: totalPages,
+            logoUrl: logoUrl
         };
         this.catalogCache.set(cacheKey, { data, expiresAt: now + 2 * 60 * 1000 });
         return data;
@@ -189,7 +193,7 @@ let PublicStoreService = PublicStoreService_1 = class PublicStoreService {
                 title: p.titulo,
                 model: p.modelo,
                 description: p.descripcion,
-                price: parseFloat(p.precios?.precio_descuento || p.precios?.precio_lista || '0'),
+                price: parseFloat(p.precios?.precio_descuento || p.precios?.precio_lista || '0') * 1.30,
                 stock: parseInt(p.existencia?.nuevo || '0', 10),
                 brand: p.marca,
                 imageUrl: p.img_portada,
@@ -351,6 +355,60 @@ let PublicStoreService = PublicStoreService_1 = class PublicStoreService {
             include: { items: true },
             orderBy: { createdAt: 'desc' }
         });
+    }
+    async generateQuotePdf(slug, data) {
+        const tenant = await this.prisma.tenant.findFirst({
+            where: { storeEnabled: true, hasStoreAccess: true, OR: [{ storeSlug: slug }, { storeCustomDomain: slug }] },
+            include: { taxProfiles: true }
+        });
+        if (!tenant)
+            throw new common_1.NotFoundException('Store not found');
+        const { customerName, items, totalAmount, clientName, projectName, markupPercentage, senderName } = data;
+        const taxProfile = tenant.taxProfiles[0] || {
+            legalName: tenant.name,
+            brandColor: '#1d4ed8',
+            pdfTemplate: 'Bold Accent'
+        };
+        if (senderName) {
+            taxProfile.legalName = senderName;
+        }
+        taxProfile.pdfTemplate = 'Bold Accent';
+        if (!taxProfile.brandColor)
+            taxProfile.brandColor = '#1d4ed8';
+        const markup = parseFloat(markupPercentage || '0');
+        const multiplier = 1 + (markup / 100);
+        let newTotalAmount = 0;
+        const finalItems = items.map((item) => {
+            const originalPrice = item.price;
+            const newPrice = originalPrice * multiplier;
+            const itemTotal = newPrice * item.quantity;
+            newTotalAmount += itemTotal;
+            return {
+                quantity: item.quantity,
+                description: item.title,
+                unitPrice: newPrice / 1.16,
+                discount: 0
+            };
+        });
+        const subtotal = newTotalAmount / 1.16;
+        const taxTotal = newTotalAmount - subtotal;
+        const dummyQuote = {
+            tenant: tenant,
+            taxProfile: taxProfile,
+            customer: {
+                legalName: clientName || 'Público General',
+                rfc: 'XAXX010101000'
+            },
+            quoteNumber: 'STORE-' + Math.floor(Math.random() * 10000),
+            createdAt: new Date(),
+            subtotal: subtotal,
+            taxTotal: taxTotal,
+            total: newTotalAmount,
+            items: finalItems,
+            notes: projectName ? `Proyecto: ${projectName}\nCotización generada automáticamente.` : 'Cotización generada automáticamente.'
+        };
+        const pdfService = new pdf_service_1.PdfService();
+        return pdfService.generateQuotePdf(dummyQuote);
     }
 };
 exports.PublicStoreService = PublicStoreService;

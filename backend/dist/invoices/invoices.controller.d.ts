@@ -140,14 +140,6 @@ export declare class InvoicesController {
             taxRate: number;
             total: number;
         }[];
-        attachments: {
-            id: string;
-            invoiceId: string;
-            fileName: string;
-            fileUrl: string;
-            fileSize: number | null;
-            createdAt: Date;
-        }[];
         payments: {
             id: string;
             invoiceId: string;
@@ -156,6 +148,14 @@ export declare class InvoicesController {
             paymentMethod: string;
             reference: string | null;
             notes: string | null;
+            createdAt: Date;
+        }[];
+        attachments: {
+            id: string;
+            invoiceId: string;
+            fileName: string;
+            fileUrl: string;
+            fileSize: number | null;
             createdAt: Date;
         }[];
     } & {
@@ -416,14 +416,6 @@ export declare class InvoicesController {
             taxRate: number;
             total: number;
         }[];
-        attachments: {
-            id: string;
-            invoiceId: string;
-            fileName: string;
-            fileUrl: string;
-            fileSize: number | null;
-            createdAt: Date;
-        }[];
         payments: {
             id: string;
             invoiceId: string;
@@ -432,6 +424,14 @@ export declare class InvoicesController {
             paymentMethod: string;
             reference: string | null;
             notes: string | null;
+            createdAt: Date;
+        }[];
+        attachments: {
+            id: string;
+            invoiceId: string;
+            fileName: string;
+            fileUrl: string;
+            fileSize: number | null;
             createdAt: Date;
         }[];
     } & {

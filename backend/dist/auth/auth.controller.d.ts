@@ -63,17 +63,17 @@ export declare class AuthController {
     }>;
     getMemberships(auth: string): Promise<{
         primaryTenant: {
-            id: string;
             name: string;
-            tradeName: string | null;
             subscriptionTier: string;
+            id: string;
+            tradeName: string | null;
             agencyId: string | null;
         } | undefined;
         agencyMemberships: {
-            id: string;
             name: string;
-            tradeName: string | null;
             subscriptionTier: string;
+            id: string;
+            tradeName: string | null;
             agencyId: string | null;
         }[];
         isAgencyAdmin: boolean;
@@ -92,8 +92,8 @@ export declare class AuthController {
         id: string;
         role: string;
         user: {
-            id: string;
             name: string;
+            id: string;
             email: string;
             avatar: string | null;
         };
@@ -187,16 +187,16 @@ export declare class AuthController {
     }>;
     getAgencyTasks(auth: string): Promise<({
         tenant: {
-            id: string;
             name: string;
+            id: string;
             tradeName: string | null;
         } | null;
         agency: {
             name: string;
         };
         assignedTo: {
-            id: string;
             name: string;
+            id: string;
             avatar: string | null;
         } | null;
     } & {

@@ -85,9 +85,9 @@ export declare class PosController {
     }>;
     getCurrentShift(req: any): Promise<({
         openedBy: {
+            name: string;
             id: string;
             email: string;
-            name: string;
         };
     } & {
         id: string;

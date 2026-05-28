@@ -28,6 +28,7 @@ export declare class InternalController {
         syscomClientId: string | null;
         syscomClientSecret: string | null;
         mercadopagoAccessToken: string | null;
+        enableSyscomDropship: boolean;
         agencyId: string | null;
         createdAt: Date;
         updatedAt: Date;

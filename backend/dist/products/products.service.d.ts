@@ -111,8 +111,8 @@ export declare class ProductsService {
         updatedAt: Date;
     })[]>;
     getPublishedStoreProducts(): Promise<{
-        id: string;
         name: string;
+        id: string;
         tenantId: string;
         type: string;
         description: string | null;

@@ -1,7 +1,9 @@
 import { PrismaService } from '../prisma/prisma.service';
+import { SyscomDropshipService } from './syscom-dropship.service';
 export declare class StoreManagementService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private readonly syscomDropship;
+    constructor(prisma: PrismaService, syscomDropship: SyscomDropshipService);
     getProducts(tenantId: string): Promise<{
         id: string;
         tenantId: string;
@@ -65,6 +67,7 @@ export declare class StoreManagementService {
         totalAmount: number;
         status: string;
         isFacturado: boolean;
+        reminderSent: boolean;
         createdAt: Date;
         updatedAt: Date;
     })[]>;
@@ -98,6 +101,7 @@ export declare class StoreManagementService {
         syscomClientId: string | null;
         syscomClientSecret: string | null;
         mercadopagoAccessToken: string | null;
+        enableSyscomDropship: boolean;
         agencyId: string | null;
         createdAt: Date;
         updatedAt: Date;

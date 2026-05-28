@@ -11,6 +11,7 @@ const common_1 = require("@nestjs/common");
 const store_management_service_1 = require("./store-management.service");
 const store_management_controller_1 = require("./store-management.controller");
 const prisma_module_1 = require("../prisma/prisma.module");
+const syscom_dropship_service_1 = require("./syscom-dropship.service");
 let StoreManagementModule = class StoreManagementModule {
 };
 exports.StoreManagementModule = StoreManagementModule;
@@ -18,7 +19,7 @@ exports.StoreManagementModule = StoreManagementModule = __decorate([
     (0, common_1.Module)({
         imports: [prisma_module_1.PrismaModule],
         controllers: [store_management_controller_1.StoreManagementController],
-        providers: [store_management_service_1.StoreManagementService],
+        providers: [store_management_service_1.StoreManagementService, syscom_dropship_service_1.SyscomDropshipService],
     })
 ], StoreManagementModule);
 //# sourceMappingURL=store-management.module.js.map

@@ -24,6 +24,7 @@ export declare class TenantsController {
         syscomClientId: string | null;
         syscomClientSecret: string | null;
         mercadopagoAccessToken: string | null;
+        enableSyscomDropship: boolean;
         agencyId: string | null;
         createdAt: Date;
         updatedAt: Date;
@@ -48,6 +49,7 @@ export declare class TenantsController {
         syscomClientId: string | null;
         syscomClientSecret: string | null;
         mercadopagoAccessToken: string | null;
+        enableSyscomDropship: boolean;
         agencyId: string | null;
         createdAt: Date;
         updatedAt: Date;
@@ -102,6 +104,7 @@ export declare class TenantsController {
         syscomClientId: string | null;
         syscomClientSecret: string | null;
         mercadopagoAccessToken: string | null;
+        enableSyscomDropship: boolean;
         agencyId: string | null;
         createdAt: Date;
         updatedAt: Date;
@@ -126,6 +129,7 @@ export declare class TenantsController {
         syscomClientId: string | null;
         syscomClientSecret: string | null;
         mercadopagoAccessToken: string | null;
+        enableSyscomDropship: boolean;
         agencyId: string | null;
         createdAt: Date;
         updatedAt: Date;
@@ -159,6 +163,7 @@ export declare class TenantsController {
         syscomClientId: string | null;
         syscomClientSecret: string | null;
         mercadopagoAccessToken: string | null;
+        enableSyscomDropship: boolean;
         agencyId: string | null;
         createdAt: Date;
         updatedAt: Date;

@@ -79,7 +79,8 @@ export class PublicStoreService {
 
   async getCombinedCatalog(slug: string, page: number = 1, search: string = "") {
     const tenant = await this.prisma.tenant.findFirst({ 
-      where: { storeEnabled: true, hasStoreAccess: true, OR: [{ storeSlug: slug }, { storeCustomDomain: slug }] } 
+      where: { storeEnabled: true, hasStoreAccess: true, OR: [{ storeSlug: slug }, { storeCustomDomain: slug }] },
+      include: { taxProfiles: true }
     });
     if (!tenant) {
       throw new NotFoundException('Store not found or disabled');
@@ -142,10 +143,12 @@ export class PublicStoreService {
       }
     }
 
+    const logoUrl = tenant.taxProfiles && tenant.taxProfiles.length > 0 ? tenant.taxProfiles[0].logoUrl : null;
+
     const data = {
       products: [...localMapped, ...syscomProducts],
       paginas: totalPages,
-      logoUrl: tenant.logoUrl
+      logoUrl: logoUrl
     };
     this.catalogCache.set(cacheKey, { data, expiresAt: now + 2 * 60 * 1000 }); // 2 minute cache
     return data;

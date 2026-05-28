@@ -37,6 +37,7 @@ export declare class PublicStoreController {
         totalAmount: number;
         status: string;
         isFacturado: boolean;
+        reminderSent: boolean;
         createdAt: Date;
         updatedAt: Date;
     })[]>;
@@ -93,6 +94,7 @@ export declare class PublicStoreController {
                 syscomClientId: string | null;
                 syscomClientSecret: string | null;
                 mercadopagoAccessToken: string | null;
+                enableSyscomDropship: boolean;
                 agencyId: string | null;
                 createdAt: Date;
                 updatedAt: Date;
@@ -125,6 +127,7 @@ export declare class PublicStoreController {
             totalAmount: number;
             status: string;
             isFacturado: boolean;
+            reminderSent: boolean;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -151,6 +154,7 @@ export declare class PublicStoreController {
                 syscomClientId: string | null;
                 syscomClientSecret: string | null;
                 mercadopagoAccessToken: string | null;
+                enableSyscomDropship: boolean;
                 agencyId: string | null;
                 createdAt: Date;
                 updatedAt: Date;
@@ -183,6 +187,7 @@ export declare class PublicStoreController {
             totalAmount: number;
             status: string;
             isFacturado: boolean;
+            reminderSent: boolean;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -191,4 +196,5 @@ export declare class PublicStoreController {
     generatePaymentLink(slug: string, id: string): Promise<{
         checkoutUrl: string;
     }>;
+    generateQuotePdf(slug: string, data: any, res: any): Promise<void>;
 }

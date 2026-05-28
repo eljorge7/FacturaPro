@@ -111,15 +111,15 @@ export declare class ProductsController {
         updatedAt: Date;
     })[]>;
     getPublishedStoreProducts(): Promise<{
-        id: string;
         name: string;
-        description: string | null;
-        price: number;
-        type: string;
-        stock: number;
-        imageUrl: string | null;
-        storeCategory: string | null;
+        id: string;
         tenantId: string;
+        type: string;
+        description: string | null;
+        imageUrl: string | null;
+        stock: number;
+        price: number;
+        storeCategory: string | null;
     }[]>;
     findOne(id: string): Promise<{
         kitComponents: ({
