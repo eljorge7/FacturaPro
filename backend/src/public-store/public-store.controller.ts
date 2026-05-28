@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Query, Headers, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Headers, UnauthorizedException, Res } from '@nestjs/common';
 import { PublicStoreService } from './public-store.service';
 import { JwtService } from '@nestjs/jwt';
 
@@ -47,5 +47,16 @@ export class PublicStoreController {
   @Post('order/:id/pay')
   async generatePaymentLink(@Param('slug') slug: string, @Param('id') id: string) {
     return this.storeService.generatePaymentLink(slug, id);
+  }
+
+  @Post('quote-pdf')
+  async generateQuotePdf(@Param('slug') slug: string, @Body() data: any, @Res() res: any) {
+    const buffer = await this.storeService.generateQuotePdf(slug, data);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="Cotizacion_${slug}.pdf"`,
+      'Content-Length': buffer.length,
+    });
+    res.end(buffer);
   }
 }

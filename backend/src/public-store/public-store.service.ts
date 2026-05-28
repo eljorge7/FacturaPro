@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import axios from 'axios';
 import { PrismaService } from '../prisma/prisma.service';
+import { PdfService } from '../invoices/pdf.service';
 
 @Injectable()
 export class PublicStoreService {
@@ -378,5 +379,41 @@ export class PublicStoreService {
       include: { items: true },
       orderBy: { createdAt: 'desc' }
     });
+  }
+
+  async generateQuotePdf(slug: string, data: any): Promise<Buffer> {
+    const tenant = await this.prisma.tenant.findFirst({ 
+      where: { storeEnabled: true, hasStoreAccess: true, OR: [{ storeSlug: slug }, { storeCustomDomain: slug }] },
+      include: { taxProfiles: true }
+    });
+    if (!tenant) throw new NotFoundException('Store not found');
+
+    const taxProfile = tenant.taxProfiles[0] || { legalName: tenant.name, brandColor: '#10b981', pdfTemplate: 'Minimalista Notion' };
+
+    const { customerName, items, totalAmount } = data;
+
+    const subtotal = totalAmount / 1.16;
+    const taxTotal = totalAmount - subtotal;
+
+    const dummyQuote = {
+      tenant: tenant,
+      taxProfile: taxProfile,
+      customer: { legalName: customerName || 'Público General', rfc: 'XAXX010101000' },
+      quoteNumber: 'STORE-' + Math.floor(Math.random() * 10000),
+      createdAt: new Date(),
+      subtotal: subtotal,
+      taxTotal: taxTotal,
+      total: totalAmount,
+      items: items.map((item: any) => ({
+        quantity: item.quantity,
+        description: item.title,
+        unitPrice: item.price / 1.16,
+        discount: 0
+      })),
+      notes: 'Cotización generada automáticamente desde tienda en línea.'
+    };
+
+    const pdfService = new PdfService();
+    return pdfService.generateQuotePdf(dummyQuote);
   }
 }

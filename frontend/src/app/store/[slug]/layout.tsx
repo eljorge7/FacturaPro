@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { StoreProvider, useStore } from "./StoreContext";
 import { useAuth } from "@/components/AuthProvider";
-import { Search, ShoppingCart, ArrowLeft, Package, Trash2, Check, X, Send, Menu, Tag, ChevronDown, DollarSign, ArrowUp, Camera, Mic, Bot, Rss, UserCircle, LogOut } from "lucide-react";
+import { Search, ShoppingCart, ArrowLeft, Package, Trash2, Check, X, Send, Menu, Tag, ChevronDown, DollarSign, ArrowUp, Camera, Mic, Bot, Rss, UserCircle, LogOut, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 
@@ -188,6 +188,36 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error(error);
       alert("Error al procesar el pedido");
+    }
+  };
+
+  const handleDownloadQuote = async () => {
+    if (cart.length === 0) return;
+    try {
+      const orderData = {
+        customerName: checkoutName || user?.name || "Cliente Invitado",
+        totalAmount: cart.reduce((sum, item) => sum + (getDisplayPrice(item.product) * item.quantity), 0),
+        items: cart.map(item => ({
+          title: item.product.title,
+          price: getDisplayPrice(item.product),
+          quantity: item.quantity
+        }))
+      };
+      
+      const res = await axios.post(`${API_URL}/public-store/${slug}/quote-pdf`, orderData, {
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Cotizacion_${slug}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+    } catch (e) {
+      console.error(e);
+      alert("Error al generar la cotización");
     }
   };
 
@@ -600,6 +630,9 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
                           </Button>
                           <Button type="button" variant="outline" onClick={() => setIsCartOpen(false)} className="w-full h-12 mt-2 font-bold text-slate-600">
                              Guardar Carrito (Seguir)
+                          </Button>
+                          <Button type="button" onClick={handleDownloadQuote} className="w-full h-12 mt-2 font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border-none flex items-center justify-center gap-2">
+                             <FileText className="w-4 h-4" /> Descargar Cotización PDF
                           </Button>
                        </form>
                     </div>

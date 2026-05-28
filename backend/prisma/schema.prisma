@@ -1170,6 +1170,7 @@ model StoreOrder {
   totalAmount     Float
   status          String   @default("PENDING") // PENDING, PAID, SHIPPED, DELIVERED, CANCELLED
   isFacturado     Boolean  @default(false)
+  reminderSent    Boolean  @default(false)
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

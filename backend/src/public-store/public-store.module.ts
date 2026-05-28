@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { PublicStoreService } from './public-store.service';
 import { PublicStoreController } from './public-store.controller';
+import { StoreCronService } from './store-cron.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
 
@@ -13,6 +14,6 @@ import { JwtModule } from '@nestjs/jwt';
     })
   ],
   controllers: [PublicStoreController],
-  providers: [PublicStoreService],
+  providers: [PublicStoreService, StoreCronService],
 })
 export class PublicStoreModule {}
