@@ -43,6 +43,7 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
   const [showConfigDropdown, setShowConfigDropdown] = useState(false);
   const [showAuthDropdown, setShowAuthDropdown] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [storeLogoUrl, setStoreLogoUrl] = useState<string | null>(null);
 
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [quoteProjectName, setQuoteProjectName] = useState("");
@@ -83,8 +84,18 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 300);
     window.addEventListener('scroll', handleScroll);
+    
+    // Fetch initial layout data like logo
+    axios.get(`${API_URL}/public-store/${slug}/products?search=&page=1`)
+      .then(res => {
+         if (res.data && res.data.logoUrl) {
+            setStoreLogoUrl(`${API_URL}${res.data.logoUrl}`);
+         }
+      })
+      .catch(e => console.error("Error fetching store logo", e));
+
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [slug]);
 
   useEffect(() => {
     if (user && user.role === 'CUSTOMER') {
@@ -242,7 +253,7 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
         <div className="container mx-auto px-4">
           <div className="flex flex-wrap items-center justify-between gap-y-3 gap-x-4 md:gap-8 py-3 md:h-20 md:py-0">
             <Link href={storeHomeUrl} className="flex items-center gap-2 hover:opacity-80 transition-opacity shrink-0 order-1">
-              <img src="/logo-transparent.png" alt="RadioTec Pro" className="h-[32px] md:h-[40px] object-contain" />
+              <img src={storeLogoUrl || "/logo-transparent.png"} alt="Tienda" className="h-[32px] md:h-[40px] object-contain" />
             </Link>
 
             <form onSubmit={(e) => { e.preventDefault(); setSearchDropdownOpen(false); router.push(storeHomeUrl); }} className="w-full md:flex-1 max-w-4xl relative flex items-center gap-2 md:gap-4 order-3 md:order-2">
@@ -257,8 +268,7 @@ function StoreLayoutContent({ children }: { children: ReactNode }) {
                    className="w-full h-11 bg-white border-2 border-blue-600 rounded-lg pl-10 pr-20 text-sm font-medium transition-all outline-none focus:ring-4 focus:ring-blue-100 shadow-sm"
                  />
                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-slate-400">
-                    <button type="button" className="hover:text-blue-600 transition-colors"><Camera className="w-4 h-4" /></button>
-                    <button type="button" className="hover:text-blue-600 transition-colors"><Mic className="w-4 h-4" /></button>
+                    <Search className="w-4 h-4 text-blue-600" />
                  </div>
 
                  {/* Syscom Dropdown Overlay */}

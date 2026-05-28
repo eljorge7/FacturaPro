@@ -144,7 +144,8 @@ export class PublicStoreService {
 
     const data = {
       products: [...localMapped, ...syscomProducts],
-      paginas: totalPages
+      paginas: totalPages,
+      logoUrl: tenant.logoUrl
     };
     this.catalogCache.set(cacheKey, { data, expiresAt: now + 2 * 60 * 1000 }); // 2 minute cache
     return data;
