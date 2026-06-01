@@ -632,13 +632,16 @@ export default function CustomersPage() {
                                 <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-slate-300 border-2 border-white"></div>
                                 <p className="text-sm text-slate-700"><span className="font-bold">Cliente Agregado</span> ({selectedCustomer.legalName})</p>
                                  <p className="text-xs text-slate-400 mt-1">Hace 2 días por Sistema</p>
-                             </div>
-                             </div>
-                             <div className="absolute bottom-0 -left-[5px] w-2 h-2 rounded-full bg-slate-200"></div>
-                          </div>
-                       </div>
+                              </div>
+                           </div>
+                        </div>
+                        </div>
+                        </div>
+                        </div>
+                        ) : null}
                        
                        {/* ESTADO DE CUENTA ACTUAL (FIADO) */}
+                       {activeTab === 'estado' ? (
                        <div className="bg-[#f3f4f6] -mt-8 -mx-8 sm:p-8 flex justify-center items-start min-h-[calc(100vh-140px)]">
                           <div className="w-full max-w-4xl bg-white shadow-lg border border-slate-200 rounded-xl overflow-hidden">
                              
@@ -670,7 +673,7 @@ export default function CustomersPage() {
                                       <AlertTriangle className="w-8 h-8 text-slate-400" />
                                    </div>
                                    <h3 className="text-xl font-bold text-slate-800 mb-2">Crédito no habilitado</h3>
-                                   <p className="max-w-md mx-auto">Este cliente no tiene el módulo de Fiado activo. Ve a la pestaña Editar > Crédito (Fiado) para activarlo.</p>
+                                   <p className="max-w-md mx-auto">Este cliente no tiene el módulo de Fiado activo. Ve a la pestaña Editar &gt; Crédito (Fiado) para activarlo.</p>
                                    <button onClick={() => openEdit(selectedCustomer)} className="mt-6 bg-[#2563eb] hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold">Ir a Configuración</button>
                                 </div>
                              ) : (
@@ -806,121 +809,7 @@ export default function CustomersPage() {
                              )}
                           </div>
                        </div>
-                    </div>
-                 ) : (
-                    /* ESTADO DE CUENTA MOCK PDF */
-                    <div className="bg-[#f3f4f6] -mt-8 -mx-8 sm:p-8 flex justify-center items-start min-h-[calc(100vh-140px)]">
-                       
-                       <div className="w-full max-w-[800px] bg-white shadow-lg border border-slate-200">
-                          {/* Botonera superior simulada */}
-                          <div className="bg-slate-50 border-b border-slate-200 px-6 py-3 flex justify-between items-center text-sm">
-                             <div className="flex bg-white border border-slate-200 rounded px-2 py-1 items-center gap-2 cursor-pointer shadow-sm">
-                               <span className="font-medium">Este mes</span> <ChevronDown className="w-4 h-4 text-slate-400"/>
-                             </div>
-                             <div className="flex items-center gap-3">
-                               <button onClick={() => alert("Descargando PDF...")} className="p-1.5 text-slate-500 hover:text-slate-700 border border-slate-200 bg-white rounded shadow-sm"><FileText className="w-4 h-4"/></button>
-                               <button onClick={() => alert("Correo enviado")} className="bg-[#10b981] hover:bg-[#059669] text-white px-3 py-1.5 rounded shadow-sm font-medium flex items-center gap-2">Enviar correo electrónico</button>
-                             </div>
-                          </div>
-
-                          {/* PDF Content Area */}
-                          <div className="p-16">
-                             <h2 className="text-center text-slate-700 font-medium mb-1">Estado de cuenta de cliente para {selectedCustomer.legalName}</h2>
-                             <p className="text-center text-slate-500 text-xs mb-10">Desde 01 abr 2026 A 30 abr 2026</p>
-
-                             <div className="flex justify-between items-start mb-16">
-                                <div>
-                                   <div className="text-2xl font-black text-slate-800 tracking-tighter flex items-center gap-1.5">
-                                      <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-400 to-blue-500 grid grid-cols-2 gap-0.5 p-1">
-                                        <div className="bg-white rounded-[2px]" /><div className="bg-white rounded-[2px]" />
-                                        <div className="bg-white rounded-[2px]" /><div className="bg-white rounded-[2px]" />
-                                      </div>
-                                      radiotec
-                                   </div>
-                                </div>
-                                <div className="text-right text-[11px] text-slate-600 leading-tight">
-                                   <p className="font-bold text-slate-800 text-sm mb-1">Jorge Hurtado Cota</p>
-                                   <p>Arnulfo Ruiz Gomez</p>
-                                   <p>Avenida Sinaloa</p>
-                                   <p>85860 Navojoa Sonora</p>
-                                   <p>México</p>
-                                   <p>IVA HUCJ87011253</p>
-                                   <p>Régimen fiscal: 626 - Régimen Simplificado de Confianza</p>
-                                   <p className="text-blue-500 mt-1">jorge.hurtadoc@live.com.mx</p>
-                                </div>
-                             </div>
-
-                             <div className="flex justify-between items-start mb-16">
-                                <div className="text-[12px] text-slate-600 leading-tight">
-                                   <p className="font-bold text-slate-800 mb-1">Para</p>
-                                   <p className="text-[13px] font-bold text-[#2563eb]">{selectedCustomer.legalName}</p>
-                                   <p>85860</p>
-                                   <p>México</p>
-                                   <p>{selectedCustomer.rfc}</p>
-                                </div>
-                                <div className="text-right">
-                                   <h3 className="text-2xl font-light text-slate-800 border-b-2 border-slate-200 pb-1 mb-1">Estado de cuentas</h3>
-                                   <p className="text-xs text-slate-500">01 abr 2026 A 30 abr 2026</p>
-                                </div>
-                             </div>
-
-                             <div className="flex justify-end mb-12">
-                                <table className="w-72 text-sm">
-                                   <thead>
-                                      <tr><th colSpan={2} className="bg-slate-100 text-left px-3 py-1 font-bold text-slate-700">Resumen de la cuenta</th></tr>
-                                   </thead>
-                                   <tbody className="text-xs">
-                                      <tr>
-                                         <td className="py-1.5 px-3 border-b border-slate-100 text-slate-600">Saldo de inicio</td>
-                                         <td className="py-1.5 px-3 border-b border-slate-100 text-right font-medium">MXN 0.00</td>
-                                      </tr>
-                                      <tr>
-                                         <td className="py-1.5 px-3 border-b border-slate-100 text-slate-600">Cantidad facturada</td>
-                                         <td className="py-1.5 px-3 border-b border-slate-100 text-right font-medium">MXN 0.00</td>
-                                      </tr>
-                                      <tr>
-                                         <td className="py-1.5 px-3 border-b border-slate-100 text-slate-600">Importe recibido</td>
-                                         <td className="py-1.5 px-3 border-b border-slate-100 text-right font-medium">MXN 0.00</td>
-                                      </tr>
-                                      <tr>
-                                         <td className="py-1.5 px-3 text-slate-600">Saldo adeudado</td>
-                                         <td className="py-1.5 px-3 text-right font-medium">MXN 0.00</td>
-                                      </tr>
-                                   </tbody>
-                                </table>
-                             </div>
-
-                             <table className="w-full text-xs text-left mb-6">
-                                <thead>
-                                   <tr className="bg-slate-700 text-white leading-none">
-                                      <th className="py-2.5 px-3 font-medium">Fecha</th>
-                                      <th className="py-2.5 px-3 font-medium">Transacciones</th>
-                                      <th className="py-2.5 px-3 font-medium">Detalles</th>
-                                      <th className="py-2.5 px-3 font-medium text-right">Cantidad</th>
-                                      <th className="py-2.5 px-3 font-medium text-right">Pagos</th>
-                                      <th className="py-2.5 px-3 font-medium text-right">Saldo</th>
-                                   </tr>
-                                </thead>
-                                <tbody className="text-slate-600 border-b border-slate-200">
-                                   <tr>
-                                      <td className="py-4 px-3 border-b border-slate-100">01 abr 2026</td>
-                                      <td className="py-4 px-3 border-b border-slate-100 font-medium">***Saldo de Inicio***</td>
-                                      <td className="py-4 px-3 border-b border-slate-100"></td>
-                                      <td className="py-4 px-3 border-b border-slate-100 text-right">0.00</td>
-                                      <td className="py-4 px-3 border-b border-slate-100 text-right"></td>
-                                      <td className="py-4 px-3 border-b border-slate-100 text-right">0.00</td>
-                                   </tr>
-                                </tbody>
-                             </table>
-
-                             <div className="flex justify-end pr-3">
-                                <p className="font-bold text-slate-800 text-sm">Saldo adeudado <span className="ml-8 font-medium">MXN 0.00</span></p>
-                             </div>
-
-                          </div>
-                       </div>
-                    </div>
-                 )}
+                    ) : null}
               </div>
            </div>
         </div>
