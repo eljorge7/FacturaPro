@@ -84,8 +84,8 @@ export function Sidebar() {
   }
 
   const isStarter = tier === 'STARTER';
-  const isPro = tier === 'PRO' || tier === 'ENTERPRISE' || tier === 'AGENCY' || !tier;
-  const isEnterprise = tier === 'ENTERPRISE' || tier === 'AGENCY' || !tier;
+  const isPro = tier === 'PRO' || tier === 'ENTERPRISE' || tier === 'CORPORATIVO' || tier === 'AGENCY' || !tier;
+  const isEnterprise = tier === 'ENTERPRISE' || tier === 'CORPORATIVO' || tier === 'AGENCY' || !tier;
 
   let links = [
     { name: "Resumen", href: "/", icon: <LayoutDashboard className="w-5 h-5 shrink-0" /> },
