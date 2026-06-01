@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Plus, Save, Loader2, X, FileEdit, Trash2, ChevronDown, CheckCircle2, MoreHorizontal, Mail, Phone, MapPin, Building, Clock, ArrowUpRight, ArrowDownRight, User, XCircle, Info, FileText } from "lucide-react";
+import { Search, Plus, Save, Loader2, X, FileEdit, Trash2, ChevronDown, CheckCircle2, MoreHorizontal, Mail, Phone, MapPin, Building, Clock, ArrowUpRight, ArrowDownRight, User, XCircle, Info, FileText, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
