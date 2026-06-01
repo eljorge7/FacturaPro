@@ -31,6 +31,9 @@ export default function SettingsPage() {
       syscomClientId: "",
       syscomClientSecret: "",
       mercadopagoAccessToken: "",
+      mercadopagoPointDeviceId: "",
+      recargasApiKey: "",
+      recargasSecretKey: "",
       enableSyscomDropship: false
    });
 
@@ -144,6 +147,9 @@ export default function SettingsPage() {
             syscomClientId: data.syscomClientId || "",
             syscomClientSecret: data.syscomClientSecret || "",
             mercadopagoAccessToken: data.mercadopagoAccessToken || "",
+            mercadopagoPointDeviceId: data.mercadopagoPointDeviceId || "",
+            recargasApiKey: data.recargasApiKey || "",
+            recargasSecretKey: data.recargasSecretKey || "",
             enableSyscomDropship: data.enableSyscomDropship || false
          });
         }
@@ -340,7 +346,7 @@ export default function SettingsPage() {
             body: JSON.stringify(payload)
          });
 
-         if (activeTab === 'store') {
+         if (activeTab === 'store' || activeTab === 'pos') {
             await fetch(`${baseUrl}/store-management/settings`, {
                method: 'PATCH',
                headers: {
@@ -354,6 +360,9 @@ export default function SettingsPage() {
                   syscomClientId: storeSettings.syscomClientId,
                   syscomClientSecret: storeSettings.syscomClientSecret,
                   mercadopagoAccessToken: storeSettings.mercadopagoAccessToken,
+                  mercadopagoPointDeviceId: storeSettings.mercadopagoPointDeviceId,
+                  recargasApiKey: storeSettings.recargasApiKey,
+                  recargasSecretKey: storeSettings.recargasSecretKey,
                   enableSyscomDropship: storeSettings.enableSyscomDropship
                })
             });
@@ -444,6 +453,13 @@ export default function SettingsPage() {
                   className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'store' ? 'bg-emerald-50 text-[#10b981] border-l-4 border-l-[#10b981]' : 'text-slate-600 hover:bg-slate-50 border-l-4 border-l-transparent'}`}
                 >
                    <ShoppingCart className="w-5 h-5"/> Tienda en Línea
+                </button>
+                <div className="h-px bg-slate-100"></div>
+                <button 
+                  onClick={() => setActiveTab('pos')} 
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'pos' ? 'bg-emerald-50 text-[#10b981] border-l-4 border-l-[#10b981]' : 'text-slate-600 hover:bg-slate-50 border-l-4 border-l-transparent'}`}
+                >
+                   <SettingsIcon className="w-5 h-5"/> Integraciones Mostrador
                 </button>
              </div>
           </div>
@@ -1168,6 +1184,54 @@ export default function SettingsPage() {
                                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Access Token (PROD)</label>
                                <input type="password" value={storeSettings.mercadopagoAccessToken} onChange={e => setStoreSettings({...storeSettings, mercadopagoAccessToken: e.target.value})} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-800 font-mono focus:outline-none focus:border-[#10b981]" placeholder="APP_USR-..." />
                                <p className="text-[10px] text-slate-500 mt-1">Este token permite recibir los pagos directamente a tu cuenta.</p>
+                            </div>
+                         </div>
+                      </div>
+                   </div>
+                </div>
+             )}
+
+             {/* POS INTEGRATIONS TAB */}
+             {activeTab === 'pos' && (
+                <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-8 animate-in fade-in">
+                   <h2 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-4 mb-6">Integraciones de Mostrador</h2>
+                   <p className="text-sm text-slate-600 mb-8">Conecta terminales físicas de cobro y proveedores de recargas telefónicas para tu Punto de Venta.</p>
+
+                   <div className="space-y-8">
+                      {/* MercadoPago Point */}
+                      <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-6">
+                         <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-2 text-blue-900">
+                            Terminal Física MercadoPago (Point)
+                         </h3>
+                         <p className="text-xs text-slate-600 mb-4">Ingresa el ID de la terminal (Device ID) que está físicamente en el mostrador para enviarle cobros automáticos.</p>
+                         
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                               <label className="block text-xs font-bold text-slate-600 uppercase mb-2">Access Token (Prod)</label>
+                               <input type="password" value={storeSettings.mercadopagoAccessToken} onChange={e => setStoreSettings({...storeSettings, mercadopagoAccessToken: e.target.value})} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-800 font-mono focus:outline-none focus:border-blue-500" placeholder="APP_USR-..." />
+                            </div>
+                            <div>
+                               <label className="block text-xs font-bold text-slate-600 uppercase mb-2">Point Device ID</label>
+                               <input type="text" value={storeSettings.mercadopagoPointDeviceId} onChange={e => setStoreSettings({...storeSettings, mercadopagoPointDeviceId: e.target.value})} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-800 font-mono focus:outline-none focus:border-blue-500" placeholder="PDV_..." />
+                            </div>
+                         </div>
+                      </div>
+
+                      {/* Recargas Taecel */}
+                      <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-6">
+                         <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-2 text-emerald-900">
+                            Proveedor de Recargas Telefónicas
+                         </h3>
+                         <p className="text-xs text-slate-600 mb-4">Configura tus credenciales de integrador (ej. Taecel) para vender saldo desde el Punto de Venta.</p>
+                         
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                               <label className="block text-xs font-bold text-slate-600 uppercase mb-2">API Key</label>
+                               <input type="password" value={storeSettings.recargasApiKey} onChange={e => setStoreSettings({...storeSettings, recargasApiKey: e.target.value})} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-800 font-mono focus:outline-none focus:border-emerald-500" placeholder="key_..." />
+                            </div>
+                            <div>
+                               <label className="block text-xs font-bold text-slate-600 uppercase mb-2">Secret Key</label>
+                               <input type="password" value={storeSettings.recargasSecretKey} onChange={e => setStoreSettings({...storeSettings, recargasSecretKey: e.target.value})} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-800 font-mono focus:outline-none focus:border-emerald-500" placeholder="sk_..." />
                             </div>
                          </div>
                       </div>

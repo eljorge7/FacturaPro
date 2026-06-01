@@ -948,27 +948,34 @@ export default function PosPage() {
                 <span className="text-4xl font-black text-slate-900 tracking-tight">${total.toLocaleString('en-US', {minimumFractionDigits: 2})} <span className="text-lg text-slate-400">MXN</span></span>
              </div>
 
-             <div className="flex gap-2 mb-6">
+             <div className="grid grid-cols-4 gap-2 mb-6">
                 <button 
                    onClick={() => setPaymentMethod('01')}
-                   className={`flex-1 flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${paymentMethod === '01' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                   className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${paymentMethod === '01' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
                 >
-                   <Banknote className="w-6 h-6 mb-1" />
-                   <span className="text-xs font-bold">Efectivo</span>
+                   <Banknote className="w-5 h-5 mb-1" />
+                   <span className="text-[10px] font-bold">Efectivo</span>
                 </button>
                 <button 
                    onClick={() => setPaymentMethod('04')}
-                   className={`flex-1 flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${paymentMethod === '04' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                   className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${paymentMethod === '04' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
                 >
-                   <CreditCard className="w-6 h-6 mb-1" />
-                   <span className="text-xs font-bold">Tarjeta</span>
+                   <CreditCard className="w-5 h-5 mb-1" />
+                   <span className="text-[10px] font-bold">Tarjeta</span>
+                </button>
+                <button 
+                   onClick={() => setPaymentMethod('MP')}
+                   className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${paymentMethod === 'MP' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                >
+                   <CreditCard className="w-5 h-5 mb-1 text-blue-500" />
+                   <span className="text-[10px] font-bold text-center leading-tight">Mercado Pago</span>
                 </button>
                 <button 
                     onClick={() => { setPaymentMethod('99'); if(!selectedCustomer) setShowCustomerModal(true); }}
-                    className={`flex-1 flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${paymentMethod === '99' ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                    className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${paymentMethod === '99' ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
                  >
-                    <FileText className="w-6 h-6 mb-1" />
-                    <span className="text-xs font-bold">Fiado</span>
+                    <FileText className="w-5 h-5 mb-1" />
+                    <span className="text-[10px] font-bold">Fiado</span>
                  </button>
              </div>
 
