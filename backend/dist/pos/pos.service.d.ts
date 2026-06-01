@@ -43,6 +43,10 @@ export declare class PosService {
             state: string | null;
             tdsEnabled: boolean;
             portalEnabled: boolean;
+            creditEnabled: boolean;
+            creditLimit: number;
+            creditDays: number;
+            creditStatus: string;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -151,5 +155,9 @@ export declare class PosService {
         amount: number;
         reason: string;
         createdAt: Date;
+    }>;
+    authorizeAction(tenantId: string, pin: string): Promise<{
+        authorized: boolean;
+        managerName: string;
     }>;
 }

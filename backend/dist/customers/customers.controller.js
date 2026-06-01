@@ -42,6 +42,15 @@ let CustomersController = class CustomersController {
     remove(id) {
         return this.customersService.remove(id);
     }
+    getCreditStatement(id) {
+        return this.customersService.getCreditStatement(id);
+    }
+    updateCreditConfig(id, body) {
+        return this.customersService.updateCreditConfig(id, body.creditEnabled, body.creditLimit, body.creditDays, body.creditStatus);
+    }
+    registerCreditPayment(id, body) {
+        return this.customersService.registerCreditPayment(id, body.amount, body.paymentMethod, body.notes);
+    }
 };
 exports.CustomersController = CustomersController;
 __decorate([
@@ -87,6 +96,29 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], CustomersController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Get)(':id/credit'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], CustomersController.prototype, "getCreditStatement", null);
+__decorate([
+    (0, common_1.Patch)(':id/credit-config'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], CustomersController.prototype, "updateCreditConfig", null);
+__decorate([
+    (0, common_1.Post)(':id/credit-payment'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], CustomersController.prototype, "registerCreditPayment", null);
 exports.CustomersController = CustomersController = __decorate([
     (0, common_1.Controller)('customers'),
     __metadata("design:paramtypes", [customers_service_1.CustomersService])

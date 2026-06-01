@@ -19,6 +19,8 @@ export declare class ProductsController {
         maxStock: number | null;
         trackInventory: boolean;
         hasSerials: boolean;
+        hasBatches: boolean;
+        soldByWeight: boolean;
         supplierSku: string | null;
         locationShelf: string | null;
         imageUrl: string | null;
@@ -49,6 +51,8 @@ export declare class ProductsController {
                 maxStock: number | null;
                 trackInventory: boolean;
                 hasSerials: boolean;
+                hasBatches: boolean;
+                soldByWeight: boolean;
                 supplierSku: string | null;
                 locationShelf: string | null;
                 imageUrl: string | null;
@@ -97,6 +101,8 @@ export declare class ProductsController {
         maxStock: number | null;
         trackInventory: boolean;
         hasSerials: boolean;
+        hasBatches: boolean;
+        soldByWeight: boolean;
         supplierSku: string | null;
         locationShelf: string | null;
         imageUrl: string | null;
@@ -138,6 +144,8 @@ export declare class ProductsController {
                 maxStock: number | null;
                 trackInventory: boolean;
                 hasSerials: boolean;
+                hasBatches: boolean;
+                soldByWeight: boolean;
                 supplierSku: string | null;
                 locationShelf: string | null;
                 imageUrl: string | null;
@@ -186,6 +194,8 @@ export declare class ProductsController {
         maxStock: number | null;
         trackInventory: boolean;
         hasSerials: boolean;
+        hasBatches: boolean;
+        soldByWeight: boolean;
         supplierSku: string | null;
         locationShelf: string | null;
         imageUrl: string | null;
@@ -214,6 +224,8 @@ export declare class ProductsController {
         maxStock: number | null;
         trackInventory: boolean;
         hasSerials: boolean;
+        hasBatches: boolean;
+        soldByWeight: boolean;
         supplierSku: string | null;
         locationShelf: string | null;
         imageUrl: string | null;
@@ -242,6 +254,8 @@ export declare class ProductsController {
         maxStock: number | null;
         trackInventory: boolean;
         hasSerials: boolean;
+        hasBatches: boolean;
+        soldByWeight: boolean;
         supplierSku: string | null;
         locationShelf: string | null;
         imageUrl: string | null;

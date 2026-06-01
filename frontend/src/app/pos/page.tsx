@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 
 export default function PosPage() {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
   const [products, setProducts] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [carts, setCarts] = useState<any[][]>([[]]);

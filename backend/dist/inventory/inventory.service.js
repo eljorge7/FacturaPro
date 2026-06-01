@@ -28,6 +28,39 @@ let InventoryService = class InventoryService {
             orderBy: { createdAt: 'desc' }
         });
     }
+    async quickReceive(tenantId, payload) {
+        const results = [];
+        for (const item of payload) {
+            if (item.quantity <= 0)
+                continue;
+            const updated = await this.prisma.product.update({
+                where: { id: item.productId },
+                data: { stock: { increment: item.quantity } }
+            });
+            if (item.expiryDate) {
+                await this.prisma.productBatch.create({
+                    data: {
+                        tenantId,
+                        productId: item.productId,
+                        batchNumber: item.batchNumber || null,
+                        expiryDate: new Date(item.expiryDate),
+                        stock: item.quantity
+                    }
+                });
+            }
+            await this.prisma.inventoryMovement.create({
+                data: {
+                    tenantId,
+                    productId: item.productId,
+                    type: 'IN',
+                    quantity: item.quantity,
+                    reference: item.reference || 'Recepción Rápida Mostrador'
+                }
+            });
+            results.push(updated);
+        }
+        return results;
+    }
 };
 exports.InventoryService = InventoryService;
 exports.InventoryService = InventoryService = __decorate([

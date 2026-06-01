@@ -18,6 +18,10 @@ export declare class CustomersService {
         state: string | null;
         tdsEnabled: boolean;
         portalEnabled: boolean;
+        creditEnabled: boolean;
+        creditLimit: number;
+        creditDays: number;
+        creditStatus: string;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -36,6 +40,10 @@ export declare class CustomersService {
         state: string | null;
         tdsEnabled: boolean;
         portalEnabled: boolean;
+        creditEnabled: boolean;
+        creditLimit: number;
+        creditDays: number;
+        creditStatus: string;
         createdAt: Date;
         updatedAt: Date;
     }[]>;
@@ -53,6 +61,10 @@ export declare class CustomersService {
         state: string | null;
         tdsEnabled: boolean;
         portalEnabled: boolean;
+        creditEnabled: boolean;
+        creditLimit: number;
+        creditDays: number;
+        creditStatus: string;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -70,6 +82,10 @@ export declare class CustomersService {
         state: string | null;
         tdsEnabled: boolean;
         portalEnabled: boolean;
+        creditEnabled: boolean;
+        creditLimit: number;
+        creditDays: number;
+        creditStatus: string;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -87,7 +103,109 @@ export declare class CustomersService {
         state: string | null;
         tdsEnabled: boolean;
         portalEnabled: boolean;
+        creditEnabled: boolean;
+        creditLimit: number;
+        creditDays: number;
+        creditStatus: string;
         createdAt: Date;
         updatedAt: Date;
+    }>;
+    updateCreditConfig(id: string, creditEnabled: boolean, creditLimit: number, creditDays: number, creditStatus: string): Promise<{
+        id: string;
+        tenantId: string;
+        legalName: string;
+        rfc: string;
+        taxRegime: string | null;
+        zipCode: string | null;
+        email: string | null;
+        phone: string | null;
+        street: string | null;
+        city: string | null;
+        state: string | null;
+        tdsEnabled: boolean;
+        portalEnabled: boolean;
+        creditEnabled: boolean;
+        creditLimit: number;
+        creditDays: number;
+        creditStatus: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    getCreditStatement(id: string): Promise<{
+        customer: {
+            id: string;
+            name: string;
+            creditEnabled: boolean;
+            creditLimit: number;
+            creditDays: number;
+            creditStatus: string;
+            availableCredit: number;
+            currentDebt: number;
+        };
+        unpaidInvoices: ({
+            items: {
+                id: string;
+                invoiceId: string;
+                productId: string | null;
+                description: string;
+                imageUrl: string | null;
+                quantity: number;
+                unitPrice: number;
+                discount: number;
+                taxRate: number;
+                total: number;
+            }[];
+            payments: {
+                id: string;
+                invoiceId: string;
+                amount: number;
+                paymentDate: Date;
+                paymentMethod: string;
+                reference: string | null;
+                notes: string | null;
+                createdAt: Date;
+            }[];
+        } & {
+            id: string;
+            tenantId: string;
+            taxProfileId: string;
+            customerId: string;
+            quoteId: string | null;
+            invoiceNumber: string;
+            date: Date;
+            dueDate: Date | null;
+            satUuid: string | null;
+            paymentMethod: string | null;
+            paymentForm: string | null;
+            cfdiUse: string | null;
+            subtotal: number;
+            taxTotal: number;
+            tdsTotal: number;
+            total: number;
+            currency: string;
+            exchangeRate: number;
+            cashShiftId: string | null;
+            customFields: import(".prisma/client").Prisma.JsonValue | null;
+            status: string;
+            xmlContent: string | null;
+            pdfUrl: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+        })[];
+    }>;
+    registerCreditPayment(id: string, amount: number, paymentMethod: string, notes?: string): Promise<{
+        success: boolean;
+        amountApplied: number;
+        remainingChange: number;
+        payments: {
+            id: string;
+            invoiceId: string;
+            amount: number;
+            paymentDate: Date;
+            paymentMethod: string;
+            reference: string | null;
+            notes: string | null;
+            createdAt: Date;
+        }[];
     }>;
 }

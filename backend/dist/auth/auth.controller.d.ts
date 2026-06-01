@@ -124,6 +124,7 @@ export declare class AuthController {
                 avatar: string | null;
                 birthDate: Date | null;
                 role: string;
+                posPin: string | null;
                 phone: string | null;
                 companyName: string | null;
                 rfc: string | null;

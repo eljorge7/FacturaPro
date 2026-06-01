@@ -56,6 +56,12 @@ let PosController = class PosController {
             throw new common_1.UnauthorizedException('TenantID missing');
         return this.posService.addMovement(tenantId, req.params.id, payload);
     }
+    async authorizeAction(req, payload) {
+        const tenantId = req.headers['x-tenant-id'];
+        if (!tenantId)
+            throw new common_1.UnauthorizedException('TenantID missing');
+        return this.posService.authorizeAction(tenantId, payload.pin);
+    }
 };
 exports.PosController = PosController;
 __decorate([
@@ -104,6 +110,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], PosController.prototype, "addMovement", null);
+__decorate([
+    (0, common_1.Post)('authorize'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], PosController.prototype, "authorizeAction", null);
 exports.PosController = PosController = __decorate([
     (0, common_1.Controller)('pos'),
     __metadata("design:paramtypes", [pos_service_1.PosService])

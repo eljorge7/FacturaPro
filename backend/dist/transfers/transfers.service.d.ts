@@ -29,6 +29,8 @@ export declare class TransfersService {
                 maxStock: number | null;
                 trackInventory: boolean;
                 hasSerials: boolean;
+                hasBatches: boolean;
+                soldByWeight: boolean;
                 supplierSku: string | null;
                 locationShelf: string | null;
                 imageUrl: string | null;

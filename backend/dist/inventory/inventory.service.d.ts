@@ -18,4 +18,40 @@ export declare class InventoryService {
         userId: string | null;
         createdAt: Date;
     })[]>;
+    quickReceive(tenantId: string, payload: {
+        productId: string;
+        quantity: number;
+        reference: string;
+        batchNumber?: string;
+        expiryDate?: string;
+    }[]): Promise<{
+        id: string;
+        tenantId: string;
+        sku: string | null;
+        barcode: string | null;
+        name: string;
+        description: string | null;
+        price: number;
+        costPrice: number | null;
+        type: string;
+        stock: number;
+        minStock: number;
+        maxStock: number | null;
+        trackInventory: boolean;
+        hasSerials: boolean;
+        hasBatches: boolean;
+        soldByWeight: boolean;
+        supplierSku: string | null;
+        locationShelf: string | null;
+        imageUrl: string | null;
+        currency: string;
+        satProductCode: string | null;
+        satUnitCode: string | null;
+        isPublishedToStore: boolean;
+        storeCategory: string | null;
+        taxIncluded: boolean;
+        taxRate: number;
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>;
 }

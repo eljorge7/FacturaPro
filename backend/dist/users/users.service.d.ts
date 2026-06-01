@@ -10,6 +10,7 @@ export declare class UsersService {
         avatar: string | null;
         birthDate: Date | null;
         role: string;
+        posPin: string | null;
         phone: string | null;
         companyName: string | null;
         rfc: string | null;
@@ -49,6 +50,7 @@ export declare class UsersService {
         avatar: string | null;
         birthDate: Date | null;
         role: string;
+        posPin: string | null;
         phone: string | null;
         companyName: string | null;
         rfc: string | null;
@@ -73,6 +75,7 @@ export declare class UsersService {
         avatar: string | null;
         birthDate: Date | null;
         role: string;
+        posPin: string | null;
         phone: string | null;
         companyName: string | null;
         rfc: string | null;

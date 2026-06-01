@@ -18,6 +18,7 @@ export declare class StockTakesService {
             avatar: string | null;
             birthDate: Date | null;
             role: string;
+            posPin: string | null;
             phone: string | null;
             companyName: string | null;
             rfc: string | null;
@@ -62,6 +63,7 @@ export declare class StockTakesService {
             avatar: string | null;
             birthDate: Date | null;
             role: string;
+            posPin: string | null;
             phone: string | null;
             companyName: string | null;
             rfc: string | null;
@@ -111,6 +113,8 @@ export declare class StockTakesService {
                 maxStock: number | null;
                 trackInventory: boolean;
                 hasSerials: boolean;
+                hasBatches: boolean;
+                soldByWeight: boolean;
                 supplierSku: string | null;
                 locationShelf: string | null;
                 imageUrl: string | null;
@@ -141,6 +145,7 @@ export declare class StockTakesService {
             avatar: string | null;
             birthDate: Date | null;
             role: string;
+            posPin: string | null;
             phone: string | null;
             companyName: string | null;
             rfc: string | null;
@@ -193,6 +198,8 @@ export declare class StockTakesService {
                 maxStock: number | null;
                 trackInventory: boolean;
                 hasSerials: boolean;
+                hasBatches: boolean;
+                soldByWeight: boolean;
                 supplierSku: string | null;
                 locationShelf: string | null;
                 imageUrl: string | null;
@@ -223,6 +230,7 @@ export declare class StockTakesService {
             avatar: string | null;
             birthDate: Date | null;
             role: string;
+            posPin: string | null;
             phone: string | null;
             companyName: string | null;
             rfc: string | null;
@@ -272,6 +280,8 @@ export declare class StockTakesService {
                 maxStock: number | null;
                 trackInventory: boolean;
                 hasSerials: boolean;
+                hasBatches: boolean;
+                soldByWeight: boolean;
                 supplierSku: string | null;
                 locationShelf: string | null;
                 imageUrl: string | null;
@@ -302,6 +312,7 @@ export declare class StockTakesService {
             avatar: string | null;
             birthDate: Date | null;
             role: string;
+            posPin: string | null;
             phone: string | null;
             companyName: string | null;
             rfc: string | null;

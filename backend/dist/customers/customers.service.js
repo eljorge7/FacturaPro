@@ -75,6 +75,90 @@ let CustomersService = class CustomersService {
             where: { id },
         });
     }
+    async updateCreditConfig(id, creditEnabled, creditLimit, creditDays, creditStatus) {
+        await this.findOne(id);
+        return this.prisma.customer.update({
+            where: { id },
+            data: {
+                creditEnabled,
+                creditLimit,
+                creditDays,
+                creditStatus
+            }
+        });
+    }
+    async getCreditStatement(id) {
+        const customer = await this.findOne(id);
+        const unpaidInvoices = await this.prisma.invoice.findMany({
+            where: {
+                customerId: id,
+                paymentMethod: '99',
+                status: 'UNPAID'
+            },
+            orderBy: { date: 'asc' },
+            include: { items: true, payments: true }
+        });
+        let currentDebt = 0;
+        for (const inv of unpaidInvoices) {
+            const paid = inv.payments.reduce((sum, p) => sum + p.amount, 0);
+            currentDebt += (inv.total - paid);
+        }
+        return {
+            customer: {
+                id: customer.id,
+                name: customer.legalName,
+                creditEnabled: customer.creditEnabled,
+                creditLimit: customer.creditLimit,
+                creditDays: customer.creditDays,
+                creditStatus: customer.creditStatus,
+                availableCredit: customer.creditLimit - currentDebt,
+                currentDebt
+            },
+            unpaidInvoices
+        };
+    }
+    async registerCreditPayment(id, amount, paymentMethod, notes) {
+        await this.findOne(id);
+        if (amount <= 0)
+            throw new common_1.BadRequestException('El monto debe ser mayor a 0');
+        const unpaidInvoices = await this.prisma.invoice.findMany({
+            where: { customerId: id, paymentMethod: '99', status: 'UNPAID' },
+            orderBy: { date: 'asc' },
+            include: { payments: true }
+        });
+        let remainingAmount = amount;
+        const paymentsCreated = [];
+        for (const inv of unpaidInvoices) {
+            if (remainingAmount <= 0)
+                break;
+            const alreadyPaid = inv.payments.reduce((sum, p) => sum + p.amount, 0);
+            const debt = inv.total - alreadyPaid;
+            const paymentToApply = Math.min(remainingAmount, debt);
+            const payment = await this.prisma.payment.create({
+                data: {
+                    invoiceId: inv.id,
+                    amount: paymentToApply,
+                    paymentMethod,
+                    notes: notes || 'Abono a cuenta'
+                }
+            });
+            paymentsCreated.push(payment);
+            remainingAmount -= paymentToApply;
+            const newPaid = alreadyPaid + paymentToApply;
+            if (newPaid >= inv.total - 0.01) {
+                await this.prisma.invoice.update({
+                    where: { id: inv.id },
+                    data: { status: 'PAID' }
+                });
+            }
+        }
+        return {
+            success: true,
+            amountApplied: amount - remainingAmount,
+            remainingChange: remainingAmount,
+            payments: paymentsCreated
+        };
+    }
 };
 exports.CustomersService = CustomersService;
 exports.CustomersService = CustomersService = __decorate([

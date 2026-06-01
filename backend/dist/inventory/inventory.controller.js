@@ -21,10 +21,16 @@ let InventoryController = class InventoryController {
         this.inventoryService = inventoryService;
     }
     async getAllMovements(req) {
-        const tenantId = req.headers['x-tenant-id'];
+        const tenantId = req.headers['x-tenant-id'] || req.user?.tenantId;
         if (!tenantId)
             throw new common_1.UnauthorizedException('TenantID missing');
         return this.inventoryService.getAllMovements(tenantId);
+    }
+    async quickReceive(req, payload) {
+        const tenantId = req.headers['x-tenant-id'] || req.user?.tenantId;
+        if (!tenantId)
+            throw new common_1.UnauthorizedException('TenantID missing');
+        return this.inventoryService.quickReceive(tenantId, payload);
     }
 };
 exports.InventoryController = InventoryController;
@@ -35,6 +41,14 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], InventoryController.prototype, "getAllMovements", null);
+__decorate([
+    (0, common_1.Post)('quick-receive'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Array]),
+    __metadata("design:returntype", Promise)
+], InventoryController.prototype, "quickReceive", null);
 exports.InventoryController = InventoryController = __decorate([
     (0, common_1.Controller)('inventory'),
     __metadata("design:paramtypes", [inventory_service_1.InventoryService])

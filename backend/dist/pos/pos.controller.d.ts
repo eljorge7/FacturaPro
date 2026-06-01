@@ -41,6 +41,10 @@ export declare class PosController {
             state: string | null;
             tdsEnabled: boolean;
             portalEnabled: boolean;
+            creditEnabled: boolean;
+            creditLimit: number;
+            creditDays: number;
+            creditStatus: string;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -142,5 +146,11 @@ export declare class PosController {
         amount: number;
         reason: string;
         createdAt: Date;
+    }>;
+    authorizeAction(req: any, payload: {
+        pin: string;
+    }): Promise<{
+        authorized: boolean;
+        managerName: string;
     }>;
 }

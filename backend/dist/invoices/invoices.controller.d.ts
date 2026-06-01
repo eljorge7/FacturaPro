@@ -44,6 +44,10 @@ export declare class InvoicesController {
             state: string | null;
             tdsEnabled: boolean;
             portalEnabled: boolean;
+            creditEnabled: boolean;
+            creditLimit: number;
+            creditDays: number;
+            creditStatus: string;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -125,6 +129,10 @@ export declare class InvoicesController {
             state: string | null;
             tdsEnabled: boolean;
             portalEnabled: boolean;
+            creditEnabled: boolean;
+            creditLimit: number;
+            creditDays: number;
+            creditStatus: string;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -221,6 +229,10 @@ export declare class InvoicesController {
                 state: string | null;
                 tdsEnabled: boolean;
                 portalEnabled: boolean;
+                creditEnabled: boolean;
+                creditLimit: number;
+                creditDays: number;
+                creditStatus: string;
                 createdAt: Date;
                 updatedAt: Date;
             };
@@ -312,6 +324,10 @@ export declare class InvoicesController {
                 state: string | null;
                 tdsEnabled: boolean;
                 portalEnabled: boolean;
+                creditEnabled: boolean;
+                creditLimit: number;
+                creditDays: number;
+                creditStatus: string;
                 createdAt: Date;
                 updatedAt: Date;
             };
@@ -401,6 +417,10 @@ export declare class InvoicesController {
             state: string | null;
             tdsEnabled: boolean;
             portalEnabled: boolean;
+            creditEnabled: boolean;
+            creditLimit: number;
+            creditDays: number;
+            creditStatus: string;
             createdAt: Date;
             updatedAt: Date;
         };

@@ -29,6 +29,10 @@ let PosService = class PosService {
         if (!items || items.length === 0)
             throw new common_1.BadRequestException('El carrito está vacío');
         for (const item of items) {
+            if (item.customFields?.type === 'TOPUP') {
+                console.log(`📡 [MOCK API] Disparando recarga de $${item.unitPrice} para ${item.customFields.provider} (Tel: ${item.customFields.phone})...`);
+                continue;
+            }
             const product = await this.prisma.product.findUnique({
                 where: { id: item.productId },
                 include: { kitComponents: true }
@@ -63,6 +67,23 @@ let PosService = class PosService {
                 if (product.stock < item.quantity) {
                     throw new common_1.BadRequestException(`Inventario insuficiente para ${product.name}. Quedan ${product.stock}`);
                 }
+                if (product.hasBatches) {
+                    let remainingToDeduct = item.quantity;
+                    const batches = await this.prisma.productBatch.findMany({
+                        where: { productId: product.id, stock: { gt: 0 } },
+                        orderBy: { expiryDate: 'asc' }
+                    });
+                    for (const batch of batches) {
+                        if (remainingToDeduct <= 0)
+                            break;
+                        const deductFromThisBatch = Math.min(batch.stock, remainingToDeduct);
+                        await this.prisma.productBatch.update({
+                            where: { id: batch.id },
+                            data: { stock: { decrement: deductFromThisBatch } }
+                        });
+                        remainingToDeduct -= deductFromThisBatch;
+                    }
+                }
                 if (product.hasSerials) {
                     if (!item.serials || item.serials.length !== item.quantity) {
                         throw new common_1.BadRequestException(`Debe proporcionar ${item.quantity} números de serie para ${product.name}`);
@@ -95,37 +116,79 @@ let PosService = class PosService {
                 });
             }
         }
-        let publicoGen = await this.prisma.customer.findFirst({
-            where: { tenantId, rfc: 'XAXX010101000' }
-        });
-        if (!publicoGen) {
-            publicoGen = await this.prisma.customer.create({
-                data: {
-                    tenantId,
-                    legalName: 'PÚBLICO EN GENERAL',
-                    rfc: 'XAXX010101000',
-                    taxRegime: '616'
-                }
+        let customerId;
+        let finalStatus = 'DRAFT';
+        if (paymentMethod === '99') {
+            if (!payload.customerId) {
+                throw new common_1.BadRequestException('Para cobrar a Fiado debe seleccionar un cliente.');
+            }
+            const customer = await this.prisma.customer.findUnique({ where: { id: payload.customerId } });
+            if (!customer)
+                throw new common_1.BadRequestException('Cliente no encontrado.');
+            if (!customer.creditEnabled) {
+                throw new common_1.BadRequestException('El cliente no tiene el crédito habilitado.');
+            }
+            if (customer.creditStatus !== 'ACTIVE') {
+                throw new common_1.BadRequestException('El crédito del cliente está suspendido.');
+            }
+            const purchaseTotal = items.reduce((sum, i) => sum + (i.quantity * i.unitPrice * (1 - (i.discount || 0))), 0);
+            const finalTotal = purchaseTotal * 1.16;
+            const unpaidInvoices = await this.prisma.invoice.findMany({
+                where: { customerId: customer.id, paymentMethod: '99', status: 'UNPAID' },
+                include: { payments: true }
             });
+            let currentDebt = 0;
+            for (const inv of unpaidInvoices) {
+                const paid = inv.payments.reduce((s, p) => s + p.amount, 0);
+                currentDebt += (inv.total - paid);
+            }
+            if (currentDebt + finalTotal > customer.creditLimit) {
+                if (!payload.overridePin) {
+                    throw new common_1.BadRequestException(`Límite de crédito excedido. Disponible: $${(customer.creditLimit - currentDebt).toFixed(2)}. Requiere PIN de Encargado para autorizar.`);
+                }
+                await this.authorizeAction(tenantId, payload.overridePin);
+            }
+            customerId = customer.id;
+            finalStatus = 'UNPAID';
         }
-        return this.invoicesService.create({
+        else {
+            let publicoGen = await this.prisma.customer.findFirst({
+                where: { tenantId, rfc: 'XAXX010101000' }
+            });
+            if (!publicoGen) {
+                publicoGen = await this.prisma.customer.create({
+                    data: {
+                        tenantId,
+                        legalName: 'PÚBLICO EN GENERAL',
+                        rfc: 'XAXX010101000',
+                        taxRegime: '616'
+                    }
+                });
+            }
+            customerId = payload.customerId || publicoGen.id;
+        }
+        const invoice = await this.invoicesService.create({
             tenantId,
-            customerId: publicoGen.id,
+            customerId,
             paymentMethod: paymentMethod || 'PUE',
             paymentForm: paymentForm || '01',
             cfdiUse: 'S01',
             items: items.map((i) => ({
-                productId: i.productId,
+                productId: i.productId.startsWith('virtual-') ? null : i.productId,
                 description: i.description || i.name,
                 quantity: i.quantity,
                 unitPrice: i.unitPrice,
                 discount: i.discount || 0,
-                taxRate: 0.16
+                taxRate: i.taxRate !== undefined ? i.taxRate : 0.16
             })),
-            status: 'DRAFT',
+            status: finalStatus,
             ...(cashShiftId && { cashShiftId }),
             ...(customFields && { customFields })
         });
+        if (paymentForm === '04' || paymentForm === '28') {
+            console.log(`💳 [MOCK API] Enviando cobro de $${invoice.total} a Terminal Point Mercado Pago (Device ID: POS-1)...`);
+        }
+        return invoice;
     }
     async getCurrentShift(tenantId) {
         return this.prisma.cashShift.findFirst({
@@ -216,6 +279,21 @@ let PosService = class PosService {
                 reason: payload.reason
             }
         });
+    }
+    async authorizeAction(tenantId, pin) {
+        if (!pin)
+            throw new common_1.UnauthorizedException('Debe ingresar un PIN');
+        const manager = await this.prisma.user.findFirst({
+            where: {
+                tenantId,
+                posPin: pin,
+                role: { in: ['OWNER', 'ADMIN'] }
+            }
+        });
+        if (!manager) {
+            throw new common_1.UnauthorizedException('PIN incorrecto o usuario sin permisos');
+        }
+        return { authorized: true, managerName: manager.name };
     }
 };
 exports.PosService = PosService;
