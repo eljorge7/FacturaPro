@@ -29,7 +29,7 @@ model Tenant {
   hasApiAccess        Boolean   @default(false)
   hasPosAccess        Boolean   @default(false)
   hasInventoryControl Boolean   @default(false)
-  
+
   // Tienda en Lnea (E-Commerce)
   hasStoreAccess         Boolean @default(false)
   storeEnabled           Boolean @default(false)
@@ -41,10 +41,9 @@ model Tenant {
   enableSyscomDropship   Boolean @default(false)
 
   // Reloj de la Agencia / Reseller
-  agencyId            String?
-  agency              AccountantAgency? @relation(fields: [agencyId], references: [id])
-  memberships         WorkspaceMember[] // Accesos M2M a esta empresa
-
+  agencyId    String?
+  agency      AccountantAgency? @relation(fields: [agencyId], references: [id])
+  memberships WorkspaceMember[] // Accesos M2M a esta empresa
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -74,11 +73,12 @@ model Tenant {
   roles                TenantRole[]
   payrollRuns          PayrollRun[]
   timeOffRequests      TimeOffRequest[]
-  
-  warehouses           Warehouse[]
-  transferOrders       TransferOrder[]
-  stockTakes           StockTake[]
-  proposalTemplates    ProposalTemplate[]
+
+  warehouses        Warehouse[]
+  transferOrders    TransferOrder[]
+  stockTakes        StockTake[]
+  proposalTemplates ProposalTemplate[]
+  productBatches    ProductBatch[]
 }
 
 // ----------------------------------------------------
@@ -86,33 +86,33 @@ model Tenant {
 // ----------------------------------------------------
 
 model AccountantAgency {
-  id               String   @id @default(uuid())
-  name             String   // Razón Social o Nombre del Despacho
-  billingEmail     String   // Correo oficial para cobros
-  stripeCustomerId String?  // Cobro agrupado
+  id               String  @id @default(uuid())
+  name             String // Razón Social o Nombre del Despacho
+  billingEmail     String // Correo oficial para cobros
+  stripeCustomerId String? // Cobro agrupado
 
-  subscriptionTier String   @default("STARTER") // STARTER (50), PRO (100), ENTERPRISE
-  maxTenants       Int      @default(50)
+  subscriptionTier String @default("STARTER") // STARTER (50), PRO (100), ENTERPRISE
+  maxTenants       Int    @default(50)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tenants   Tenant[]        // Empresas bajo su paraguas
-  members   AgencyMember[]  // Staff y socios de la Agencia
-  tasks     AgencyTask[]    // Kanban de tareas
+  tenants Tenant[] // Empresas bajo su paraguas
+  members AgencyMember[] // Staff y socios de la Agencia
+  tasks   AgencyTask[] // Kanban de tareas
 }
 
 model AgencyMember {
-  id        String   @id @default(uuid())
-  agencyId  String
-  userId    String
-  role      String   @default("STAFF") // OWNER, MANAGER, STAFF
+  id       String @id @default(uuid())
+  agencyId String
+  userId   String
+  role     String @default("STAFF") // OWNER, MANAGER, STAFF
 
-  agency    AccountantAgency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agency AccountantAgency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
-  
+
   @@unique([agencyId, userId])
 }
 
@@ -132,23 +132,23 @@ model SubscriptionRequest {
 }
 
 model AgencyTask {
-  id          String   @id @default(uuid())
-  agencyId    String
-  agency      AccountantAgency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  id       String           @id @default(uuid())
+  agencyId String
+  agency   AccountantAgency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
 
   title       String
   description String?
-  status      String   @default("TODO") // TODO, IN_PROGRESS, REVIEW, DONE
+  status      String    @default("TODO") // TODO, IN_PROGRESS, REVIEW, DONE
   dueDate     DateTime?
-  
+
   assignedToId String?
   assignedTo   User?   @relation("TaskAssignee", fields: [assignedToId], references: [id])
 
-  tenantId    String? 
-  tenant      Tenant? @relation(fields: [tenantId], references: [id])
+  tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id])
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ----------------------------------------------------
@@ -163,7 +163,9 @@ model User {
   avatar       String?   @db.Text
   birthDate    DateTime?
   role         String    @default("OWNER") // OWNER, ADMIN, CUSTOM
-  
+
+  posPin String? // NIP numérico (ej. "1234") para autorizaciones en Punto de Venta
+
   // B2B E-Commerce Fields (For CUSTOMER role)
   phone        String?
   companyName  String?
@@ -182,31 +184,31 @@ model User {
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id])
 
-  warehouseId  String?
-  warehouse    Warehouse? @relation("UserWarehouse", fields: [warehouseId], references: [id])
+  warehouseId String?
+  warehouse   Warehouse? @relation("UserWarehouse", fields: [warehouseId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   openedShifts CashShift[] @relation("ShiftOpener")
   closedShifts CashShift[] @relation("ShiftCloser")
-  
+
   agencyMemberships WorkspaceMember[] // Multi-acceso a bóvedas alternas (Por nivel de Tenant)
-  agencyRoles       AgencyMember[]    // Rol de nivel corporativo en despachos
+  agencyRoles       AgencyMember[] // Rol de nivel corporativo en despachos
   assignedTasks     AgencyTask[]      @relation("TaskAssignee")
   stockTakes        StockTake[]       @relation("AssignedStockTakes")
-  
-  employeeProfile   EmployeeProfile?
+
+  employeeProfile EmployeeProfile?
 }
 
 model WorkspaceMember {
-  id        String   @id @default(uuid())
-  userId    String
-  tenantId  String
-  role      String   @default("ACCOUNTANT")
+  id       String @id @default(uuid())
+  userId   String
+  tenantId String
+  role     String @default("ACCOUNTANT")
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -231,9 +233,9 @@ model TaxProfile {
   keyBase64   String? // Llave Privada (.key)
   keyPassword String? // Contraseña de la llave Privada
 
-  fielCerBase64   String? // Certificado FIEL (.cer) para Bóveda SAT
-  fielKeyBase64   String? // Llave Privada FIEL (.key)
-  fielPassword    String? // Contraseña de FIEL
+  fielCerBase64 String? // Certificado FIEL (.cer) para Bóveda SAT
+  fielKeyBase64 String? // Llave Privada FIEL (.key)
+  fielPassword  String? // Contraseña de FIEL
 
   billingEmail String?
   billingPhone String?
@@ -247,25 +249,25 @@ model TaxProfile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  invoices Invoice[]
-  quotes   Quote[]
-  satRequests SatDownloadRequest[]
+  invoices      Invoice[]
+  quotes        Quote[]
+  satRequests   SatDownloadRequest[]
   invoiceSeries InvoiceSeries[]
 }
 
 model InvoiceSeries {
-  id           String @id @default(uuid())
-  tenantId     String
-  tenant       Tenant @relation(fields: [tenantId], references: [id])
-  
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
   taxProfileId String
   taxProfile   TaxProfile @relation(fields: [taxProfileId], references: [id])
 
-  name         String  // Ej. "Facturas Principales"
-  prefix       String  // Ej. "F", "INV="
-  nextFolio    Int     @default(1)
-  isDefault    Boolean @default(false)
-  type         String  @default("INVOICE") // "INVOICE", "QUOTE"
+  name      String // Ej. "Facturas Principales"
+  prefix    String // Ej. "F", "INV="
+  nextFolio Int     @default(1)
+  isDefault Boolean @default(false)
+  type      String  @default("INVOICE") // "INVOICE", "QUOTE"
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -292,6 +294,8 @@ model Product {
   maxStock       Float?
   trackInventory Boolean @default(true)
   hasSerials     Boolean @default(false)
+  hasBatches     Boolean @default(false) // Nuevo: Control de Lotes y Caducidades
+  soldByWeight   Boolean @default(false) // Para báscula (ej. Abarrotes, Frutas, Carnes)
   supplierSku    String?
   locationShelf  String? // Ubicación física en Almacén Ej. Pasillo 3, Anaquel B
   imageUrl       String? // Para fotos de productos
@@ -316,10 +320,26 @@ model Product {
   movements     InventoryMovement[]
   serialNumbers SerialNumber[]
   purchaseItems PurchaseItem[]
-  
+
   warehouseStocks WarehouseStock[]
   transferItems   TransferItem[]
   stockTakeItems  StockTakeItem[]
+  batches         ProductBatch[]
+}
+
+model ProductBatch {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  batchNumber String?  // Lote
+  expiryDate  DateTime // Caducidad
+  stock       Float    @default(0) // Cantidad en este lote específico
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model ProductComponent {
@@ -353,6 +373,12 @@ model Customer {
 
   tdsEnabled    Boolean @default(false)
   portalEnabled Boolean @default(false)
+
+  // Módulo de Fiado (Crédito)
+  creditEnabled Boolean @default(false)
+  creditLimit   Float   @default(0)
+  creditDays    Int     @default(0) // 0 = sin límite de días, 7 = semanal, 15 = quincenal, 30 = mensual
+  creditStatus  String  @default("ACTIVE") // ACTIVE, SUSPENDED
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -388,15 +414,15 @@ model Quote {
   currency String @default("MXN")
 
   // --- CAMPOS PARA PROPUESTAS COMERCIALES ---
-  isProposal      Boolean @default(false)
-  projectName     String?
-  projectScope    String? @db.Text
-  projectNotes    String? @db.Text
-  coordinates     String?
-  personnel       String? @db.Text
-  materials       String? @db.Text
-  coverImageUrl   String?
-  templateId      String?
+  isProposal    Boolean @default(false)
+  projectName   String?
+  projectScope  String? @db.Text
+  projectNotes  String? @db.Text
+  coordinates   String?
+  personnel     String? @db.Text
+  materials     String? @db.Text
+  coverImageUrl String?
+  templateId    String?
   // ------------------------------------------
 
   notes  String?
@@ -422,8 +448,8 @@ model QuoteItem {
   imageUrl    String?
   quantity    Int
   unitPrice   Float
-  discount    Float  @default(0)
-  taxRate     Float  @default(0.16)
+  discount    Float   @default(0)
+  taxRate     Float   @default(0.16)
   total       Float
 }
 
@@ -433,7 +459,7 @@ model QuoteAttachment {
   quote     Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
   fileName  String
   fileUrl   String
-  fileSize  Int?     // bytes
+  fileSize  Int? // bytes
   createdAt DateTime @default(now())
 }
 
@@ -443,7 +469,7 @@ model InvoiceAttachment {
   invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   fileName  String
   fileUrl   String
-  fileSize  Int?     // bytes
+  fileSize  Int? // bytes
   createdAt DateTime @default(now())
 }
 
@@ -508,7 +534,7 @@ model Payment {
   notes         String?
 
   createdAt DateTime @default(now())
-  
+
   bankTransaction BankTransaction?
 }
 
@@ -556,7 +582,7 @@ model SupplierPayment {
   notes         String?
 
   createdAt DateTime @default(now())
-  
+
   bankTransaction BankTransaction?
 }
 
@@ -605,8 +631,8 @@ model InvoiceItem {
   imageUrl    String?
   quantity    Int
   unitPrice   Float
-  discount    Float  @default(0)
-  taxRate     Float  @default(0.16)
+  discount    Float   @default(0)
+  taxRate     Float   @default(0.16)
   total       Float
 }
 
@@ -764,22 +790,22 @@ model CashMovement {
 // ----------------------------------------------------
 
 model SatDownloadRequest {
-  id          String   @id @default(uuid())
-  tenantId    String
+  id           String     @id @default(uuid())
+  tenantId     String
   taxProfileId String
-  taxProfile  TaxProfile @relation(fields: [taxProfileId], references: [id])
+  taxProfile   TaxProfile @relation(fields: [taxProfileId], references: [id])
 
   idSolicitud String   @unique
   requestType String   @default("issued") // issued or received
   periodStart DateTime
   periodEnd   DateTime
-  
-  status      String   @default("PENDING") // PENDING, ACCEPTED, REJECTED, SUCCESS
-  message     String?
-  packageIds  String?  // Ej. "id1,id2"
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  status     String  @default("PENDING") // PENDING, ACCEPTED, REJECTED, SUCCESS
+  message    String?
+  packageIds String? // Ej. "id1,id2"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ----------------------------------------------------
@@ -787,13 +813,13 @@ model SatDownloadRequest {
 // ----------------------------------------------------
 
 model EfosRecord {
-  id               String   @id @default(uuid())
-  rfc              String   @unique
-  nombre           String?  // Razón social del EFO
-  situacion        String?  // Presunto, Definitivo, Desvirtuado
+  id               String    @id @default(uuid())
+  rfc              String    @unique
+  nombre           String? // Razón social del EFO
+  situacion        String? // Presunto, Definitivo, Desvirtuado
   fechaPublicacion DateTime?
-  
-  updatedAt        DateTime @updatedAt
+
+  updatedAt DateTime @updatedAt
 }
 
 // ----------------------------------------------------
@@ -801,42 +827,42 @@ model EfosRecord {
 // ----------------------------------------------------
 
 model BankAccount {
-  id          String   @id @default(uuid())
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
-  name        String   // "BBVA Principal"
-  currency    String   @default("MXN")
-  accountNum  String?
-  balance     Float    @default(0)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  name       String // "BBVA Principal"
+  currency   String  @default("MXN")
+  accountNum String?
+  balance    Float   @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   transactions BankTransaction[]
 }
 
 model BankTransaction {
-  id              String   @id @default(uuid())
-  bankAccountId   String
-  bankAccount     BankAccount @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+  id            String      @id @default(uuid())
+  bankAccountId String
+  bankAccount   BankAccount @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
 
-  date            DateTime
-  amount          Float
-  description     String   // Raw text from bank CSV
-  reference       String?
+  date        DateTime
+  amount      Float
+  description String // Raw text from bank CSV
+  reference   String?
 
-  reconciled      Boolean  @default(false)
-  type            String   // IN (deposit), OUT (withdrawal)
+  reconciled Boolean @default(false)
+  type       String // IN (deposit), OUT (withdrawal)
 
   // Link to FacturaPro Payments
-  paymentId       String?  @unique
-  payment         Payment? @relation(fields: [paymentId], references: [id])
-  
-  supplierPaymentId String? @unique
+  paymentId String?  @unique
+  payment   Payment? @relation(fields: [paymentId], references: [id])
+
+  supplierPaymentId String?          @unique
   supplierPayment   SupplierPayment? @relation(fields: [supplierPaymentId], references: [id])
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 // ----------------------------------------------------
@@ -844,63 +870,63 @@ model BankTransaction {
 // ----------------------------------------------------
 
 model Warehouse {
-  id        String   @id @default(uuid())
-  tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  
-  name      String   // "Bodega Central", "Sucursal Norte"
-  address   String?
-  isDefault Boolean  @default(false)
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
 
-  stocks    WarehouseStock[]
-  transfersFrom TransferOrder[] @relation("FromWarehouse")
-  transfersTo   TransferOrder[] @relation("ToWarehouse")
-  users         User[]          @relation("UserWarehouse")
-  stockTakes    StockTake[]     @relation("WarehouseStockTakes")
+  name      String // "Bodega Central", "Sucursal Norte"
+  address   String?
+  isDefault Boolean @default(false)
+
+  stocks        WarehouseStock[]
+  transfersFrom TransferOrder[]  @relation("FromWarehouse")
+  transfersTo   TransferOrder[]  @relation("ToWarehouse")
+  users         User[]           @relation("UserWarehouse")
+  stockTakes    StockTake[]      @relation("WarehouseStockTakes")
 }
 
 model WarehouseStock {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   warehouseId String
   warehouse   Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
-  
-  productId   String
-  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
-  stock       Float     @default(0)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  stock Float @default(0)
 
   @@unique([warehouseId, productId])
 }
 
 model TransferOrder {
-  id              String   @id @default(uuid())
-  tenantId        String
-  tenant          Tenant   @relation(fields: [tenantId], references: [id])
-  
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
   fromWarehouseId String
   fromWarehouse   Warehouse @relation("FromWarehouse", fields: [fromWarehouseId], references: [id])
-  
-  toWarehouseId   String
-  toWarehouse     Warehouse @relation("ToWarehouse", fields: [toWarehouseId], references: [id])
-  
-  status          String    @default("DRAFT") // DRAFT, IN_TRANSIT, RECEIVED, DISCREPANCY
-  reference       String?
-  issueDate       DateTime  @default(now())
-  receivedDate    DateTime?
-  
-  items           TransferItem[]
+
+  toWarehouseId String
+  toWarehouse   Warehouse @relation("ToWarehouse", fields: [toWarehouseId], references: [id])
+
+  status       String    @default("DRAFT") // DRAFT, IN_TRANSIT, RECEIVED, DISCREPANCY
+  reference    String?
+  issueDate    DateTime  @default(now())
+  receivedDate DateTime?
+
+  items TransferItem[]
 }
 
 model TransferItem {
-  id              String @id @default(uuid())
+  id              String        @id @default(uuid())
   transferOrderId String
   transferOrder   TransferOrder @relation(fields: [transferOrderId], references: [id], onDelete: Cascade)
-  
-  productId       String
-  product         Product @relation(fields: [productId], references: [id])
-  
-  quantity        Float // Cantidad Enviada
-  receivedQty     Float @default(0) // Cantidad Recibida (Confirmada por destino)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  quantity    Float // Cantidad Enviada
+  receivedQty Float @default(0) // Cantidad Recibida (Confirmada por destino)
 }
 
 // ----------------------------------------------------
@@ -908,36 +934,36 @@ model TransferItem {
 // ----------------------------------------------------
 
 model StockTake {
-  id            String   @id @default(uuid())
-  tenantId      String
-  tenant        Tenant   @relation(fields: [tenantId], references: [id])
-  
-  warehouseId   String
-  warehouse     Warehouse @relation("WarehouseStockTakes", fields: [warehouseId], references: [id])
-  
-  status        String   @default("IN_PROGRESS") // IN_PROGRESS, REVIEW, COMPLETED
-  
-  auditorId     String?
-  auditor       User?    @relation("AssignedStockTakes", fields: [auditorId], references: [id])
-  
-  createdAt     DateTime @default(now())
-  completedAt   DateTime?
-  
-  items         StockTakeItem[]
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  warehouseId String
+  warehouse   Warehouse @relation("WarehouseStockTakes", fields: [warehouseId], references: [id])
+
+  status String @default("IN_PROGRESS") // IN_PROGRESS, REVIEW, COMPLETED
+
+  auditorId String?
+  auditor   User?   @relation("AssignedStockTakes", fields: [auditorId], references: [id])
+
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  items StockTakeItem[]
 }
 
 model StockTakeItem {
-  id            String @id @default(uuid())
-  stockTakeId   String
-  stockTake     StockTake @relation(fields: [stockTakeId], references: [id], onDelete: Cascade)
-  
-  productId     String
-  product       Product @relation(fields: [productId], references: [id])
-  
-  expectedQty   Float  // Cantidad teórica al momento de generar la auditoría
-  countedQty    Float? // Cantidad ingresada por el auditor (a ciegas)
-  discrepancy   Float? // Diferencia (countedQty - expectedQty)
-  applied       Boolean @default(false)
+  id          String    @id @default(uuid())
+  stockTakeId String
+  stockTake   StockTake @relation(fields: [stockTakeId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  expectedQty Float // Cantidad teórica al momento de generar la auditoría
+  countedQty  Float? // Cantidad ingresada por el auditor (a ciegas)
+  discrepancy Float? // Diferencia (countedQty - expectedQty)
+  applied     Boolean @default(false)
 }
 
 // ----------------------------------------------------
@@ -945,53 +971,53 @@ model StockTakeItem {
 // ----------------------------------------------------
 
 model Department {
-  id          String   @id @default(uuid())
+  id          String  @id @default(uuid())
   tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  tenant      Tenant  @relation(fields: [tenantId], references: [id])
   name        String
   description String?
-  
-  employees   EmployeeProfile[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  employees EmployeeProfile[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([tenantId, name])
 }
 
 model EmployeeProfile {
-  id             String @id @default(uuid())
-  tenantId       String
-  tenant         Tenant @relation(fields: [tenantId], references: [id])
-  
-  documents      EmployeeDocument[]
-  payslips       Payslip[]
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  documents       EmployeeDocument[]
+  payslips        Payslip[]
   timeOffRequests TimeOffRequest[]
-  
+
   // Enlace Opcional al Acceso del Sistema (Si usan el ERP)
-  userId         String? @unique 
-  user           User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId String? @unique
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   // Datos Personales
-  firstName      String
-  lastName       String
-  phone          String?
-  email          String?
-  
+  firstName String
+  lastName  String
+  phone     String?
+  email     String?
+
   // Información Corporativa y de Gafete
   employeeNumber String? // Número de Empleado interno
   department     String? // Texto libre anterior (Deprecado)
-  departmentId   String? 
+  departmentId   String?
   departmentRef  Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   jobTitle       String? // Ej. Cajero Principal, Mecánico A
-  employeeType   String  @default("DIRECT") // DIRECT vs CONTRACTOR
-  
+  employeeType   String      @default("DIRECT") // DIRECT vs CONTRACTOR
+
   // Cimientos de Nómina (Timbrado CFDI 4.0 Futuro)
-  rfc            String? 
-  curp           String?
-  nss            String? 
-  baseSalary     Float?  @default(0) // Salario Diario Base / Mensual
-  
+  rfc        String?
+  curp       String?
+  nss        String?
+  baseSalary Float?  @default(0) // Salario Diario Base / Mensual
+
   // Archivo Corporativo Médico y de Uniforme
   avatarUrl        String? @db.Text
   shirtSize        String?
@@ -999,21 +1025,21 @@ model EmployeeProfile {
   shoeSize         String?
   bloodType        String?
   emergencyContact String?
-  
-  hireDate       DateTime?
-  isActive       Boolean @default(true)
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  hireDate DateTime?
+  isActive Boolean   @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model EmployeeDocument {
-  id               String          @id @default(uuid())
-  employeeId       String
-  employee         EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  name             String          // Ej. "Contrato Juan 2020" o "INE"
-  fileUrl          String          @db.Text
-  uploadedAt       DateTime        @default(now())
+  id         String          @id @default(uuid())
+  employeeId String
+  employee   EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  name       String // Ej. "Contrato Juan 2020" o "INE"
+  fileUrl    String          @db.Text
+  uploadedAt DateTime        @default(now())
 }
 
 model PayrollRun {
@@ -1025,31 +1051,31 @@ model PayrollRun {
   paymentDate DateTime?
   status      String    @default("DRAFT") // DRAFT, PAID
   totalAmount Float     @default(0)
-  
-  payslips    Payslip[]
-  
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+
+  payslips Payslip[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Payslip {
-  id               String          @id @default(uuid())
-  payrollRunId     String
-  payrollRun       PayrollRun      @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
-  
-  employeeId       String
-  employee         EmployeeProfile @relation(fields: [employeeId], references: [id])
-  
-  baseSalary       Float           @default(0)
-  bonuses          Float           @default(0)
-  deductions       Float           @default(0)
-  netPay           Float           @default(0)
-  
-  status           String          @default("DRAFT") // DRAFT, PAID
-  auditSignature   String?         // Firma hash encriptada para probar que no se alteró post-pago
-  
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  id           String     @id @default(uuid())
+  payrollRunId String
+  payrollRun   PayrollRun @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+
+  employeeId String
+  employee   EmployeeProfile @relation(fields: [employeeId], references: [id])
+
+  baseSalary Float @default(0)
+  bonuses    Float @default(0)
+  deductions Float @default(0)
+  netPay     Float @default(0)
+
+  status         String  @default("DRAFT") // DRAFT, PAID
+  auditSignature String? // Firma hash encriptada para probar que no se alteró post-pago
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ----------------------------------------------------
@@ -1057,20 +1083,20 @@ model Payslip {
 // ----------------------------------------------------
 
 model TenantRole {
-  id          String   @id @default(uuid())
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  
-  name        String   // Ej. "Vendedor Jr.", "Jefe de Taller"
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  name        String // Ej. "Vendedor Jr.", "Jefe de Taller"
   description String?
-  
-  permissions String   @db.Text // JSON string: '["view_sales", "create_audit"]'
-  isSystem    Boolean  @default(false)
-  
-  users       User[]
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+  permissions String  @db.Text // JSON string: '["view_sales", "create_audit"]'
+  isSystem    Boolean @default(false)
+
+  users User[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ----------------------------------------------------
@@ -1078,46 +1104,44 @@ model TenantRole {
 // ----------------------------------------------------
 
 model TimeOffRequest {
-  id          String   @id @default(uuid())
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  
-  employeeId  String
-  employee    EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  
-  type        String   // VACATION, SICK_LEAVE, BEREAVEMENT, MATERNITY_PATERNITY, UNPAID_LEAVE, SPECIAL
-  startDate   DateTime
-  endDate     DateTime
-  
-  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
-  reason      String?  @db.Text
-  adminNotes  String?  @db.Text
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  employeeId String
+  employee   EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  type      String // VACATION, SICK_LEAVE, BEREAVEMENT, MATERNITY_PATERNITY, UNPAID_LEAVE, SPECIAL
+  startDate DateTime
+  endDate   DateTime
+
+  status       String  @default("PENDING") // PENDING, APPROVED, REJECTED
+  reason       String? @db.Text
+  adminNotes   String? @db.Text
   deductedDays Float   @default(0)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
-
-
 
 // ----------------------------------------------------
 // PROPUESTAS COMERCIALES Y PLANTILLAS
 // ----------------------------------------------------
 
 model ProposalTemplate {
-  id          String   @id @default(uuid())
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
   name        String
   description String?
-  
-  defaultScope    String? @db.Text
-  defaultNotes    String? @db.Text
+
+  defaultScope     String? @db.Text
+  defaultNotes     String? @db.Text
   defaultPersonnel String? @db.Text
   defaultMaterials String? @db.Text
-  coverImageUrl   String?
-  
+  coverImageUrl    String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -1127,67 +1151,67 @@ model ProposalTemplate {
 // ----------------------------------------------------
 
 model StoreProduct {
-  id          String   @id @default(uuid())
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
 
   title       String
-  description String?  @db.Text
+  description String? @db.Text
   price       Float
-  stock       Int      @default(0)
+  stock       Int     @default(0)
   imageUrl    String?
   category    String?
   brand       String?
-  source      String   @default("local") // local, syscom
-  syscomId    String?  // Id in Syscom if applicable
-  satKey      String?  @default("43222609")
+  source      String  @default("local") // local, syscom
+  syscomId    String? // Id in Syscom if applicable
+  satKey      String? @default("43222609")
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model StoreOrder {
-  id              String   @id @default(uuid())
-  tenantId        String
-  tenant          Tenant   @relation(fields: [tenantId], references: [id])
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
 
-  customerId      String?
-  customerName    String
-  customerPhone   String
-  
+  customerId    String?
+  customerName  String
+  customerPhone String
+
   // Structured Shipping Address
-  street          String?
-  exteriorNum     String?
-  neighborhood    String?
-  zipCode         String?
-  city            String?
-  state           String?
-  references      String?  @db.Text
-  
+  street       String?
+  exteriorNum  String?
+  neighborhood String?
+  zipCode      String?
+  city         String?
+  state        String?
+  references   String? @db.Text
+
   // Billing Data
-  billingRfc      String?
-  billingName     String?
+  billingRfc  String?
+  billingName String?
 
-  totalAmount     Float
-  status          String   @default("PENDING") // PENDING, PAID, SHIPPED, DELIVERED, CANCELLED
-  isFacturado     Boolean  @default(false)
-  reminderSent    Boolean  @default(false)
+  totalAmount  Float
+  status       String  @default("PENDING") // PENDING, PAID, SHIPPED, DELIVERED, CANCELLED
+  isFacturado  Boolean @default(false)
+  reminderSent Boolean @default(false)
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  items           StoreOrderItem[]
+  items StoreOrderItem[]
 }
 
 model StoreOrderItem {
-  id          String     @id @default(uuid())
-  orderId     String
-  order       StoreOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  id      String     @id @default(uuid())
+  orderId String
+  order   StoreOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  productId   String?
-  syscomId    String?
-  title       String
-  price       Float
-  quantity    Int
-  satKey      String?
+  productId String?
+  syscomId  String?
+  title     String
+  price     Float
+  quantity  Int
+  satKey    String?
 }

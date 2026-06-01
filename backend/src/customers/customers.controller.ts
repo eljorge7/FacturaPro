@@ -37,4 +37,27 @@ export class CustomersController {
   remove(@Param('id') id: string) {
     return this.customersService.remove(id);
   }
+
+  // --- MÓDULO DE FIADO ---
+
+  @Get(':id/credit')
+  getCreditStatement(@Param('id') id: string) {
+    return this.customersService.getCreditStatement(id);
+  }
+
+  @Patch(':id/credit-config')
+  updateCreditConfig(
+    @Param('id') id: string,
+    @Body() body: { creditEnabled: boolean; creditLimit: number; creditDays: number; creditStatus: string }
+  ) {
+    return this.customersService.updateCreditConfig(id, body.creditEnabled, body.creditLimit, body.creditDays, body.creditStatus);
+  }
+
+  @Post(':id/credit-payment')
+  registerCreditPayment(
+    @Param('id') id: string,
+    @Body() body: { amount: number; paymentMethod: string; notes?: string }
+  ) {
+    return this.customersService.registerCreditPayment(id, body.amount, body.paymentMethod, body.notes);
+  }
 }

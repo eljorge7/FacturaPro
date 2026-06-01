@@ -24,6 +24,11 @@ export default function CustomersPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Credit Statement State
+  const [creditStatement, setCreditStatement] = useState<any>(null);
+  const [paymentAmount, setPaymentAmount] = useState<string>("");
+  const [paymentMethod, setPaymentMethod] = useState("01");
+
   // Form Fields
   const [legalName, setLegalName] = useState("");
   const [rfc, setRfc] = useState("");
@@ -46,6 +51,25 @@ export default function CustomersPage() {
     router.push(`/customers/${customer.id}/edit`);
   };
 
+  const loadCreditStatement = async (custId: string) => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
+      const res = await fetch(`${baseUrl}/customers/${custId}/credit`);
+      if (res.ok) {
+         setCreditStatement(await res.json());
+      }
+    } catch(e) {}
+  };
+
+  const handleSelectCustomer = (c: any) => {
+     setSelectedCustomer(c);
+     if (c) {
+        loadCreditStatement(c.id);
+     } else {
+        setCreditStatement(null);
+     }
+  };
+
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`¿Eliminar al cliente ${name}? Se perderá la relación si no tiene facturas activas.`)) return;
     try {
@@ -59,7 +83,7 @@ export default function CustomersPage() {
       }
       
       fetchCustomers();
-      if(selectedCustomer && selectedCustomer.id === id) setSelectedCustomer(null);
+      if(selectedCustomer && selectedCustomer.id === id) handleSelectCustomer(null);
     } catch (e) {
       console.error("Error al eliminar", e);
       alert("Hubo un problema de conexión al intentar eliminar.");
@@ -74,7 +98,7 @@ export default function CustomersPage() {
       setCustomers(data);
       if (selectedCustomer) {
          const updated = data.find((c: any) => c.id === selectedCustomer.id);
-         if (updated) setSelectedCustomer(updated);
+         if (updated) handleSelectCustomer(updated);
       }
     } catch (e) {
       console.error(e);
@@ -249,7 +273,7 @@ export default function CustomersPage() {
               </thead>
               <tbody className="text-sm">
                  {filteredCustomers.map(c => (
-                    <tr key={c.id} onClick={() => setSelectedCustomer(c)} className={`border-b border-slate-100 cursor-pointer transition-colors group ${selectedIds.includes(c.id) ? 'bg-blue-50/50' : 'hover:bg-slate-50'}`}>
+                    <tr key={c.id} onClick={() => handleSelectCustomer(c)} className={`border-b border-slate-100 cursor-pointer transition-colors group ${selectedIds.includes(c.id) ? 'bg-blue-50/50' : 'hover:bg-slate-50'}`}>
                        <td className="py-4 px-6" onClick={(e) => toggleSelect(e, c.id)}>
                           <input type="checkbox" checked={selectedIds.includes(c.id)} onChange={() => {}} className="rounded border-slate-300" />
                        </td>
@@ -283,12 +307,12 @@ export default function CustomersPage() {
        <div className="flex items-center px-4 py-3 bg-white border-b border-slate-200 shrink-0 shadow-sm z-20">
            <div className="w-[320px] flex items-center gap-2 border-r border-slate-200">
               <button 
-                onClick={() => setSelectedCustomer(null)} 
+                onClick={() => handleSelectCustomer(null)} 
                 className="flex items-center gap-1 text-[15px] font-medium text-slate-800 hover:bg-slate-50 px-2 py-1 rounded transition-colors"
               >
                  Clientes activos <ChevronDown className="w-4 h-4 text-slate-400" />
               </button>
-              <button onClick={() => setSelectedCustomer(null)} className="ml-auto mr-4 text-slate-400 hover:bg-slate-100 p-1 rounded">
+              <button onClick={() => handleSelectCustomer(null)} className="ml-auto mr-4 text-slate-400 hover:bg-slate-100 p-1 rounded">
                  <XCircle className="w-5 h-5"/>
               </button>
            </div>
@@ -325,7 +349,7 @@ export default function CustomersPage() {
               {filteredCustomers.map(c => (
                  <div 
                     key={c.id} 
-                    onClick={() => setSelectedCustomer(c)}
+                    onClick={() => handleSelectCustomer(c)}
                     className={`p-4 border-b border-slate-100 cursor-pointer flex justify-between group ${selectedCustomer.id === c.id ? 'bg-[#f8fafc] border-l-4 border-l-[#10b981]' : 'hover:bg-slate-50 border-l-4 border-l-transparent'}`}
                  >
                     <div className="space-y-1 overflow-hidden pr-2">
@@ -607,14 +631,182 @@ export default function CustomersPage() {
                              <div className="relative pl-6">
                                 <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-slate-300 border-2 border-white"></div>
                                 <p className="text-sm text-slate-700"><span className="font-bold">Cliente Agregado</span> ({selectedCustomer.legalName})</p>
-                                <p className="text-xs text-slate-400 mt-1">Hace 2 días por Sistema</p>
+                                 <p className="text-xs text-slate-400 mt-1">Hace 2 días por Sistema</p>
                              </div>
                              </div>
                              <div className="absolute bottom-0 -left-[5px] w-2 h-2 rounded-full bg-slate-200"></div>
                           </div>
                        </div>
+                       
+                       {/* ESTADO DE CUENTA ACTUAL (FIADO) */}
+                       <div className="bg-[#f3f4f6] -mt-8 -mx-8 sm:p-8 flex justify-center items-start min-h-[calc(100vh-140px)]">
+                          <div className="w-full max-w-4xl bg-white shadow-lg border border-slate-200 rounded-xl overflow-hidden">
+                             
+                             {/* HEADER DE FIADO */}
+                             <div className="bg-slate-900 px-8 py-6 text-white flex justify-between items-center">
+                                <div>
+                                   <h2 className="text-2xl font-black flex items-center gap-2">
+                                      <FileText className="w-6 h-6 text-emerald-400" />
+                                      Estado de Cuenta: Crédito (Fiado)
+                                   </h2>
+                                   <p className="text-slate-400 text-sm mt-1">Saldos pendientes y abonos de tickets de mostrador</p>
+                                </div>
+                                <div className="text-right">
+                                   <p className="text-sm text-slate-400 font-bold uppercase tracking-wider mb-1">Adeudo Total</p>
+                                   <p className="text-3xl font-black text-rose-400">
+                                      ${creditStatement ? creditStatement.customer.currentDebt.toLocaleString('en-US', {minimumFractionDigits: 2}) : '0.00'}
+                                   </p>
+                                </div>
+                             </div>
+
+                             {!creditStatement ? (
+                                <div className="p-12 text-center text-slate-500">
+                                   <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+                                   <p>Cargando estado de cuenta...</p>
+                                </div>
+                             ) : !creditStatement.customer.creditEnabled ? (
+                                <div className="p-12 text-center text-slate-500">
+                                   <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                      <AlertTriangle className="w-8 h-8 text-slate-400" />
+                                   </div>
+                                   <h3 className="text-xl font-bold text-slate-800 mb-2">Crédito no habilitado</h3>
+                                   <p className="max-w-md mx-auto">Este cliente no tiene el módulo de Fiado activo. Ve a la pestaña Editar > Crédito (Fiado) para activarlo.</p>
+                                   <button onClick={() => openEdit(selectedCustomer)} className="mt-6 bg-[#2563eb] hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold">Ir a Configuración</button>
+                                </div>
+                             ) : (
+                                <div className="p-8">
+                                   
+                                   {/* RESUMEN DE LÍMITES */}
+                                   <div className="grid grid-cols-3 gap-6 mb-8">
+                                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                                         <p className="text-xs text-slate-500 font-bold uppercase mb-1">Límite de Crédito</p>
+                                         <p className="text-xl font-black text-slate-800">${creditStatement.customer.creditLimit.toLocaleString('en-US', {minimumFractionDigits:2})}</p>
+                                      </div>
+                                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                                         <p className="text-xs text-slate-500 font-bold uppercase mb-1">Crédito Disponible</p>
+                                         <p className={`text-xl font-black ${creditStatement.customer.availableCredit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                            ${creditStatement.customer.availableCredit.toLocaleString('en-US', {minimumFractionDigits:2})}
+                                         </p>
+                                      </div>
+                                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                                         <p className="text-xs text-slate-500 font-bold uppercase mb-1">Estado</p>
+                                         {creditStatement.customer.creditStatus === 'ACTIVE' ? (
+                                            <div className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md text-sm font-bold">
+                                               <CheckCircle2 className="w-4 h-4"/> Activo
+                                            </div>
+                                         ) : (
+                                            <div className="inline-flex items-center gap-1.5 bg-rose-100 text-rose-700 px-2 py-1 rounded-md text-sm font-bold">
+                                               <AlertTriangle className="w-4 h-4"/> Suspendido
+                                            </div>
+                                         )}
+                                      </div>
+                                   </div>
+
+                                   {/* ABONAR */}
+                                   {creditStatement.customer.currentDebt > 0 && (
+                                      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 mb-8 flex gap-6 items-center">
+                                         <div className="flex-1">
+                                            <h3 className="text-lg font-bold text-blue-900 mb-1">Registrar Abono</h3>
+                                            <p className="text-sm text-blue-700">Ingresa la cantidad para abonar a la cuenta. Se liquidarán los tickets más antiguos primero.</p>
+                                         </div>
+                                         <div className="flex items-center gap-3 w-max">
+                                            <select 
+                                               value={paymentMethod} 
+                                               onChange={e => setPaymentMethod(e.target.value)}
+                                               className="w-32 bg-white border border-blue-200 rounded-xl px-3 py-3 text-sm font-bold text-slate-700 focus:outline-none focus:border-blue-500"
+                                            >
+                                               <option value="01">Efectivo</option>
+                                               <option value="04">Tarjeta</option>
+                                               <option value="03">Transferencia</option>
+                                            </select>
+                                            <div className="relative w-40">
+                                               <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
+                                               <input 
+                                                  type="number"
+                                                  value={paymentAmount}
+                                                  onChange={e => setPaymentAmount(e.target.value)}
+                                                  placeholder="0.00"
+                                                  className="w-full pl-8 pr-4 py-3 bg-white border border-blue-200 rounded-xl font-bold text-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                               />
+                                            </div>
+                                            <button 
+                                               disabled={isSaving || !paymentAmount || Number(paymentAmount) <= 0}
+                                               onClick={async () => {
+                                                  if (!paymentAmount || Number(paymentAmount) <= 0) return;
+                                                  setIsSaving(true);
+                                                  try {
+                                                    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
+                                                    const res = await fetch(`${baseUrl}/customers/${selectedCustomer.id}/credit-payment`, {
+                                                      method: "POST",
+                                                      headers: { "Content-Type": "application/json" },
+                                                      body: JSON.stringify({ amount: Number(paymentAmount), paymentMethod })
+                                                    });
+                                                    if (res.ok) {
+                                                       setPaymentAmount("");
+                                                       loadCreditStatement(selectedCustomer.id);
+                                                       alert("Abono registrado con éxito. Se liquidaron las facturas correspondientes.");
+                                                    } else {
+                                                       const err = await res.json().catch(()=>({}));
+                                                       alert(err.message || "Error al registrar abono");
+                                                    }
+                                                  } catch(e) {
+                                                     alert("Error de red");
+                                                  } finally {
+                                                    setIsSaving(false);
+                                                  }
+                                               }}
+                                               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                            >
+                                               {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : "Abonar"}
+                                            </button>
+                                         </div>
+                                      </div>
+                                   )}
+
+                                   {/* TABLA DE DEUDAS */}
+                                   <h3 className="text-lg font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2">Tickets Pendientes de Pago</h3>
+                                   {creditStatement.unpaidInvoices.length === 0 ? (
+                                      <div className="text-center py-12 bg-slate-50 border border-dashed border-slate-200 rounded-xl">
+                                         <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
+                                         <p className="text-lg font-bold text-slate-700">El cliente no tiene deudas activas.</p>
+                                      </div>
+                                   ) : (
+                                      <table className="w-full text-left text-sm">
+                                         <thead>
+                                            <tr className="bg-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
+                                               <th className="py-3 px-4 rounded-tl-lg">Fecha / Hora</th>
+                                               <th className="py-3 px-4">Total Ticket</th>
+                                               <th className="py-3 px-4">Abonos</th>
+                                               <th className="py-3 px-4 text-right rounded-tr-lg">Resta</th>
+                                            </tr>
+                                         </thead>
+                                         <tbody>
+                                            {creditStatement.unpaidInvoices.map((inv: any) => {
+                                               const paid = inv.payments.reduce((s: number, p: any) => s + p.amount, 0);
+                                               const debt = inv.total - paid;
+                                               return (
+                                                  <tr key={inv.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                                     <td className="py-4 px-4 font-medium text-slate-700">
+                                                        {new Date(inv.date).toLocaleString()}
+                                                     </td>
+                                                     <td className="py-4 px-4 text-slate-600 font-medium">${inv.total.toLocaleString('en-US', {minimumFractionDigits:2})}</td>
+                                                     <td className="py-4 px-4">
+                                                        <span className="text-emerald-600 font-bold">${paid.toLocaleString('en-US', {minimumFractionDigits:2})}</span>
+                                                     </td>
+                                                     <td className="py-4 px-4 text-right">
+                                                        <span className="text-rose-600 font-black">${debt.toLocaleString('en-US', {minimumFractionDigits:2})}</span>
+                                                     </td>
+                                                  </tr>
+                                               );
+                                            })}
+                                         </tbody>
+                                      </table>
+                                   )}
+                                </div>
+                             )}
+                          </div>
+                       </div>
                     </div>
-                 </div>
                  ) : (
                     /* ESTADO DE CUENTA MOCK PDF */
                     <div className="bg-[#f3f4f6] -mt-8 -mx-8 sm:p-8 flex justify-center items-start min-h-[calc(100vh-140px)]">

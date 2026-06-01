@@ -71,6 +71,12 @@ export default function EditCustomerPage() {
     street: '',
     city: '',
     state: '',
+    
+    // TAB: Fiado
+    creditEnabled: false,
+    creditLimit: 0,
+    creditDays: 0,
+    creditStatus: 'ACTIVE',
   });
 
   useEffect(() => {
@@ -95,6 +101,10 @@ export default function EditCustomerPage() {
                  state: data.state || '',
                  tdsEnabled: !!data.tdsEnabled,
                  portalEnabled: !!data.portalEnabled,
+                 creditEnabled: !!data.creditEnabled,
+                 creditLimit: data.creditLimit || 0,
+                 creditDays: data.creditDays || 0,
+                 creditStatus: data.creditStatus || 'ACTIVE',
               }));
            }
         } catch (e) {
@@ -168,6 +178,18 @@ export default function EditCustomerPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
+      });
+
+      // Guardar también la configuración de Fiado
+      await fetch(`${baseUrl}/customers/${customerId}/credit-config`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          creditEnabled: formData.creditEnabled,
+          creditLimit: Number(formData.creditLimit),
+          creditDays: Number(formData.creditDays),
+          creditStatus: formData.creditStatus
+        }),
       });
 
       if (response.ok) {
@@ -358,6 +380,9 @@ export default function EditCustomerPage() {
                <button onClick={()=>setActiveTab('contacto')} className={`pb-3 px-2 mr-8 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'contacto' ? 'border-[#2563eb] text-[#2563eb]' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
                   Personas de contacto
                </button>
+               <button onClick={()=>setActiveTab('fiado')} className={`pb-3 px-2 mr-8 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'fiado' ? 'border-[#10b981] text-[#10b981]' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
+                  Crédito (Fiado)
+               </button>
                <button onClick={()=>setActiveTab('campos')} className={`pb-3 px-2 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'campos' ? 'border-[#2563eb] text-[#2563eb]' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
                   Campos personalizados
                </button>
@@ -486,7 +511,49 @@ export default function EditCustomerPage() {
                   </div>
                )}
 
-               {activeTab !== 'otros' && activeTab !== 'direccion' && (
+               {activeTab === 'fiado' && (
+                  <div className="space-y-6 max-w-2xl animate-in fade-in">
+                     <div className="bg-slate-50 border border-slate-200 rounded-lg p-6 space-y-6">
+                        <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+                           <div>
+                              <h3 className="text-sm font-bold text-slate-800">Crédito a Cliente (Fiado)</h3>
+                              <p className="text-xs text-slate-500 mt-1">Permite que este cliente compre a crédito en el Punto de Venta.</p>
+                           </div>
+                           <label className="relative inline-flex items-center cursor-pointer">
+                              <input type="checkbox" className="sr-only peer" checked={formData.creditEnabled} onChange={e => setFormData({...formData, creditEnabled: e.target.checked})} />
+                              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                           </label>
+                        </div>
+                        
+                        {formData.creditEnabled && (
+                           <div className="grid grid-cols-2 gap-6 pt-2">
+                              <div className="space-y-2">
+                                 <label className="text-sm font-bold text-slate-700">Límite de Crédito ($)</label>
+                                 <input type="number" value={formData.creditLimit} onChange={e => setFormData({...formData, creditLimit: Number(e.target.value)})} placeholder="Ej. 1000" className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-emerald-500 font-medium" />
+                              </div>
+                              <div className="space-y-2">
+                                 <label className="text-sm font-bold text-slate-700">Plazo máximo (Días)</label>
+                                 <select value={formData.creditDays} onChange={e => setFormData({...formData, creditDays: Number(e.target.value)})} className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-emerald-500 font-medium cursor-pointer">
+                                    <option value="0">Sin límite de días</option>
+                                    <option value="7">Semanal (7 días)</option>
+                                    <option value="15">Quincenal (15 días)</option>
+                                    <option value="30">Mensual (30 días)</option>
+                                 </select>
+                              </div>
+                              <div className="space-y-2 col-span-2">
+                                 <label className="text-sm font-bold text-slate-700">Estado del Crédito</label>
+                                 <select value={formData.creditStatus} onChange={e => setFormData({...formData, creditStatus: e.target.value})} className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-emerald-500 font-medium cursor-pointer">
+                                    <option value="ACTIVE">Activo - Puede seguir comprando</option>
+                                    <option value="SUSPENDED">Suspendido - Bloqueado por falta de pago</option>
+                                 </select>
+                              </div>
+                           </div>
+                        )}
+                     </div>
+                  </div>
+               )}
+
+               {activeTab !== 'otros' && activeTab !== 'direccion' && activeTab !== 'fiado' && (
                   <div className="py-12 flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-slate-400">
                      <FileText className="w-10 h-10 mb-2 opacity-50" />
                      <p className="font-medium text-sm">Contenido en construcción para la pestaña: {activeTab}</p>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-import { Search, ShoppingCart, CheckCircle, CreditCard, Banknote, Trash2, Tag, Box, X, AlertTriangle, Plus } from "lucide-react";
+import { Search, ShoppingCart, CheckCircle, CreditCard, Banknote, Trash2, Tag, Box, X, AlertTriangle, Plus, FileText, User } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 
@@ -38,6 +38,241 @@ export default function PosPage() {
   const [showSerialsModal, setShowSerialsModal] = useState(false);
   const [serialsInput, setSerialsInput] = useState<any>({});
 
+  // == FIADO / CUSTOMER STATES ==
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [showCustomerModal, setShowCustomerModal] = useState(false);
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [authModal, setAuthModal] = useState<{isOpen: boolean; resolve: (pin: string|null)=>void; message: string} | null>(null);
+  const [creditStatement, setCreditStatement] = useState<any>(null);
+
+  // == SCALE HARDWARE STATE ==
+  const [scaleModalOpen, setScaleModalOpen] = useState(false);
+  const [scaleProduct, setScaleProduct] = useState<any>(null);
+  const [scaleWeight, setScaleWeight] = useState<string>("0.000");
+  const [isReadingScale, setIsReadingScale] = useState(false);
+
+  const requestScaleWeight = (product: any) => {
+     if (!('serial' in navigator)) {
+         console.warn("Tu navegador no soporta Web Serial API.");
+     }
+     setScaleProduct(product);
+     setScaleWeight("0.000");
+     setScaleModalOpen(true);
+  };
+
+  const readFromScale = async () => {
+     if (!('serial' in (navigator as any))) {
+         alert("Web Serial no está soportado en tu navegador actual. Usa Chrome o Edge para conectar la báscula.");
+         return;
+     }
+     try {
+         setIsReadingScale(true);
+         // @ts-ignore
+         const port = await navigator.serial.requestPort();
+         await port.open({ baudRate: 9600 });
+         
+         const reader = port.readable.getReader();
+         const decoder = new TextDecoder();
+         let buffer = "";
+         
+         // Timeout after 5 seconds if no data
+         const timeoutId = setTimeout(() => {
+             reader.cancel();
+         }, 5000);
+         
+         while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value);
+            if (buffer.includes("\n") || buffer.includes("\r")) {
+                reader.cancel();
+                break;
+            }
+         }
+         clearTimeout(timeoutId);
+         
+         const matches = buffer.match(/[\d.]+/);
+         if (matches) {
+            setScaleWeight(parseFloat(matches[0]).toFixed(3));
+         } else {
+            alert("No se pudo leer el formato de la báscula. Recibido: " + buffer);
+         }
+         
+         reader.releaseLock();
+         await port.close();
+     } catch (e: any) {
+         console.error("Error leyendo báscula", e);
+         if (e.message?.includes('cancel')) {
+             // Ignorar cancelaciones intencionales
+         } else {
+             alert("Error conectando con la báscula: " + e.message);
+         }
+     } finally {
+         setIsReadingScale(false);
+     }
+  };
+
+  const confirmScaleWeight = () => {
+     const weight = parseFloat(scaleWeight);
+     if (isNaN(weight) || weight <= 0) {
+        alert("Peso inválido.");
+        return;
+     }
+     
+     if (scaleProduct.trackInventory && weight > scaleProduct.stock) {
+        alert(`Solo quedan ${scaleProduct.stock} kg en inventario de ${scaleProduct.name}`);
+        return;
+     }
+
+     const existing = cart.find(i => i.productId === scaleProduct.id);
+     if (existing) {
+        setCart(cart.map(i => i.productId === scaleProduct.id ? { ...i, quantity: existing.quantity + weight } : i));
+     } else {
+        setCart([...cart, { 
+           productId: scaleProduct.id, 
+           name: scaleProduct.name, 
+           unitPrice: scaleProduct.price, 
+           quantity: weight,
+           taxRate: scaleProduct.taxRate || 0.16
+        }]);
+     }
+     setScaleModalOpen(false);
+     setScaleProduct(null);
+  };
+
+  // == KEYBOARD SHORTCUTS STATE ==
+  const [shortcutsConfig, setShortcutsConfig] = useState({
+     search: 'F2',
+     payMethod: 'F4',
+     checkout: 'F8',
+     cancel: 'Escape'
+  });
+
+  useEffect(() => {
+     const handleKeyDown = (e: KeyboardEvent) => {
+         const tag = (e.target as HTMLElement).tagName.toLowerCase();
+         if (tag === 'textarea') return;
+         if (tag === 'input' && (e.target as HTMLInputElement).id !== 'pos-search-input') {
+             // Si el foco está en un input (ej. recargas, cantidades), solo permitimos F-keys y Escape
+             if (!e.key.startsWith('F') && e.key !== 'Escape') return;
+         }
+
+         if (e.key === shortcutsConfig.search) {
+             e.preventDefault();
+             document.getElementById('pos-search-input')?.focus();
+         }
+         else if (e.key === shortcutsConfig.payMethod) {
+             e.preventDefault();
+             setPaymentMethod(prev => prev === '01' ? '04' : (prev === '04' ? '99' : '01'));
+         }
+         else if (e.key === shortcutsConfig.checkout) {
+             e.preventDefault();
+             document.getElementById('btn-checkout')?.click();
+         }
+         else if (e.key === shortcutsConfig.cancel) {
+             if (scaleModalOpen) setScaleModalOpen(false);
+             else if (showCustomerModal) setShowCustomerModal(false);
+             else if (showSerialsModal) setShowSerialsModal(false);
+         }
+     };
+
+     window.addEventListener('keydown', handleKeyDown);
+     return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [shortcutsConfig, scaleModalOpen, showCustomerModal, showSerialsModal]);
+
+  // == PRINTER HARDWARE STATE ==
+  const [printerPort, setPrinterPort] = useState<any>(null);
+
+  // == QUICK KEYS STATE ==
+  const [showQuickKeysOnly, setShowQuickKeysOnly] = useState(false);
+
+  // == TOPUP STATE ==
+  const [showTopupModal, setShowTopupModal] = useState(false);
+  const [topupData, setTopupData] = useState({ provider: 'Telcel', phone: '', amount: '50' });
+
+  const addTopupToCart = () => {
+      if (topupData.phone.length !== 10) {
+          alert('El número debe tener 10 dígitos');
+          return;
+      }
+      const existing = cart.find(i => i.name === `Recarga ${topupData.provider} - ${topupData.phone}` && i.unitPrice === parseFloat(topupData.amount));
+      if (existing) {
+          setCart(cart.map(i => i.productId === existing.productId ? { ...i, quantity: i.quantity + 1 } : i));
+      } else {
+          setCart([...cart, {
+              productId: 'virtual-topup-' + Date.now(),
+              name: `Recarga ${topupData.provider} - ${topupData.phone}`,
+              unitPrice: parseFloat(topupData.amount),
+              quantity: 1,
+              taxRate: 0,
+              type: 'SERVICE',
+              customFields: { phone: topupData.phone, provider: topupData.provider, type: 'TOPUP' }
+          }]);
+      }
+      setShowTopupModal(false);
+      setTopupData({ provider: 'Telcel', phone: '', amount: '50' });
+  };
+
+  const connectPrinter = async () => {
+      if (!('serial' in (navigator as any))) {
+         alert("Web Serial no está soportado en tu navegador actual.");
+         return;
+      }
+      try {
+         // @ts-ignore
+         const port = await navigator.serial.requestPort();
+         await port.open({ baudRate: 9600 });
+         setPrinterPort(port);
+         alert("Impresora conectada exitosamente para Impresión Silenciosa.");
+      } catch (e: any) {
+         console.error(e);
+         if (!e.message?.includes('cancel')) {
+             alert("Error conectando a la impresora: " + e.message);
+         }
+      }
+  };
+
+  const printTicket = async (cartItems: any[], ticketTotal: number) => {
+      if (!printerPort) return;
+      try {
+          const writer = printerPort.writable.getWriter();
+          const encoder = new TextEncoder();
+          
+          const INIT = new Uint8Array([0x1B, 0x40]);
+          const ALIGN_CENTER = new Uint8Array([0x1B, 0x61, 0x01]);
+          const ALIGN_LEFT = new Uint8Array([0x1B, 0x61, 0x00]);
+          const BOLD_ON = new Uint8Array([0x1B, 0x45, 0x01]);
+          const BOLD_OFF = new Uint8Array([0x1B, 0x45, 0x00]);
+          const CUT = new Uint8Array([0x1D, 0x56, 0x41, 0x10]);
+          const NL = "\n";
+          
+          await writer.write(INIT);
+          await writer.write(ALIGN_CENTER);
+          await writer.write(BOLD_ON);
+          await writer.write(encoder.encode("FACTURAPRO POS" + NL));
+          await writer.write(BOLD_OFF);
+          await writer.write(encoder.encode("Ticket de Venta" + NL));
+          await writer.write(encoder.encode("================================" + NL));
+          
+          await writer.write(ALIGN_LEFT);
+          for (const item of cartItems) {
+              await writer.write(encoder.encode(`${item.name}${NL}`));
+              const line = `  ${item.quantity} x $${item.unitPrice.toFixed(2)} = $${(item.quantity * item.unitPrice).toFixed(2)}`;
+              await writer.write(encoder.encode(line + NL));
+          }
+          await writer.write(ALIGN_CENTER);
+          await writer.write(encoder.encode("================================" + NL));
+          await writer.write(BOLD_ON);
+          await writer.write(encoder.encode(`TOTAL: $${ticketTotal.toFixed(2)}${NL}${NL}${NL}${NL}`));
+          
+          await writer.write(CUT);
+          writer.releaseLock();
+      } catch(e) {
+          console.error("Printer error", e);
+      }
+  };
+
   useEffect(() => {
     // Initial load
     if (typeof window !== 'undefined') {
@@ -56,6 +291,7 @@ export default function PosPage() {
 
         if (token) {
            fetchProducts();
+           fetchCustomers();
            checkShift();
         }
 
@@ -126,6 +362,32 @@ export default function PosPage() {
     }
   };
 
+  const fetchCustomers = async () => {
+    if (!token) return;
+    try {
+       const res = await fetch(`http://${window.location.hostname}:3005/customers`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+       });
+       if (res.ok) setCustomers(await res.json());
+    } catch(e) { console.error("Error fetching customers", e); }
+  };
+
+  const loadCreditStatement = async (custId: string) => {
+     try {
+        const res = await fetch(`http://${window.location.hostname}:3005/customers/${custId}/credit`, {
+           headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) setCreditStatement(await res.json());
+     } catch(e) { console.error(e); }
+  };
+
+  const selectCustomer = (c: any) => {
+     setSelectedCustomer(c);
+     setShowCustomerModal(false);
+     if (c) loadCreditStatement(c.id);
+     else setCreditStatement(null);
+  };
+
   const syncOfflineQueue = async () => {
       if (typeof window === 'undefined') return;
       const storedQueue = localStorage.getItem('pos_offline_queue');
@@ -171,6 +433,11 @@ export default function PosPage() {
   };
 
   const addToCart = (product: any) => {
+    if (product.soldByWeight) {
+        requestScaleWeight(product);
+        return;
+    }
+
     const isKitOrService = product.type === 'KIT' || product.type === 'SERVICE';
     // Si trackea inventario y no hay, bloquéalo (Omitido para KITS y Servicios).
     if (!isKitOrService && product.trackInventory && product.stock <= 0) {
@@ -223,7 +490,10 @@ export default function PosPage() {
   const tax = cart.reduce((acc, item) => acc + ((item.unitPrice * item.quantity) * item.taxRate), 0);
   const total = subtotal + tax;
 
-  const filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()) || (p.barcode && p.barcode.includes(searchTerm)));
+  const filteredProducts = products.filter(p => {
+      if (showQuickKeysOnly) return !p.barcode; // Si activó Teclas Rápidas, mostrar solo los que NO tienen código de barras
+      return p.name.toLowerCase().includes(searchTerm.toLowerCase()) || (p.barcode && p.barcode.includes(searchTerm));
+  });
 
   const handleCheckout = async () => {
      if (cart.length === 0) return;
@@ -232,6 +502,11 @@ export default function PosPage() {
      const missingSerials = itemsWithSerials.some(i => !i.serials || i.serials.length !== i.quantity);
      if (missingSerials) {
          setShowSerialsModal(true);
+         return;
+     }
+
+     if (paymentMethod === '99' && !selectedCustomer) {
+         setShowCustomerModal(true);
          return;
      }
 
@@ -252,15 +527,17 @@ export default function PosPage() {
       executeCheckout(updatedCart);
   };
 
-  const executeCheckout = async (itemsToCheckout: any[]) => {
-     const payload = {
+  const executeCheckout = async (itemsToCheckout: any[], overridePin?: string) => {
+     const payload: any = {
          items: itemsToCheckout,
-         paymentMethod: 'PUE',
-         paymentForm: paymentMethod,
+         paymentMethod: paymentMethod === '99' ? '99' : 'PUE',
+         paymentForm: paymentMethod === '99' ? '99' : paymentMethod,
          cashShiftId: currentShift?.id,
          customFields: customFields,
          _offlineId: Date.now() // to track
      };
+     if (selectedCustomer) payload.customerId = selectedCustomer.id;
+     if (overridePin) payload.overridePin = overridePin;
 
      if (isOffline) {
          // GUARDA EN LIMBO Y CORTA EL STACK
@@ -301,6 +578,9 @@ export default function PosPage() {
 
        if (res.ok) {
           setSuccessMode(true);
+          const currentTotal = cart.reduce((acc, item) => acc + (item.unitPrice * item.quantity), 0);
+          printTicket(itemsToCheckout, currentTotal * 1.16); // Assuming tax calculation roughly
+          
           if (carts.length > 1) {
              const newCarts = carts.filter((_, idx) => idx !== activeCartIndex);
              setCarts(newCarts);
@@ -311,6 +591,21 @@ export default function PosPage() {
           fetchProducts(); // Refresh stock
        } else {
           const err = await res.json().catch(()=>({}));
+          
+          if (res.status === 400 && err.message?.includes('Requiere PIN de Encargado')) {
+             // Abrir modal de PIN
+             setCheckoutLoading(false);
+             const pin = await new Promise<string|null>((resolve) => {
+                setAuthModal({ isOpen: true, resolve, message: err.message });
+             });
+             setAuthModal(null);
+             if (pin) {
+                // Reintentar con el PIN
+                executeCheckout(itemsToCheckout, pin);
+             }
+             return;
+          }
+          
           alert(err.message || 'Error al procesar el cobro.');
        }
      } catch (e: any) {
@@ -326,6 +621,32 @@ export default function PosPage() {
      }
   };
 
+  // == BLIND CLOSE STATE ==
+  const [requireBlindClose, setRequireBlindClose] = useState(true); // Demo toggle for Phase 5
+  const [showBlindCloseModal, setShowBlindCloseModal] = useState(false);
+  const [cashCount, setCashCount] = useState({
+      b1000: 0, b500: 0, b200: 0, b100: 0, b50: 0, b20: 0,
+      m20: 0, m10: 0, m5: 0, m2: 0, m1: 0, m05: 0
+  });
+
+  const getPhysicalTotal = () => {
+      return (cashCount.b1000 * 1000) + (cashCount.b500 * 500) + (cashCount.b200 * 200) + 
+             (cashCount.b100 * 100) + (cashCount.b50 * 50) + (cashCount.b20 * 20) +
+             (cashCount.m20 * 20) + (cashCount.m10 * 10) + (cashCount.m5 * 5) + 
+             (cashCount.m2 * 2) + (cashCount.m1 * 1) + (cashCount.m05 * 0.5);
+  };
+
+  const confirmBlindClose = () => {
+      const physical = getPhysicalTotal();
+      setShiftSummary({
+          ...shiftSummary,
+          physicalCash: physical,
+          cashDiff: physical - shiftSummary.expectedCash
+      });
+      setShowBlindCloseModal(false);
+      setShowShiftSummary(true);
+  };
+
   const loadShiftSummary = async () => {
       try {
          const res = await fetch(`http://${window.location.hostname}:3005/pos/shifts/${currentShift.id}/summary`, {
@@ -333,7 +654,11 @@ export default function PosPage() {
          });
          if (res.ok) {
             setShiftSummary(await res.json());
-            setShowShiftSummary(true);
+            if (requireBlindClose) {
+                setShowBlindCloseModal(true);
+            } else {
+                setShowShiftSummary(true);
+            }
          }
       } catch (e) { console.error(e); }
   };
@@ -431,6 +756,15 @@ export default function PosPage() {
                       En Bandeja Local: {offlineQueue.length}
                    </div>
                )}
+               {printerPort ? (
+                   <div className="flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-xs font-bold border border-blue-200">
+                      🖨️ Impresora USB
+                   </div>
+               ) : (
+                   <button onClick={connectPrinter} className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors flex items-center gap-1 border border-slate-200">
+                      🖨️ Conectar Impresora
+                   </button>
+               )}
               <button onClick={() => alert('Movimiento Manual')} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition-colors">Retiro / Ingreso</button>
               <button onClick={loadShiftSummary} className="px-4 py-2 bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold rounded-xl text-sm transition-colors">Corte de Caja</button>
            </div>
@@ -439,23 +773,22 @@ export default function PosPage() {
        <div className="flex-1 flex gap-6 overflow-hidden">
        {/* LEFT COLUMN: Products Grid */}
        <div className="flex-1 flex flex-col bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-slate-100 bg-slate-50">
-             <div className="relative">
+          <div className="p-6 border-b border-slate-100 bg-slate-50 flex gap-4">
+             <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input 
+                   id="pos-search-input"
                    type="text" 
                    autoFocus
-                   placeholder="Buscar producto por nombre o escanear código de barras..." 
+                   placeholder="Buscar producto o escanear código (F2)..." 
                    value={searchTerm}
                    onChange={e => setSearchTerm(e.target.value)}
                    onKeyDown={e => {
                       if (e.key === 'Enter') {
-                         // Si solo hay un match, agregarlo y limpiar.
                          if (filteredProducts.length === 1) {
                             addToCart(filteredProducts[0]);
                             setSearchTerm('');
                          } else {
-                            // Buscar si hay match exacto en codigo de barras
                             const exact = products.find(p => p.barcode === searchTerm);
                             if (exact) {
                                addToCart(exact);
@@ -467,6 +800,22 @@ export default function PosPage() {
                    className="w-full pl-12 pr-4 py-4 rounded-2xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-lg text-slate-700 shadow-sm"
                 />
              </div>
+             
+             <div className="flex bg-white rounded-2xl border border-slate-200 p-1 shadow-sm h-[60px]">
+                <button onClick={() => setShowQuickKeysOnly(false)} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${!showQuickKeysOnly ? 'bg-slate-100 text-slate-800 shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}>
+                   Lista
+                </button>
+                <button onClick={() => setShowQuickKeysOnly(true)} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${showQuickKeysOnly ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}>
+                   ⭐ Táctil
+                </button>
+             </div>
+
+             <button 
+                 onClick={() => setShowTopupModal(true)} 
+                 className="px-6 h-[60px] bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold flex items-center gap-2 shadow-sm transition-colors"
+              >
+                 📱 Recargas
+              </button>
           </div>
           <div className="flex-1 p-6 overflow-y-auto">
              {loading ? (
@@ -614,19 +963,110 @@ export default function PosPage() {
                    <CreditCard className="w-6 h-6 mb-1" />
                    <span className="text-xs font-bold">Tarjeta</span>
                 </button>
+                <button 
+                    onClick={() => { setPaymentMethod('99'); if(!selectedCustomer) setShowCustomerModal(true); }}
+                    className={`flex-1 flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${paymentMethod === '99' ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                 >
+                    <FileText className="w-6 h-6 mb-1" />
+                    <span className="text-xs font-bold">Fiado</span>
+                 </button>
              </div>
 
+             {selectedCustomer && (
+                 <div className="mb-4 p-3 bg-slate-100 rounded-xl border border-slate-200 flex items-center justify-between">
+                    <div>
+                       <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-0.5">Cliente Seleccionado</p>
+                       <p className="font-bold text-slate-800 text-sm truncate max-w-[200px]">{selectedCustomer.legalName}</p>
+                       {creditStatement && (
+                          <p className={`text-xs font-bold mt-1 ${creditStatement.customer.availableCredit >= total ? 'text-emerald-600' : 'text-rose-600'}`}>
+                             Crédito disp: ${(creditStatement.customer.availableCredit).toLocaleString('en-US', {minimumFractionDigits: 2})}
+                          </p>
+                       )}
+                    </div>
+                    <button onClick={() => selectCustomer(null)} className="p-2 text-rose-500 hover:bg-rose-100 rounded-lg">
+                       <X className="w-4 h-4" />
+                    </button>
+                 </div>
+              )}
+
              <button 
+                id="btn-checkout"
                 onClick={handleCheckout}
                 disabled={cart.length === 0 || checkoutLoading}
                 className="w-full h-16 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white rounded-2xl font-black text-xl shadow-lg shadow-blue-600/30 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
              >
-                {checkoutLoading ? <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div> : "Cobrar Ticket"}
+                {checkoutLoading ? <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div> : "Cobrar Ticket (F8)"}
              </button>
           </div>
        </div>
 
        </div>
+
+        {showBlindCloseModal && shiftSummary && (
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm shadow-2xl z-50 flex items-center justify-center animate-in fade-in p-4">
+               <div className="bg-white rounded-3xl w-full max-w-2xl p-8 relative shadow-2xl scale-in-95 duration-200">
+                  <button onClick={() => setShowBlindCloseModal(false)} className="absolute right-6 top-6 text-slate-400 hover:text-slate-700">
+                     <X className="w-6 h-6" />
+                  </button>
+
+                  <div className="mb-6 text-center">
+                     <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 mx-auto mb-4">
+                        <Banknote className="w-8 h-8" />
+                     </div>
+                     <h2 className="text-3xl font-black text-slate-800">Arqueo de Caja (Corte Ciego)</h2>
+                     <p className="text-slate-500 font-medium mt-2">Ingresa la cantidad de billetes y monedas que tienes físicamente en el cajón.</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6 mb-8">
+                     <div>
+                         <h3 className="font-bold text-slate-700 mb-4 border-b pb-2">Billetes</h3>
+                         <div className="space-y-3">
+                             {[1000, 500, 200, 100, 50, 20].map(val => (
+                                 <div key={`b${val}`} className="flex items-center gap-3">
+                                     <span className="w-16 font-bold text-slate-600">${val}</span>
+                                     <span className="text-slate-400">x</span>
+                                     <input 
+                                         type="number" min="0" 
+                                         value={(cashCount as any)[`b${val}`] || ''} 
+                                         onChange={e => setCashCount({...cashCount, [`b${val}`]: parseInt(e.target.value) || 0})}
+                                         className="w-full p-2 border border-slate-200 rounded-lg text-center bg-slate-50 focus:bg-white focus:ring-2 ring-indigo-500" 
+                                         placeholder="0"
+                                     />
+                                 </div>
+                             ))}
+                         </div>
+                     </div>
+                     <div>
+                         <h3 className="font-bold text-slate-700 mb-4 border-b pb-2">Monedas</h3>
+                         <div className="space-y-3">
+                             {[20, 10, 5, 2, 1, '05'].map(val => (
+                                 <div key={`m${val}`} className="flex items-center gap-3">
+                                     <span className="w-16 font-bold text-slate-600">${val === '05' ? '0.50' : val}</span>
+                                     <span className="text-slate-400">x</span>
+                                     <input 
+                                         type="number" min="0" 
+                                         value={(cashCount as any)[`m${val}`] || ''} 
+                                         onChange={e => setCashCount({...cashCount, [`m${val}`]: parseInt(e.target.value) || 0})}
+                                         className="w-full p-2 border border-slate-200 rounded-lg text-center bg-slate-50 focus:bg-white focus:ring-2 ring-indigo-500" 
+                                         placeholder="0"
+                                     />
+                                 </div>
+                             ))}
+                         </div>
+                     </div>
+                  </div>
+
+                  <div className="p-4 bg-indigo-50 rounded-xl flex justify-between items-center mb-6">
+                      <span className="font-bold text-indigo-700">Total Físico Contado:</span>
+                      <span className="text-3xl font-black text-indigo-700">${getPhysicalTotal().toLocaleString('en-US',{minimumFractionDigits:2})}</span>
+                  </div>
+
+                  <button onClick={confirmBlindClose} className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-indigo-600/30 transition-all">
+                     Confirmar Arqueo y Revelar Corte
+                  </button>
+               </div>
+            </div>
+        )}
 
         {showShiftSummary && shiftSummary && (
            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm shadow-2xl z-50 flex items-center justify-center animate-in fade-in">
@@ -668,9 +1108,26 @@ export default function PosPage() {
                     </div>
 
                     <div className="p-4 bg-slate-50 rounded-xl flex justify-between items-center mt-4">
-                       <span className="font-bold text-slate-700">Efectivo en cajón esperado:</span>
+                       <span className="font-bold text-slate-700">Efectivo Esperado (Sistema):</span>
                        <span className="text-2xl font-black text-blue-600">${shiftSummary.expectedCash.toLocaleString('en-US',{minimumFractionDigits:2})}</span>
                     </div>
+
+                    {shiftSummary.physicalCash !== undefined && (
+                        <div className="p-4 bg-slate-50 rounded-xl flex flex-col gap-2 mt-4 border-t-2 border-slate-200">
+                           <div className="flex justify-between items-center">
+                               <span className="font-bold text-slate-700">Efectivo Físico (Arqueo):</span>
+                               <span className="text-xl font-black text-indigo-600">${shiftSummary.physicalCash.toLocaleString('en-US',{minimumFractionDigits:2})}</span>
+                           </div>
+                           <div className={`flex justify-between items-center p-3 rounded-lg ${shiftSummary.cashDiff < 0 ? 'bg-rose-100' : shiftSummary.cashDiff > 0 ? 'bg-amber-100' : 'bg-emerald-100'}`}>
+                               <span className={`font-bold ${shiftSummary.cashDiff < 0 ? 'text-rose-700' : shiftSummary.cashDiff > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
+                                   {shiftSummary.cashDiff < 0 ? 'Faltante en Caja:' : shiftSummary.cashDiff > 0 ? 'Sobrante en Caja:' : 'Caja Cuadrada Perfectamente'}
+                               </span>
+                               <span className={`text-xl font-black ${shiftSummary.cashDiff < 0 ? 'text-rose-700' : shiftSummary.cashDiff > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
+                                   {shiftSummary.cashDiff !== 0 ? `$${Math.abs(shiftSummary.cashDiff).toLocaleString('en-US',{minimumFractionDigits:2})}` : '✓'}
+                               </span>
+                           </div>
+                        </div>
+                    )}
                  </div>
                  
                  <p className="text-sm text-slate-500 text-center mb-6">
@@ -711,6 +1168,184 @@ export default function PosPage() {
                     </div>
                 </div>
             </div>
+        )}
+
+        {scaleModalOpen && scaleProduct && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+                <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center">
+                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mx-auto mb-4">
+                       <Tag className="w-8 h-8" />
+                    </div>
+                    <h2 className="text-xl font-black text-slate-800 mb-1">{scaleProduct.name}</h2>
+                    <p className="text-sm text-slate-500 mb-6">Coloque el producto en la báscula y presione el botón para leer el peso.</p>
+                    
+                    <div className="bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 mb-6">
+                       <div className="flex items-end justify-center gap-2">
+                           <input 
+                              type="number" 
+                              step="0.001"
+                              value={scaleWeight} 
+                              onChange={(e) => setScaleWeight(e.target.value)}
+                              className="text-4xl font-black text-slate-800 bg-transparent w-32 text-center focus:outline-none" 
+                           />
+                           <span className="text-xl font-bold text-slate-500 mb-1">KG</span>
+                       </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                        <button 
+                           onClick={readFromScale} 
+                           disabled={isReadingScale}
+                           className="w-full py-4 bg-slate-800 hover:bg-slate-900 disabled:bg-slate-400 text-white rounded-xl font-bold transition-all flex justify-center items-center gap-2"
+                        >
+                           {isReadingScale ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : "Obtener Peso de Báscula"}
+                        </button>
+                        <button 
+                           onClick={confirmScaleWeight} 
+                           className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all"
+                        >
+                           Confirmar e Ingresar
+                        </button>
+                        <button 
+                           onClick={() => setScaleModalOpen(false)} 
+                           className="w-full py-3 text-slate-500 hover:text-slate-700 font-bold transition-all"
+                        >
+                           Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {showTopupModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+                <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl">
+                    <h2 className="text-2xl font-black text-slate-800 mb-6">📱 Recarga Electrónica</h2>
+                    
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">Compañía</label>
+                            <select 
+                                value={topupData.provider} 
+                                onChange={e => setTopupData({...topupData, provider: e.target.value})}
+                                className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                            >
+                                <option value="Telcel">Telcel</option>
+                                <option value="AT&T">AT&T</option>
+                                <option value="Movistar">Movistar</option>
+                                <option value="Unefon">Unefon</option>
+                                <option value="Bait">Bait</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">Número a Recargar (10 dígitos)</label>
+                            <input 
+                                type="text" 
+                                maxLength={10}
+                                value={topupData.phone} 
+                                onChange={e => setTopupData({...topupData, phone: e.target.value.replace(/\D/g, '')})}
+                                placeholder="0000000000"
+                                className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold text-lg tracking-widest text-center"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">Monto ($)</label>
+                            <select 
+                                value={topupData.amount} 
+                                onChange={e => setTopupData({...topupData, amount: e.target.value})}
+                                className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                            >
+                                <option value="20">$20.00</option>
+                                <option value="30">$30.00</option>
+                                <option value="50">$50.00</option>
+                                <option value="100">$100.00</option>
+                                <option value="200">$200.00</option>
+                                <option value="500">$500.00</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-4 mt-8">
+                        <button onClick={() => setShowTopupModal(false)} className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-all">Cancelar</button>
+                        <button onClick={addTopupToCart} className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all">Agregar a Caja</button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {showCustomerModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+                <div className="bg-white rounded-3xl p-8 max-w-xl w-full shadow-xl flex flex-col max-h-[80vh]">
+                    <div className="flex justify-between items-center mb-6">
+                       <h2 className="text-2xl font-black text-slate-800">Seleccionar Cliente</h2>
+                       <button onClick={() => setShowCustomerModal(false)} className="text-slate-400 hover:text-slate-600"><X className="w-6 h-6" /></button>
+                    </div>
+                    
+                    <div className="relative mb-6">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                        <input 
+                            type="text" 
+                            autoFocus
+                            placeholder="Buscar cliente..." 
+                            value={customerSearch}
+                            onChange={e => setCustomerSearch(e.target.value)}
+                            className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                        />
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto space-y-2">
+                        {customers.filter(c => c.legalName.toLowerCase().includes(customerSearch.toLowerCase()) || c.rfc.includes(customerSearch)).map(c => (
+                            <button 
+                               key={c.id}
+                               onClick={() => selectCustomer(c)}
+                               className="w-full flex justify-between items-center p-4 bg-white border border-slate-200 rounded-xl hover:border-blue-500 hover:shadow-md transition-all text-left"
+                            >
+                               <div>
+                                  <p className="font-bold text-slate-800">{c.legalName}</p>
+                                  <p className="text-sm text-slate-500">RFC: {c.rfc}</p>
+                               </div>
+                               {c.creditEnabled && (
+                                  <div className="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg uppercase">
+                                     Crédito Activo
+                                  </div>
+                               )}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {authModal?.isOpen && (
+           <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/70 backdrop-blur-md p-4">
+               <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center">
+                   <AlertTriangle className="w-16 h-16 text-rose-500 mx-auto mb-4" />
+                   <h2 className="text-2xl font-black text-slate-800 mb-2">Autorización Requerida</h2>
+                   <p className="text-slate-600 text-sm mb-6">{authModal.message}</p>
+                   
+                   <input 
+                      type="password" 
+                      placeholder="PIN de Encargado" 
+                      id="authPinInput"
+                      autoFocus
+                      onKeyDown={e => {
+                         if (e.key === 'Enter') {
+                            const val = (e.target as HTMLInputElement).value;
+                            authModal.resolve(val);
+                         }
+                      }}
+                      className="w-full text-center tracking-[0.5em] font-black text-2xl py-4 rounded-xl border-2 border-slate-200 bg-slate-50 focus:border-blue-500 focus:outline-none mb-4" 
+                   />
+
+                   <div className="flex gap-3">
+                      <button onClick={() => authModal.resolve(null)} className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold">Cancelar</button>
+                      <button onClick={() => {
+                         const val = (document.getElementById('authPinInput') as HTMLInputElement).value;
+                         authModal.resolve(val);
+                      }} className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold">Autorizar</button>
+                   </div>
+               </div>
+           </div>
         )}
     </div>
   );

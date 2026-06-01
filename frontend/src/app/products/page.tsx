@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Plus, Save, Loader2, X, FileEdit, Trash2, ChevronDown, MoreHorizontal, Package, Tag, ArrowLeft, Image as ImageIcon, XCircle, FileText, Globe } from "lucide-react";
+import { Search, Plus, Save, Loader2, X, FileEdit, Trash2, ChevronDown, MoreHorizontal, Package, Tag, ArrowLeft, Image as ImageIcon, XCircle, FileText, Globe, Printer } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
@@ -33,7 +33,9 @@ export default function ProductsPage() {
   // Form Fields
   const [name, setName] = useState("");
   const [sku, setSku] = useState("");
+  const [barcode, setBarcode] = useState("");
   const [description, setDescription] = useState("");
+  const [soldByWeight, setSoldByWeight] = useState(false);
   const [satProductCode, setSatProductCode] = useState("");
   const [satUnitCode, setSatUnitCode] = useState("H87"); // Pieza
   const [price, setPrice] = useState("");
@@ -73,7 +75,9 @@ export default function ProductsPage() {
     setEditingId(null);
     setName("");
     setSku("");
+    setBarcode("");
     setDescription("");
+    setSoldByWeight(false);
     setSatProductCode("");
     setSatUnitCode("H87");
     setPrice("");
@@ -90,12 +94,38 @@ export default function ProductsPage() {
     setStoreCategory("");
   };
 
+  const [isSearchingOFF, setIsSearchingOFF] = useState(false);
+  const handleBarcodeSearch = async () => {
+    if (!barcode) return;
+    setIsSearchingOFF(true);
+    try {
+       const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+       const data = await res.json();
+       if (data.status === 1 && data.product) {
+          const p = data.product;
+          if (p.product_name && !name) setName(p.product_name);
+          if (p.image_url && !imageUrl) setImageUrl(p.image_url);
+          if (p.categories && !storeCategory) setStoreCategory(p.categories.split(',')[0]);
+          alert("Datos encontrados en el Catálogo FacturaPro (Open Food Facts)");
+       } else {
+          alert('No se encontró el producto en el catálogo público.');
+       }
+    } catch(e) {
+       console.error(e);
+       alert("Error de conexión al catálogo.");
+    } finally {
+       setIsSearchingOFF(false);
+    }
+  };
+
   const openEdit = (product: any) => {
     resetForm();
     setEditingId(product.id);
     setName(product.name);
     setSku(product.sku || "");
+    setBarcode(product.barcode || "");
     setDescription(product.description || "");
+    setSoldByWeight(product.soldByWeight || false);
     setSatProductCode(product.satProductCode || "");
     setSatUnitCode(product.satUnitCode || "H87");
     setPrice(product.price.toString());
@@ -203,6 +233,61 @@ export default function ProductsPage() {
     }, 200);
   };
 
+  const printLabel = async () => {
+    if (!selectedProduct) return;
+    try {
+        const port = await (navigator as any).serial.requestPort();
+        await port.open({ baudRate: 9600 });
+        const writer = port.writable.getWriter();
+        
+        const qty = prompt("¿Cuántas etiquetas deseas imprimir?", "1");
+        if (!qty || isNaN(parseInt(qty))) {
+            writer.releaseLock();
+            await port.close();
+            return;
+        }
+
+        const ESC = '\x1b';
+        const GS = '\x1d';
+        let payload = `${ESC}@`; // Initialize printer
+        
+        for (let i = 0; i < parseInt(qty); i++) {
+            payload += `${ESC}a\x01`; // Center alignment
+            payload += `\x1b\x21\x08`; // Emphasized mode
+            payload += `${selectedProduct.name.substring(0, 30)}\n`;
+            payload += `\x1b\x21\x00`; // Reset font
+            payload += `\n`;
+            
+            if (selectedProduct.barcode) {
+                payload += `${GS}h\x50`; // Barcode height
+                payload += `${GS}w\x02`; // Barcode width
+                payload += `${GS}f\x00`; // Font for HRI characters
+                payload += `${GS}H\x02`; // Print text below barcode
+                // Code 128
+                payload += `${GS}k\x49${String.fromCharCode(selectedProduct.barcode.length)}${selectedProduct.barcode}\n\n`;
+            } else {
+                payload += `(Sin Codigo de Barras)\n\n`;
+            }
+            
+            payload += `\x1b\x21\x10`; // Double height
+            payload += `PRECIO: $${selectedProduct.price.toLocaleString('en-US', {minimumFractionDigits: 2})}\n\n\n`;
+            payload += `\x1b\x21\x00`; // Reset
+        }
+        
+        // Feed and cut
+        payload += `\n\n${GS}V\x41\x00`;
+        
+        const encoder = new TextEncoder();
+        await writer.write(encoder.encode(payload));
+        writer.releaseLock();
+        await port.close();
+        
+    } catch(e) {
+        console.error(e);
+        alert('Error al imprimir etiqueta. Asegúrate de conectar tu Miniprinter vía USB y autorizarla.');
+    }
+  };
+
   if (!mounted) return null;
 
   const handleSave = async () => {
@@ -214,7 +299,9 @@ export default function ProductsPage() {
         tenantId: activeTenantId,
         name,
         sku,
+        barcode: barcode || null,
         description,
+        soldByWeight,
         satProductCode: satProductCode || '01010101',
         satUnitCode: satUnitCode || 'H87',
         price: parseFloat(price),
@@ -437,6 +524,7 @@ export default function ProductsPage() {
                  </h2>
               </div>
               <div className="flex gap-2 items-center">
+                 <button onClick={printLabel} title="Imprimir Etiqueta Térmica" className="border border-slate-200 bg-white hover:bg-slate-50 p-1.5 rounded text-slate-500"><Printer className="w-4 h-4"/></button>
                  <button onClick={() => openEdit(selectedProduct)} className="border border-slate-200 bg-white hover:bg-slate-50 p-1.5 rounded text-slate-500"><FileEdit className="w-4 h-4"/></button>
                  <button onClick={() => handleDelete(selectedProduct.id, selectedProduct.name)} className="border border-slate-200 bg-white hover:bg-red-50 p-1.5 rounded text-slate-400 hover:text-red-500"><Trash2 className="w-4 h-4"/></button>
               </div>
@@ -740,7 +828,7 @@ export default function ProductsPage() {
                  <span className="text-[10px] text-slate-400 font-medium mt-2">Opcional (JPG/PNG)</span>
               </div>
            <div className="p-6 space-y-5">
-              <div className="grid grid-cols-[2fr_1fr] gap-4">
+              <div className="grid grid-cols-[2fr_1fr_1.5fr] gap-4">
                  <div className="space-y-2">
                     <label className="text-sm font-bold text-slate-700">Nombre del Concepto</label>
                     <input type="text" value={name} onChange={e=>setName(e.target.value)} placeholder="Ej. Suscripción Mensual" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 font-medium" />
@@ -748,6 +836,15 @@ export default function ProductsPage() {
                  <div className="space-y-2">
                     <label className="text-sm font-bold text-slate-700">SKU</label>
                     <input type="text" value={sku} onChange={e=>setSku(e.target.value)} placeholder="SRV-001" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 font-medium uppercase" />
+                 </div>
+                 <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700 text-blue-600 flex items-center gap-1"><Globe className="w-3 h-3"/> Código Barras / EAN</label>
+                    <div className="relative">
+                      <input type="text" value={barcode} onChange={e=>setBarcode(e.target.value)} placeholder="00000000" className="w-full bg-slate-50 border border-blue-200 rounded-xl px-4 py-3 pr-10 text-sm focus:outline-none focus:border-blue-500 font-medium" />
+                      <button onClick={handleBarcodeSearch} className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-blue-100 rounded-lg text-blue-600 hover:bg-blue-600 hover:text-white transition-colors" title="Buscar en Catálogo Global (Open Food Facts)">
+                        {isSearchingOFF ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                      </button>
+                    </div>
                  </div>
               </div>
 
@@ -789,6 +886,13 @@ export default function ProductsPage() {
                        <option value="CONSUMABLE">Consumible</option>
                        <option value="KIT">Kit / Combo</option>
                     </select>
+                    
+                    {type === 'PRODUCT' && (
+                       <label className="flex items-center gap-2 mt-2 cursor-pointer p-2 bg-slate-50 rounded-lg border border-slate-200 hover:border-blue-500 transition-colors">
+                          <input type="checkbox" checked={soldByWeight} onChange={e=>setSoldByWeight(e.target.checked)} className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500" />
+                          <span className="text-sm font-bold text-slate-700">Venta a granel / por peso (Báscula)</span>
+                       </label>
+                    )}
                  </div>
                  <div className="space-y-2">
                     <label className="text-sm font-bold text-slate-700">Impuesto de Venta</label>

@@ -47,4 +47,11 @@ export class PosController {
     if (!tenantId) throw new UnauthorizedException('TenantID missing');
     return this.posService.addMovement(tenantId, req.params.id, payload);
   }
+
+  @Post('authorize')
+  async authorizeAction(@Req() req: any, @Body() payload: { pin: string }) {
+    const tenantId = req.headers['x-tenant-id'];
+    if (!tenantId) throw new UnauthorizedException('TenantID missing');
+    return this.posService.authorizeAction(tenantId, payload.pin);
+  }
 }
