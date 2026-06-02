@@ -305,7 +305,7 @@ export default function PosPage() {
 
   const checkShift = async () => {
      try {
-       const res = await fetch(`http://${window.location.hostname}:3005/pos/shifts/current`, {
+       const res = await fetch(`${baseUrl}/pos/shifts/current`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` }
        });
@@ -325,7 +325,7 @@ export default function PosPage() {
 
   const openShift = async () => {
      try {
-        const res = await fetch(`http://${window.location.hostname}:3005/pos/shifts/open`, {
+        const res = await fetch(`${baseUrl}/pos/shifts/open`, {
            method: 'POST',
            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
            body: JSON.stringify({ startingCash: parseFloat(startingCash || '0'), userId: user?.id })
@@ -342,7 +342,7 @@ export default function PosPage() {
   const fetchProducts = async () => {
     if (!token) return;
     try {
-      const res = await fetch(`http://${window.location.hostname}:3005/products`, {
+      const res = await fetch(`${baseUrl}/products`, {
          headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -366,7 +366,7 @@ export default function PosPage() {
   const fetchCustomers = async () => {
     if (!token) return;
     try {
-       const res = await fetch(`http://${window.location.hostname}:3005/customers`, {
+       const res = await fetch(`${baseUrl}/customers`, {
           headers: { 'Authorization': `Bearer ${token}` }
        });
        if (res.ok) setCustomers(await res.json());
@@ -375,7 +375,7 @@ export default function PosPage() {
 
   const loadCreditStatement = async (custId: string) => {
      try {
-        const res = await fetch(`http://${window.location.hostname}:3005/customers/${custId}/credit`, {
+        const res = await fetch(`${baseUrl}/customers/${custId}/credit`, {
            headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) setCreditStatement(await res.json());
@@ -403,7 +403,7 @@ export default function PosPage() {
       for (const payload of q) {
           try {
              // Re-inject the token if not available inside the payload
-             const res = await fetch(`http://${window.location.hostname}:3005/pos/checkout`, {
+             const res = await fetch(`${baseUrl}/pos/checkout`, {
                 method: 'POST',
                 headers: { 
                    'Content-Type': 'application/json',
@@ -568,7 +568,7 @@ export default function PosPage() {
 
      setCheckoutLoading(true);
      try {
-       const res = await fetch(`http://${window.location.hostname}:3005/pos/checkout`, {
+       const res = await fetch(`${baseUrl}/pos/checkout`, {
           method: 'POST',
           headers: { 
              'Content-Type': 'application/json',
@@ -650,7 +650,7 @@ export default function PosPage() {
 
   const loadShiftSummary = async () => {
       try {
-         const res = await fetch(`http://${window.location.hostname}:3005/pos/shifts/${currentShift.id}/summary`, {
+         const res = await fetch(`${baseUrl}/pos/shifts/${currentShift.id}/summary`, {
             headers: { 'Authorization': `Bearer ${token}` }
          });
          if (res.ok) {
@@ -666,7 +666,7 @@ export default function PosPage() {
 
   const handleCloseShift = async () => {
       try {
-         const res = await fetch(`http://${window.location.hostname}:3005/pos/shifts/${currentShift.id}/close`, {
+         const res = await fetch(`${baseUrl}/pos/shifts/${currentShift.id}/close`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ userId: user?.id })
