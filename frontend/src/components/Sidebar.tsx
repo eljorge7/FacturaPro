@@ -29,9 +29,11 @@ import {
   Banknote,
   Truck,
   MessageSquare,
-  ShoppingBag
+  ShoppingBag,
+  Lock
 } from "lucide-react";
 import { useAuth } from "./AuthProvider";
+import { PaywallModal } from "./PaywallModal";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -44,6 +46,7 @@ export function Sidebar() {
   const [primaryTenant, setPrimaryTenant] = useState<any>(null);
   const [isAgencyAdmin, setIsAgencyAdmin] = useState(false);
   const [showSwitcher, setShowSwitcher] = useState(false);
+  const [paywallFeature, setPaywallFeature] = useState<{isOpen: boolean, feature: string}>({isOpen: false, feature: ""});
 
   const { user, logout, token, tenantId, switchActiveTenant } = useAuth();
   
@@ -83,8 +86,9 @@ export function Sidebar() {
      if (!isBaseDomain) return null;
   }
 
-  const isStarter = tier === 'STARTER';
-  const isPro = tier === 'PRO' || tier === 'ENTERPRISE' || tier === 'CORPORATIVO' || tier === 'AGENCY' || !tier;
+  const isLite = tier === 'LITE';
+  const isStarter = tier === 'STARTER' || tier === 'EMPRENDEDOR';
+  const isPro = tier === 'PRO' || tier === 'ENTERPRISE' || tier === 'CORPORATIVO' || tier === 'AGENCY' || tier === 'PYME' || !tier;
   const isEnterprise = tier === 'ENTERPRISE' || tier === 'CORPORATIVO' || tier === 'AGENCY' || !tier;
 
   let links = [
@@ -263,6 +267,27 @@ export function Sidebar() {
           }
 
           const isActive = pathname === link.href;
+          
+          // LITE Tier Logic
+          const allowedLiteRoutes = ['/', '/my-portal', '/customers', '/suppliers', '/products', '/pos'];
+          const isLockedForLite = isLite && !allowedLiteRoutes.includes(link.href) && !link.href.startsWith('/settings');
+
+          if (isLockedForLite) {
+             return (
+               <button 
+                 key={link.name} 
+                 onClick={() => setPaywallFeature({ isOpen: true, feature: link.name })}
+                 title={isCollapsed ? `${link.name} (Premium)` : undefined}
+                 className={`w-full flex items-center ${isCollapsed ? 'justify-center p-3' : 'gap-3 px-3 py-2.5'} rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-800 hover:text-slate-300 relative group`}
+               >
+                 <div className="opacity-60 grayscale group-hover:grayscale-0 transition-all">{link.icon}</div>
+                 {!isCollapsed && <span className="opacity-80 flex-1 text-left">{link.name}</span>}
+                 {!isCollapsed && <Lock className="w-3.5 h-3.5 text-rose-500 shrink-0 ml-auto drop-shadow-sm" />}
+                 {isCollapsed && <Lock className="w-3 h-3 text-rose-500 absolute top-2 right-2 drop-shadow-sm" />}
+               </button>
+             );
+          }
+
           return (
             <Link 
               key={link.name} 
@@ -366,6 +391,13 @@ export function Sidebar() {
            </button>
         </div>
       )}
+
+      {/* Paywall Modal */}
+      <PaywallModal 
+         isOpen={paywallFeature.isOpen} 
+         featureName={paywallFeature.feature} 
+         onClose={() => setPaywallFeature({ isOpen: false, feature: "" })} 
+      />
     </div>
   );
 }
