@@ -22,6 +22,10 @@ export class CreateProductDto {
   barcode?: string;
 
   @IsOptional()
+  @IsBoolean()
+  isFavorite?: boolean;
+
+  @IsOptional()
   @IsNumber()
   stock?: number;
 

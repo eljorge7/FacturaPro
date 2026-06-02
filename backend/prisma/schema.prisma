@@ -284,6 +284,7 @@ model Product {
 
   sku            String?
   barcode        String? // Para escáneres láser
+  isFavorite     Boolean @default(false) // Nuevo: Forzar aparición en POS Táctil
   name           String
   description    String?
   price          Float

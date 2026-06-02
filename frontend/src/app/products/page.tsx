@@ -36,6 +36,7 @@ export default function ProductsPage() {
   const [barcode, setBarcode] = useState("");
   const [description, setDescription] = useState("");
   const [soldByWeight, setSoldByWeight] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
   const [satProductCode, setSatProductCode] = useState("");
   const [satUnitCode, setSatUnitCode] = useState("H87"); // Pieza
   const [price, setPrice] = useState("");
@@ -78,6 +79,7 @@ export default function ProductsPage() {
     setBarcode("");
     setDescription("");
     setSoldByWeight(false);
+    setIsFavorite(false);
     setSatProductCode("");
     setSatUnitCode("H87");
     setPrice("");
@@ -126,6 +128,7 @@ export default function ProductsPage() {
     setBarcode(product.barcode || "");
     setDescription(product.description || "");
     setSoldByWeight(product.soldByWeight || false);
+    setIsFavorite(product.isFavorite || false);
     setSatProductCode(product.satProductCode || "");
     setSatUnitCode(product.satUnitCode || "H87");
     setPrice(product.price.toString());
@@ -300,6 +303,7 @@ export default function ProductsPage() {
         name,
         sku,
         barcode: barcode || null,
+        isFavorite,
         description,
         soldByWeight,
         satProductCode: satProductCode || '01010101',
@@ -893,6 +897,10 @@ export default function ProductsPage() {
                           <span className="text-sm font-bold text-slate-700">Venta a granel / por peso (Báscula)</span>
                        </label>
                     )}
+                    <label className="flex items-center gap-2 mt-2 cursor-pointer p-2 bg-indigo-50 rounded-lg border border-indigo-200 hover:border-indigo-500 transition-colors">
+                       <input type="checkbox" checked={isFavorite} onChange={e=>setIsFavorite(e.target.checked)} className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500" />
+                       <span className="text-sm font-bold text-indigo-700 flex items-center gap-1">★ Favorito Táctil (Forzar en POS)</span>
+                    </label>
                  </div>
                  <div className="space-y-2">
                     <label className="text-sm font-bold text-slate-700">Impuesto de Venta</label>

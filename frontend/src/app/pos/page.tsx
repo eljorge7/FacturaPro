@@ -492,7 +492,7 @@ export default function PosPage() {
   const total = subtotal + tax;
 
   const filteredProducts = products.filter(p => {
-      if (showQuickKeysOnly) return !p.barcode; // Si activó Teclas Rápidas, mostrar solo los que NO tienen código de barras
+      if (showQuickKeysOnly) return p.isFavorite || !p.barcode; // Mostrar favoritos o los que no tienen código
       return p.name.toLowerCase().includes(searchTerm.toLowerCase()) || (p.barcode && p.barcode.includes(searchTerm));
   });
 
