@@ -95,8 +95,8 @@ export default function CustomersPage() {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
       const res = await fetch(`${baseUrl}/customers`, { cache: 'no-store' });
       const data = await res.json();
-      setCustomers(data);
-      if (selectedCustomer) {
+      setCustomers(Array.isArray(data) ? data : []);
+      if (selectedCustomer && Array.isArray(data)) {
          const updated = data.find((c: any) => c.id === selectedCustomer.id);
          if (updated) handleSelectCustomer(updated);
       }
