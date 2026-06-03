@@ -307,7 +307,7 @@ export default function PosPage() {
      try {
        const res = await fetch(`${baseUrl}/pos/shifts/current`, {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': localStorage.getItem('tenantId') || 'demo-tenant' }
        });
        if (res.ok) {
           const text = await res.text();
@@ -327,7 +327,7 @@ export default function PosPage() {
      try {
         const res = await fetch(`${baseUrl}/pos/shifts/open`, {
            method: 'POST',
-           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, 'x-tenant-id': localStorage.getItem('tenantId') || 'demo-tenant' },
            body: JSON.stringify({ startingCash: parseFloat(startingCash || '0'), userId: user?.id })
         });
         if (res.ok) {
@@ -343,7 +343,7 @@ export default function PosPage() {
     if (!token) return;
     try {
       const res = await fetch(`${baseUrl}/products`, {
-         headers: { 'Authorization': `Bearer ${token}` }
+         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': localStorage.getItem('tenantId') || 'demo-tenant' }
       });
       if (res.ok) {
          const data = await res.json();
@@ -367,7 +367,7 @@ export default function PosPage() {
     if (!token) return;
     try {
        const res = await fetch(`${baseUrl}/customers`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': localStorage.getItem('tenantId') || 'demo-tenant' }
        });
        if (res.ok) setCustomers(await res.json());
     } catch(e) { console.error("Error fetching customers", e); }
@@ -376,7 +376,7 @@ export default function PosPage() {
   const loadCreditStatement = async (custId: string) => {
      try {
         const res = await fetch(`${baseUrl}/customers/${custId}/credit`, {
-           headers: { 'Authorization': `Bearer ${token}` }
+           headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': localStorage.getItem('tenantId') || 'demo-tenant' }
         });
         if (res.ok) setCreditStatement(await res.json());
      } catch(e) { console.error(e); }
@@ -407,7 +407,7 @@ export default function PosPage() {
                 method: 'POST',
                 headers: { 
                    'Content-Type': 'application/json',
-                   'Authorization': `Bearer ${token}` 
+                   'Authorization': `Bearer ${token}`, 'x-tenant-id': localStorage.getItem('tenantId') || 'demo-tenant' 
                 },
                 body: JSON.stringify(payload)
              });
@@ -572,7 +572,7 @@ export default function PosPage() {
           method: 'POST',
           headers: { 
              'Content-Type': 'application/json',
-             'Authorization': `Bearer ${token}` 
+             'Authorization': `Bearer ${token}`, 'x-tenant-id': localStorage.getItem('tenantId') || 'demo-tenant' 
           },
           body: JSON.stringify(payload)
        });
@@ -651,7 +651,7 @@ export default function PosPage() {
   const loadShiftSummary = async () => {
       try {
          const res = await fetch(`${baseUrl}/pos/shifts/${currentShift.id}/summary`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': localStorage.getItem('tenantId') || 'demo-tenant' }
          });
          if (res.ok) {
             setShiftSummary(await res.json());
@@ -668,7 +668,7 @@ export default function PosPage() {
       try {
          const res = await fetch(`${baseUrl}/pos/shifts/${currentShift.id}/close`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, 'x-tenant-id': localStorage.getItem('tenantId') || 'demo-tenant' },
             body: JSON.stringify({ userId: user?.id })
          });
          if (res.ok) {
