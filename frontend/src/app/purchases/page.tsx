@@ -17,12 +17,14 @@ export default function PurchasesPage() {
             fetch((process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api') + '/products', { headers: { 'x-tenant-id': localStorage.getItem('tenantId') || 'demo-tenant' } }).then(r => r.json())
         ])
         .then(([purchasesData, productsData]) => {
-            setOrders(purchasesData);
+            const pData = Array.isArray(purchasesData) ? purchasesData : [];
+            const prData = Array.isArray(productsData) ? productsData : [];
+            setOrders(pData as any);
             setLoading(false);
 
             // Compute incoming
             const incomingMap: any = {};
-            purchasesData.forEach((po: any) => {
+            pData.forEach((po: any) => {
                 if (po.status === 'PENDING' || po.status === 'PARTIAL') {
                     po.items?.forEach((item: any) => {
                         if (!incomingMap[item.productId]) incomingMap[item.productId] = 0;

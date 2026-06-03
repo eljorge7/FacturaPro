@@ -182,9 +182,10 @@ export default function ProductsPage() {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
       const res = await fetch(`${baseUrl}/products`, { cache: 'no-store' });
       const data = await res.json();
-      setProducts(data);
+      const pData = Array.isArray(data) ? data : [];
+      setProducts(pData);
       if (selectedProduct) {
-         const updated = data.find((p: any) => p.id === selectedProduct.id);
+         const updated = pData.find((p: any) => p.id === selectedProduct.id);
          if (updated) setSelectedProduct(updated);
       }
     } catch (e) {

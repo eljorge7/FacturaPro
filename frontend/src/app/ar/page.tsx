@@ -51,7 +51,7 @@ export default function ARReportsPage() {
     };
 
     if (loading) return <div className="p-8">Calculando reportes y sumando ingresos...</div>;
-    if (!report) return <div className="p-8">Error al cargar datos de cuentas por cobrar.</div>;
+    if (!report || report.monthlyCollected === undefined || !report.paymentHistory) return <div className="p-8 text-slate-500 text-center mt-10">Aún no hay datos financieros o hubo un error al cargar. Asegúrate de tener conexión.</div>;
 
     return (
         <div className="p-8 pb-20 max-w-7xl mx-auto w-full animate-in fade-in zoom-in-95 duration-300">
