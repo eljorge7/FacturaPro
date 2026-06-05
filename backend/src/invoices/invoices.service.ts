@@ -225,6 +225,7 @@ export class InvoicesService {
       tenantId = tenantObj.id;
     } else {
       tenantObj = await this.prisma.tenant.findUnique({ where: { id: tenantId } });
+      if (!tenantObj) throw new NotFoundException('Empresa no encontrada.');
     }
 
     if (tenantObj.availableStamps !== -1 && tenantObj.availableStamps <= 0) {
