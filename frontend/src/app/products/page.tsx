@@ -41,6 +41,7 @@ export default function ProductsPage() {
   const [satUnitCode, setSatUnitCode] = useState("H87"); // Pieza
   const [price, setPrice] = useState("");
   const [taxType, setTaxType] = useState("IVA_16");
+  const [taxIncluded, setTaxIncluded] = useState(false);
   const [costPrice, setCostPrice] = useState("");
   const [type, setType] = useState("PRODUCT");
   const [kitComponents, setKitComponents] = useState<{componentId: string, quantity: string, name?: string}[]>([]);
@@ -86,6 +87,7 @@ export default function ProductsPage() {
     setCostPrice("");
     setType("PRODUCT");
     setTaxType("IVA_16");
+    setTaxIncluded(false);
     setKitComponents([]);
     setStock("");
     setMinStock("");
@@ -139,6 +141,7 @@ export default function ProductsPage() {
     setLocationShelf(product.locationShelf || "");
     setImageUrl(product.imageUrl || null);
     setType(product.type || "PRODUCT");
+    setTaxIncluded(product.taxIncluded || false);
     setIsPublishedToStore(product.isPublishedToStore || false);
     setStoreCategory(product.storeCategory || "");
     
@@ -313,6 +316,7 @@ export default function ProductsPage() {
         costPrice: costPrice ? parseFloat(costPrice) : null,
         type,
         taxType,
+        taxIncluded,
         stock: stock ? parseFloat(stock) : 0,
         minStock: minStock ? parseFloat(minStock) : 0,
         maxStock: maxStock ? parseFloat(maxStock) : null,
@@ -911,6 +915,12 @@ export default function ProductsPage() {
                        <option value="EXENTO">Exento</option>
                        <option value="RET_IVA_10_6">Ret. IVA 10.66%</option>
                     </select>
+                    {taxType !== 'EXENTO' && (
+                       <label className="flex items-center gap-2 mt-2 cursor-pointer p-2 bg-slate-50 rounded-lg border border-slate-200 hover:border-blue-500 transition-colors">
+                          <input type="checkbox" checked={taxIncluded} onChange={e=>setTaxIncluded(e.target.checked)} className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500" />
+                          <span className="text-sm font-bold text-slate-700">Precios con Impuesto Incluido</span>
+                       </label>
+                    )}
                  </div>
               </div>
 

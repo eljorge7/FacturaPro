@@ -65,6 +65,10 @@ export class CreateProductDto {
   taxType: string;
 
   @IsOptional()
+  @IsBoolean()
+  taxIncluded?: boolean;
+
+  @IsOptional()
   @IsNumber()
   costPrice?: number;
 

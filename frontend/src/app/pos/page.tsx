@@ -453,12 +453,17 @@ export default function PosPage() {
       }
       setCart(cart.map(i => i.productId === product.id ? { ...i, quantity: i.quantity + 1 } : i));
     } else {
+      const taxRate = product.taxRate !== undefined ? product.taxRate : 0.16;
+      const basePrice = product.taxIncluded ? (product.price / (1 + taxRate)) : product.price;
+
       setCart([...cart, { 
          productId: product.id, 
          name: product.name, 
-         unitPrice: product.price, 
+         unitPrice: basePrice, 
+         displayPrice: product.price, // Store the sticker price for UI
+         taxIncluded: product.taxIncluded,
          quantity: 1,
-         taxRate: product.taxRate || 0.16
+         taxRate: taxRate
       }]);
     }
   };
@@ -905,11 +910,13 @@ export default function PosPage() {
                 </div>
              ) : (
                 <div className="space-y-3">
-                   {cart.map(item => (
+                   {cart.map(item => {
+                      const displayP = item.displayPrice || item.unitPrice;
+                      return (
                       <div key={item.productId} className="flex gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm relative group">
                          <div className="flex-1 pr-6">
                             <p className="font-bold text-slate-800 text-sm line-clamp-2">{item.name}</p>
-                            <p className="text-slate-500 font-medium text-xs mt-1">${item.unitPrice.toLocaleString('en-US')}</p>
+                            <p className="text-slate-500 font-medium text-xs mt-1">${displayP.toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
                          </div>
                          <div className="flex flex-col items-end justify-between">
                             <div className="flex items-center gap-1 bg-slate-100 rounded-lg border border-slate-200 p-0.5">
@@ -921,11 +928,11 @@ export default function PosPage() {
                                <button onClick={() => removeFromCart(item.productId)} className="text-slate-300 hover:text-red-500 transition-colors p-1 bg-slate-50 rounded-md" title="Eliminar del carrito">
                                    <Trash2 className="w-4 h-4" />
                                </button>
-                               <p className="font-black text-slate-900">${(item.unitPrice * item.quantity).toLocaleString('en-US')}</p>
+                               <p className="font-black text-slate-900">${(displayP * item.quantity).toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
                             </div>
                          </div>
                       </div>
-                   ))}
+                   )})}
                 </div>
              )}
           </div>
