@@ -906,8 +906,8 @@ export default function PosPage() {
              ) : (
                 <div className="space-y-3">
                    {cart.map(item => (
-                      <div key={item.productId} className="flex gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-                         <div className="flex-1">
+                      <div key={item.productId} className="flex gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm relative group">
+                         <div className="flex-1 pr-6">
                             <p className="font-bold text-slate-800 text-sm line-clamp-2">{item.name}</p>
                             <p className="text-slate-500 font-medium text-xs mt-1">${item.unitPrice.toLocaleString('en-US')}</p>
                          </div>
@@ -917,7 +917,12 @@ export default function PosPage() {
                                <span className="w-6 text-center text-sm font-bold text-slate-800">{item.quantity}</span>
                                <button onClick={() => changeQuantity(item.productId, 1)} className="w-6 h-6 flex items-center justify-center text-slate-500 hover:bg-slate-200 rounded-md font-bold">+</button>
                             </div>
-                            <p className="font-black text-slate-900 mt-2">${(item.unitPrice * item.quantity).toLocaleString('en-US')}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                               <button onClick={() => removeFromCart(item.productId)} className="text-slate-300 hover:text-red-500 transition-colors p-1 bg-slate-50 rounded-md" title="Eliminar del carrito">
+                                   <Trash2 className="w-4 h-4" />
+                               </button>
+                               <p className="font-black text-slate-900">${(item.unitPrice * item.quantity).toLocaleString('en-US')}</p>
+                            </div>
                          </div>
                       </div>
                    ))}
