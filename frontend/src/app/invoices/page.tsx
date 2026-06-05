@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Search, FileText, Download, XCircle, Loader2, Plus, Mail, Share2, Printer, MoreHorizontal, ChevronDown, CheckCircle2, ArrowLeft, FileEdit, MessageCircle, Globe } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import GlobalInvoiceModal from '@/components/modals/GlobalInvoiceModal';
 
 export default function InvoicesPage() {
   const router = useRouter();
@@ -46,7 +47,9 @@ export default function InvoicesPage() {
 
   // Cancellation Modal
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-  const [cancelForm, setCancelForm] = useState({ motive: "02", substitutionUuid: "" });
+  const [cancelForm, setCancelForm] = useState({ motive: '02', substitutionUuid: '' });
+  
+  const [isGlobalModalOpen, setIsGlobalModalOpen] = useState(false);
   const [isCanceling, setIsCanceling] = useState(false);
 
   const fetchInvoices = async () => {
@@ -408,9 +411,12 @@ export default function InvoicesPage() {
               <button className="flex items-center gap-1 text-lg font-medium text-slate-800 hover:bg-slate-50 px-2 py-1 rounded transition-colors">
                  Todas las factur... <ChevronDown className="w-4 h-4 text-slate-400" />
               </button>
-              <Link href="/invoices/new" className="bg-[#10b981] hover:bg-[#059669] text-white p-1.5 rounded transition-colors shadow-sm ml-2">
+              <Link href="/invoices/new" className="bg-[#10b981] hover:bg-[#059669] text-white p-1.5 rounded transition-colors shadow-sm ml-2" title="Nueva Factura Individual">
                  <Plus className="w-5 h-5" />
               </Link>
+              <button onClick={() => setIsGlobalModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded transition-colors shadow-sm text-sm font-bold flex items-center gap-1.5 ml-1">
+                 <Globe className="w-4 h-4" /> Factura Global
+              </button>
            </div>
            
            <div className="flex border border-slate-200 rounded text-slate-400 bg-white items-center px-2 py-0.5 max-w-xs w-full focus-within:border-slate-400 focus-within:text-slate-600 transition-colors">
@@ -493,6 +499,11 @@ export default function InvoicesPage() {
               </tbody>
            </table>
         </div>
+        <GlobalInvoiceModal 
+           isOpen={isGlobalModalOpen} 
+           onClose={() => setIsGlobalModalOpen(false)} 
+           onGenerate={() => { fetchInvoices(); fetchStats(); }}
+        />
       </div>
     );
   }
@@ -509,9 +520,12 @@ export default function InvoicesPage() {
               >
                  Todas las factur... <ChevronDown className="w-4 h-4 text-slate-400" />
               </button>
-              <Link href="/invoices/new" className="bg-[#10b981] hover:bg-[#059669] text-white p-1 rounded transition-colors flex items-center justify-center">
+              <Link href="/invoices/new" className="bg-[#10b981] hover:bg-[#059669] text-white p-1 rounded transition-colors flex items-center justify-center ml-1" title="Nueva Factura">
                  <Plus className="w-4 h-4" />
               </Link>
+              <button onClick={() => setIsGlobalModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white p-1 px-2 rounded transition-colors text-xs font-bold flex items-center gap-1 ml-1">
+                 <Globe className="w-4 h-4" /> Global
+              </button>
            </div>
            
            <div className="flex-1 flex justify-between items-center px-4">

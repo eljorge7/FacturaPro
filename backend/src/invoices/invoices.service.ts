@@ -194,6 +194,186 @@ export class InvoicesService {
     });
   }
 
+  async getPendingGlobalTickets(tenantId: string, startDate: string, endDate: string) {
+     const start = new Date(startDate);
+     const end = new Date(endDate);
+     end.setHours(23, 59, 59, 999);
+     
+     const pendingTickets = await this.prisma.invoice.findMany({
+        where: {
+           tenantId,
+           status: 'DRAFT',
+           globalInvoiceId: null,
+           createdAt: {
+              gte: start,
+              lte: end,
+           }
+        }
+     });
+
+     const totalTickets = pendingTickets.length;
+     const totalAmount = pendingTickets.reduce((acc, t) => acc + t.total, 0);
+
+     return { totalTickets, totalAmount };
+  }
+
+  async createGlobalInvoice(tenantId: string, dto: any) {
+    let tenantObj;
+    if (!tenantId) {
+      tenantObj = await this.prisma.tenant.findFirst();
+      if (!tenantObj) throw new BadRequestException('El sistema no tiene Empresa configurada.');
+      tenantId = tenantObj.id;
+    } else {
+      tenantObj = await this.prisma.tenant.findUnique({ where: { id: tenantId } });
+    }
+
+    if (tenantObj.availableStamps !== -1 && tenantObj.availableStamps <= 0) {
+      throw new BadRequestException('Límite de Timbres Agotado. Por favor adquiera más timbres.');
+    }
+
+    const taxProfile = await this.prisma.taxProfile.findFirst({ where: { tenantId } });
+    if (!taxProfile) throw new NotFoundException('Perfil Fiscal no configurado.');
+
+    const startDate = new Date(dto.startDate);
+    const endDate = new Date(dto.endDate);
+    endDate.setHours(23, 59, 59, 999);
+
+    const pendingTickets = await this.prisma.invoice.findMany({
+      where: {
+        tenantId,
+        status: 'DRAFT',
+        globalInvoiceId: null,
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        }
+      },
+      include: { items: true }
+    });
+
+    if (pendingTickets.length === 0) {
+      throw new BadRequestException('No hay tickets no facturados en el rango seleccionado.');
+    }
+
+    let publicCustomer = await this.prisma.customer.findFirst({
+      where: { tenantId, rfc: 'XAXX010101000' }
+    });
+
+    if (!publicCustomer) {
+      publicCustomer = await this.prisma.customer.create({
+        data: {
+          tenantId,
+          legalName: 'PUBLICO EN GENERAL',
+          rfc: 'XAXX010101000',
+          taxRegime: '616',
+          zipCode: taxProfile.zipCode || '00000',
+        }
+      });
+    }
+
+    let subtotal = 0;
+    let taxTotal = 0;
+    let total = 0;
+    
+    const globalItems = pendingTickets.map(ticket => {
+      subtotal += ticket.subtotal;
+      taxTotal += ticket.taxTotal;
+      total += ticket.total;
+
+      const ticketTaxRate = ticket.subtotal > 0 ? (ticket.taxTotal / ticket.subtotal) : 0;
+
+      return {
+        description: 'Venta',
+        quantity: 1,
+        unitPrice: ticket.subtotal,
+        taxRate: ticketTaxRate,
+        total: ticket.total,
+        customFields: { ticketId: ticket.invoiceNumber },
+        product: {
+          satProductCode: '01010101',
+          satUnitCode: 'ACT'
+        }
+      };
+    });
+
+    let invoiceNumber = `GLOBAL-${Date.now().toString().slice(-6)}`;
+
+    const partialInvoice = {
+      tenantId,
+      customerId: publicCustomer.id,
+      invoiceNumber,
+      date: new Date(),
+      paymentMethod: 'PUE',
+      paymentForm: '01', // Efecivo por default para general
+      cfdiUse: 'S01',
+      currency: 'MXN',
+      exchangeRate: 1.0,
+      subtotal,
+      taxTotal,
+      tdsTotal: 0,
+      total,
+      customer: publicCustomer,
+      items: globalItems,
+      isGlobal: true,
+      globalPeriod: dto.globalPeriod,
+      globalMonths: dto.globalMonths,
+      globalYear: dto.globalYear
+    };
+
+    const { xml } = await this.xmlGenerator.generate(partialInvoice, taxProfile);
+    const pacResult = await this.pacService.stampXml(Buffer.from(xml).toString('base64'), 'SANDBOX');
+    
+    const [invoice] = await this.prisma.$transaction([
+      this.prisma.invoice.create({
+        data: {
+          tenantId,
+          taxProfileId: taxProfile.id,
+          customerId: publicCustomer.id,
+          invoiceNumber,
+          status: 'TIMBRADA',
+          satUuid: pacResult.satUuid,
+          paymentMethod: 'PUE',
+          paymentForm: '01',
+          cfdiUse: 'S01',
+          currency: 'MXN',
+          exchangeRate: 1.0,
+          subtotal,
+          taxTotal,
+          tdsTotal: 0,
+          total,
+          xmlContent: pacResult.stampedXml,
+          isGlobal: true,
+          globalPeriod: dto.globalPeriod,
+          globalMonths: dto.globalMonths,
+          globalYear: dto.globalYear,
+          items: {
+            create: globalItems.map(gi => ({
+              description: gi.description,
+              quantity: gi.quantity,
+              unitPrice: gi.unitPrice,
+              taxRate: gi.taxRate,
+              total: gi.total,
+              customFields: gi.customFields
+            }))
+          }
+        }
+      }),
+      ...(tenantObj.availableStamps !== -1 ? [
+        this.prisma.tenant.update({
+          where: { id: tenantId },
+          data: { availableStamps: { decrement: 1 } }
+        })
+      ] : [])
+    ]);
+
+    await this.prisma.invoice.updateMany({
+      where: { id: { in: pendingTickets.map(t => t.id) } },
+      data: { globalInvoiceId: invoice.id }
+    });
+
+    return invoice;
+  }
+
   async getStats(tenantId: string) {
     let whereFilter = {};
     if (tenantId && tenantId !== 'demo-tenant') {

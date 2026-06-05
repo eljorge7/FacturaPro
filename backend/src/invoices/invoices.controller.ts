@@ -36,6 +36,20 @@ export class InvoicesController {
     return this.invoicesService.getStats(finalTenantId);
   }
 
+  @Get('pending-global')
+  getPendingGlobalTickets(@Req() req: any, @Headers('x-tenant-id') hTenantId: string, @Body() body: any, @Req() request: any) {
+    const finalTenantId = req.tenantId || hTenantId;
+    const { startDate, endDate } = request.query;
+    if (!startDate || !endDate) throw new BadRequestException('startDate y endDate son requeridos en la query.');
+    return this.invoicesService.getPendingGlobalTickets(finalTenantId, startDate, endDate);
+  }
+
+  @Post('global')
+  createGlobalInvoice(@Req() req: any, @Headers('x-tenant-id') hTenantId: string, @Body() createGlobalDto: any) {
+    const finalTenantId = req.tenantId || hTenantId;
+    return this.invoicesService.createGlobalInvoice(finalTenantId, createGlobalDto);
+  }
+
   @Get('ar-report')
   getArReport(@Req() req: any, @Headers('x-tenant-id') hTenantId: string) {
     const finalTenantId = req.tenantId || hTenantId;

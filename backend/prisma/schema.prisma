@@ -521,6 +521,17 @@ model Invoice {
   items       InvoiceItem[]
   payments    Payment[]
   attachments InvoiceAttachment[]
+
+  // Factura Global CFDI 4.0
+  globalInvoiceId String?
+  globalInvoice   Invoice?  @relation("GlobalInvoices", fields: [globalInvoiceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  childInvoices   Invoice[] @relation("GlobalInvoices")
+
+  // Factura Global Node Data
+  isGlobal      Boolean @default(false)
+  globalPeriod  String? // 01 Diario, 02 Semanal...
+  globalMonths  String? // 01, 02, ..., 12
+  globalYear    String? // 2026
 }
 
 model Payment {
