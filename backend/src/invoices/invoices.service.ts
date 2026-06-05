@@ -27,7 +27,7 @@ export class InvoicesService {
       if (!tenantObj) throw new NotFoundException('Empresa no encontrada.');
     }
 
-    const isDraft = createInvoiceDto.status === 'DRAFT';
+    const isDraft = createInvoiceDto.status === 'DRAFT' || createInvoiceDto.isPosTicket;
 
     // Validación de Suscripción Expirada
     if ((tenantObj as any).subscriptionEndsAt && new Date() > new Date((tenantObj as any).subscriptionEndsAt)) {

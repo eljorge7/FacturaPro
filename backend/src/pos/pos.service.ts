@@ -197,6 +197,7 @@ export class PosService {
             taxRate: i.taxRate !== undefined ? i.taxRate : 0.16
          })),
          status: finalStatus, // DRAFT (Paid) o UNPAID (Fiado)
+         isPosTicket: true,
          ...(cashShiftId && { cashShiftId }),
          ...(customFields && { customFields })
      } as any);

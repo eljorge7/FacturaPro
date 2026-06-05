@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsArray, IsNumber } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsArray, IsNumber, IsBoolean } from 'class-validator';
 
 export class InvoiceItemDto {
   @IsString()
@@ -51,4 +51,8 @@ export class CreateInvoiceDto {
   @IsString()
   @IsOptional()
   status?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isPosTicket?: boolean;
 }
