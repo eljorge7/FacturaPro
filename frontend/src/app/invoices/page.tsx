@@ -326,6 +326,13 @@ export default function InvoicesPage() {
      return 'text-[#f59e0b]';
   };
 
+  const getStatusText = (status: string) => {
+     if(status === 'PAID') return 'Pagado';
+     if(status === 'UNPAID') return 'No Pagado (Fiado)';
+     if(status === 'DRAFT') return 'Borrador / Ticket';
+     return status;
+  };
+
   // Full Table View Mode
   if (!selectedInvoice) {
     return (
@@ -475,7 +482,7 @@ export default function InvoicesPage() {
                        </td>
                        <td className="py-3 px-2 text-slate-700 font-medium">{inv.customer?.legalName.substring(0, 25)}{inv.customer?.legalName.length > 25 ? '...' : ''}</td>
                        <td className="py-3 px-2 text-slate-600">{inv.satUuid ? 'Timbrado' : 'Pendiente'}</td>
-                       <td className="py-3 px-2"><span className={`text-[11px] font-bold uppercase tracking-wider ${getStatusColor(inv.status)}`}>{inv.status}</span></td>
+                       <td className="py-3 px-2"><span className={`text-[11px] font-bold uppercase tracking-wider ${getStatusColor(inv.status)}`}>{getStatusText(inv.status)}</span></td>
                        <td className="py-3 px-2 text-right font-medium">MXN{inv.total.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
                        <td className="py-3 px-6 text-right text-[#10b981] font-bold">MXN{getBalanceDue(inv).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
                     </tr>
@@ -530,7 +537,7 @@ export default function InvoicesPage() {
                           <span className={selectedInvoice.id === inv.id ? 'text-[#2563eb]' : ''}>{inv.invoiceNumber}</span>
                           <FileText className="w-3 h-3 text-[#10b981] opacity-0 group-hover:opacity-100" /> • {new Date(inv.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric'})}
                        </p>
-                       <p className={`text-[10px] font-bold uppercase tracking-wider ${getStatusColor(inv.status)}`}>{inv.status}</p>
+                       <p className={`text-[10px] font-bold uppercase tracking-wider ${getStatusColor(inv.status)}`}>{getStatusText(inv.status)}</p>
                     </div>
                     <div className="text-right shrink-0">
                        <p className="text-sm font-medium text-slate-800">MXN{inv.total.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
