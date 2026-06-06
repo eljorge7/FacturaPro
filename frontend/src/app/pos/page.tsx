@@ -1367,6 +1367,201 @@ export default function PosPage() {
                    />
 
                    <div className="flex gap-3">
+                <div className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-xl">
+                    <h2 className="text-2xl font-black text-slate-800 mb-2">Captura de Series</h2>
+                    <p className="text-slate-500 mb-6">Los siguientes productos requieren captura de número de serie para garantías.</p>
+                    
+                    <div className="space-y-4 max-h-[60vh] overflow-auto mb-6">
+                        {cart.filter(i => i.hasSerials).map(item => (
+                            <div key={item.productId} className="space-y-2">
+                                <label className="block text-sm font-bold text-slate-700">{item.name} (Esperados: {item.quantity})</label>
+                                <textarea 
+                                    className="w-full p-3 border rounded-xl font-mono text-sm" 
+                                    rows={3}
+                                    placeholder="SN-1\nSN-2..."
+                                    value={serialsInput[item.productId] || ''}
+                                    onChange={e => setSerialsInput({...serialsInput, [item.productId]: e.target.value})}
+                                />
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="flex gap-4">
+                        <button onClick={() => setShowSerialsModal(false)} className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-all">Volver</button>
+                        <button onClick={confirmSerialsAndCheckout} className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all">Confirmar y Cobrar</button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {scaleModalOpen && scaleProduct && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+                <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center">
+                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mx-auto mb-4">
+                       <Tag className="w-8 h-8" />
+                    </div>
+                    <h2 className="text-xl font-black text-slate-800 mb-1">{scaleProduct.name}</h2>
+                    <p className="text-sm text-slate-500 mb-6">Coloque el producto en la báscula y presione el botón para leer el peso.</p>
+                    
+                    <div className="bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 mb-6">
+                       <div className="flex items-end justify-center gap-2">
+                           <input 
+                              type="number" 
+                              step="0.001"
+                              value={scaleWeight} 
+                              onChange={(e) => setScaleWeight(e.target.value)}
+                              className="text-4xl font-black text-slate-800 bg-transparent w-32 text-center focus:outline-none" 
+                           />
+                           <span className="text-xl font-bold text-slate-500 mb-1">KG</span>
+                       </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                        <button 
+                           onClick={readFromScale} 
+                           disabled={isReadingScale}
+                           className="w-full py-4 bg-slate-800 hover:bg-slate-900 disabled:bg-slate-400 text-white rounded-xl font-bold transition-all flex justify-center items-center gap-2"
+                        >
+                           {isReadingScale ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : "Obtener Peso de Báscula"}
+                        </button>
+                        <button 
+                           onClick={confirmScaleWeight} 
+                           className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all"
+                        >
+                           Confirmar e Ingresar
+                        </button>
+                        <button 
+                           onClick={() => setScaleModalOpen(false)} 
+                           className="w-full py-3 text-slate-500 hover:text-slate-700 font-bold transition-all"
+                        >
+                           Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {showTopupModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+                <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl">
+                    <h2 className="text-2xl font-black text-slate-800 mb-6">📱 Recarga Electrónica</h2>
+                    
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">Compañía</label>
+                            <select 
+                                value={topupData.provider} 
+                                onChange={e => setTopupData({...topupData, provider: e.target.value})}
+                                className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                            >
+                                <option value="Telcel">Telcel</option>
+                                <option value="AT&T">AT&T</option>
+                                <option value="Movistar">Movistar</option>
+                                <option value="Unefon">Unefon</option>
+                                <option value="Bait">Bait</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">Número a Recargar (10 dígitos)</label>
+                            <input 
+                                type="text" 
+                                maxLength={10}
+                                value={topupData.phone} 
+                                onChange={e => setTopupData({...topupData, phone: e.target.value.replace(/\D/g, '')})}
+                                placeholder="0000000000"
+                                className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold text-lg tracking-widest text-center"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">Monto ($)</label>
+                            <select 
+                                value={topupData.amount} 
+                                onChange={e => setTopupData({...topupData, amount: e.target.value})}
+                                className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                            >
+                                <option value="20">$20.00</option>
+                                <option value="30">$30.00</option>
+                                <option value="50">$50.00</option>
+                                <option value="100">$100.00</option>
+                                <option value="200">$200.00</option>
+                                <option value="500">$500.00</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-4 mt-8">
+                        <button onClick={() => setShowTopupModal(false)} className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-all">Cancelar</button>
+                        <button onClick={addTopupToCart} className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all">Agregar a Caja</button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {showCustomerModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+                <div className="bg-white rounded-3xl p-8 max-w-xl w-full shadow-xl flex flex-col max-h-[80vh]">
+                    <div className="flex justify-between items-center mb-6">
+                       <h2 className="text-2xl font-black text-slate-800">Seleccionar Cliente</h2>
+                       <button onClick={() => setShowCustomerModal(false)} className="text-slate-400 hover:text-slate-600"><X className="w-6 h-6" /></button>
+                    </div>
+                    
+                    <div className="relative mb-6">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                        <input 
+                            type="text" 
+                            autoFocus
+                            placeholder="Buscar cliente..." 
+                            value={customerSearch}
+                            onChange={e => setCustomerSearch(e.target.value)}
+                            className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                        />
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto space-y-2">
+                        {customers.filter(c => c.legalName.toLowerCase().includes(customerSearch.toLowerCase()) || c.rfc.includes(customerSearch)).map(c => (
+                            <button 
+                               key={c.id}
+                               onClick={() => selectCustomer(c)}
+                               className="w-full flex justify-between items-center p-4 bg-white border border-slate-200 rounded-xl hover:border-blue-500 hover:shadow-md transition-all text-left"
+                            >
+                               <div>
+                                  <p className="font-bold text-slate-800">{c.legalName}</p>
+                                  <p className="text-sm text-slate-500">RFC: {c.rfc}</p>
+                               </div>
+                               {c.creditEnabled && (
+                                  <div className="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg uppercase">
+                                     Crédito Activo
+                                  </div>
+                               )}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {authModal?.isOpen && (
+           <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/70 backdrop-blur-md p-4">
+               <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center">
+                   <AlertTriangle className="w-16 h-16 text-rose-500 mx-auto mb-4" />
+                   <h2 className="text-2xl font-black text-slate-800 mb-2">Autorización Requerida</h2>
+                   <p className="text-slate-600 text-sm mb-6">{authModal.message}</p>
+                   
+                   <input 
+                      type="password" 
+                      placeholder="PIN de Encargado" 
+                      id="authPinInput"
+                      autoFocus
+                      onKeyDown={e => {
+                         if (e.key === 'Enter') {
+                            const val = (e.target as HTMLInputElement).value;
+                            authModal.resolve(val);
+                         }
+                      }}
+                      className="w-full text-center tracking-[0.5em] font-black text-2xl py-4 rounded-xl border-2 border-slate-200 bg-slate-50 focus:border-blue-500 focus:outline-none mb-4" 
+                   />
+
+                   <div className="flex gap-3">
                       <button onClick={() => authModal.resolve(null)} className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold">Cancelar</button>
                       <button onClick={() => {
                          const val = (document.getElementById('authPinInput') as HTMLInputElement).value;
@@ -1376,7 +1571,6 @@ export default function PosPage() {
                </div>
            </div>
         )}
-        <ShiftSummaryModal />
         <TopupModal 
            isOpen={isTopupModalOpen}
            onClose={() => setIsTopupModalOpen(false)}
