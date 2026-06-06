@@ -36,6 +36,7 @@ export default function TopupModal({ isOpen, onClose, onAdd }: TopupModalProps) 
   const [service, setService] = useState(SERVICES[0].id);
   const [reference, setReference] = useState('');
   const [serviceAmount, setServiceAmount] = useState<number | ''>('');
+  const [storeCommission, setStoreCommission] = useState<number | ''>(12);
 
   if (!isOpen) return null;
 
@@ -73,6 +74,18 @@ export default function TopupModal({ isOpen, onClose, onAdd }: TopupModalProps) 
            reference
         }
       });
+
+      if (storeCommission && storeCommission > 0) {
+        onAdd({
+          productId: `FEE-${service}`,
+          name: `Comisión por Recepción de Pago`,
+          price: storeCommission,
+          taxRate: 0.16, // La comisión que cobra la tienda sí suele llevar IVA
+          customFields: {
+             isTopup: false
+          }
+        });
+      }
     }
     
     // Reset and close
@@ -81,6 +94,7 @@ export default function TopupModal({ isOpen, onClose, onAdd }: TopupModalProps) 
     setAmount('');
     setReference('');
     setServiceAmount('');
+    setStoreCommission(12);
     onClose();
   };
 
@@ -223,6 +237,24 @@ export default function TopupModal({ isOpen, onClose, onAdd }: TopupModalProps) 
                     className="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-lg font-bold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                 </div>
+              </div>
+
+              {/* Commission */}
+              <div className="pt-4 border-t border-slate-200">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">4. Comisión de Tienda (Opcional)</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                    <span className="text-blue-500 font-bold text-lg">$</span>
+                  </div>
+                  <input 
+                    type="number" 
+                    value={storeCommission}
+                    onChange={e => setStoreCommission(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                    placeholder="0.00"
+                    className="w-full pl-8 pr-4 py-3 bg-blue-50/50 border border-blue-200 rounded-xl text-lg font-bold text-blue-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  />
+                </div>
+                <p className="text-xs text-slate-500 mt-2 font-medium">Este cargo extra se suma al total a pagar por el cliente como tu ganancia.</p>
               </div>
 
             </div>
