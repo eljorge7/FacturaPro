@@ -107,9 +107,25 @@ export default function ProductsPage() {
        const data = await res.json();
        if (data.status === 1 && data.product) {
           const p = data.product;
-          if (p.product_name && !name) setName(p.product_name);
-          if (p.image_url && !imageUrl) setImageUrl(p.image_url);
-          if (p.categories && !storeCategory) setStoreCategory(p.categories.split(',')[0]);
+          
+          // Construir un nombre más rico: Nombre + Marca + Cantidad
+          const brand = p.brands ? p.brands.split(',')[0].trim() : '';
+          const quantity = p.quantity ? p.quantity.trim() : '';
+          let fullName = p.product_name || '';
+          if (brand && !fullName.toLowerCase().includes(brand.toLowerCase())) fullName += ` ${brand}`;
+          if (quantity) fullName += ` ${quantity}`;
+          
+          if (fullName) setName(fullName.trim());
+          
+          // Intentar obtener la mejor imagen
+          const img = p.image_front_url || p.image_url;
+          if (img) setImageUrl(img);
+          
+          if (p.categories) setStoreCategory(p.categories.split(',')[0]);
+          
+          // Descripción: Nombre genérico o ingredientes
+          const desc = p.generic_name_es || p.generic_name || p.ingredients_text_es || p.ingredients_text || '';
+          if (desc) setDescription(desc.substring(0, 200));
           alert("Datos encontrados en el Catálogo FacturaPro (Open Food Facts)");
        } else {
           alert('No se encontró el producto en el catálogo público.');
