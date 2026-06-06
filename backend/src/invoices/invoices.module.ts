@@ -6,9 +6,10 @@ import { PdfService } from './pdf.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { AuthModule } from '../auth/auth.module';
 import { CfdiModule } from '../cfdi/cfdi.module';
+import { TopupsModule } from '../topups/topups.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, CfdiModule],
+  imports: [PrismaModule, AuthModule, CfdiModule, TopupsModule],
   controllers: [InvoicesController, PortalController],
   providers: [InvoicesService, PdfService],
   exports: [InvoicesService],

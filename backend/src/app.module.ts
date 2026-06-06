@@ -40,7 +40,7 @@ import { ProposalTemplatesModule } from './proposal-templates/proposal-templates
 import { MailModule } from './mail/mail.module';
 import { PublicStoreModule } from './public-store/public-store.module';
 import { StoreManagementModule } from './store-management/store-management.module';
-
+import { TopupsModule } from './topups/topups.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { CryptoModule } from './crypto/crypto.module';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -57,7 +57,7 @@ import { join } from 'path';
     }),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     ScheduleModule.forRoot(),
-    CryptoModule, AuthModule, SatCatalogsModule, TenantsModule, TaxProfilesModule, ApiKeysModule, ProductsModule, CustomersModule, QuotesModule, InvoicesModule, PrismaModule, SuppliersModule, ExpenseCategoriesModule, ExpensesModule, DiotModule, SubscriptionRequestsModule, CfdiModule, PosModule, UsersModule, PurchasesModule, InventoryModule, BovedaSatModule, EfosModule, SatScraperModule, BankAccountsModule, BankTransactionsModule, WarehousesModule, TransfersModule, StockTakesModule, EmployeesModule, RolesModule, PayrollModule, DepartmentsModule, TimeOffModule, ProposalTemplatesModule, MailModule, PublicStoreModule, StoreManagementModule
+    CryptoModule, AuthModule, SatCatalogsModule, TenantsModule, TaxProfilesModule, ApiKeysModule, ProductsModule, CustomersModule, QuotesModule, InvoicesModule, PrismaModule, SuppliersModule, ExpenseCategoriesModule, ExpensesModule, DiotModule, SubscriptionRequestsModule, CfdiModule, PosModule, UsersModule, PurchasesModule, InventoryModule, BovedaSatModule, EfosModule, SatScraperModule, BankAccountsModule, BankTransactionsModule, WarehousesModule, TransfersModule, StockTakesModule, EmployeesModule, RolesModule, PayrollModule, DepartmentsModule, TimeOffModule, ProposalTemplatesModule, MailModule, PublicStoreModule, StoreManagementModule, TopupsModule
   ],
   controllers: [AppController, InternalController],
   providers: [AppService],

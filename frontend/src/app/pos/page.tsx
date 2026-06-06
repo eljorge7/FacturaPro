@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 
-import { Search, ShoppingCart, CheckCircle, CreditCard, Banknote, Trash2, Tag, Box, X, AlertTriangle, Plus, FileText, User } from "lucide-react";
+import { Search, ShoppingCart, CheckCircle, CreditCard, Banknote, Trash2, Tag, Box, X, AlertTriangle, Plus, FileText, User, Smartphone } from "lucide-react";
 import Link from "next/link";
+import TopupModal from '@/components/pos/TopupModal';
 import { useAuth } from "@/components/AuthProvider";
 
 export default function PosPage() {
@@ -52,6 +53,9 @@ export default function PosPage() {
   const [scaleProduct, setScaleProduct] = useState<any>(null);
   const [scaleWeight, setScaleWeight] = useState<string>("0.000");
   const [isReadingScale, setIsReadingScale] = useState(false);
+
+  // == TOPUPS STATE ==
+  const [isTopupModalOpen, setIsTopupModalOpen] = useState(false);
 
   const requestScaleWeight = (product: any) => {
      if (!('serial' in navigator)) {
@@ -895,6 +899,11 @@ export default function PosPage() {
              <button title="Abrir Nueva Venta" onClick={() => { setCarts([...carts, []]); setActiveCartIndex(carts.length); }} className="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-xl flex items-center justify-center shrink-0 transition-colors">
                 <Plus className="w-4 h-4 font-bold" />
              </button>
+             
+             <button onClick={() => setIsTopupModalOpen(true)} className="ml-auto flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-xl font-bold transition-colors shadow-sm text-sm shrink-0">
+                <Smartphone className="w-4 h-4" />
+                Recargas / Servicios
+             </button>
           </div>
 
           <div className="p-6 bg-slate-900 text-white flex items-center gap-3">
@@ -1367,6 +1376,14 @@ export default function PosPage() {
                </div>
            </div>
         )}
+        <ShiftSummaryModal />
+        <TopupModal 
+           isOpen={isTopupModalOpen}
+           onClose={() => setIsTopupModalOpen(false)}
+           onAdd={(item) => {
+               setCart([...cart, { ...item, quantity: 1 }]);
+           }}
+        />
     </div>
   );
 }

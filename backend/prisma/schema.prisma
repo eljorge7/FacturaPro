@@ -77,8 +77,9 @@ model Tenant {
   warehouses        Warehouse[]
   transferOrders    TransferOrder[]
   stockTakes        StockTake[]
-  proposalTemplates ProposalTemplate[]
-  productBatches    ProductBatch[]
+  proposalTemplates    ProposalTemplate[]
+  productBatches       ProductBatch[]
+  topups               TopupTransaction[]
 }
 
 // ----------------------------------------------------
@@ -1226,4 +1227,23 @@ model StoreOrderItem {
   price     Float
   quantity  Int
   satKey    String?
+}
+
+model TopupTransaction {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  
+  type      String   // "RECARGA", "SERVICIO"
+  carrier   String   // "TELCEL", "CFE", etc.
+  amount    Float
+  reference String   // Número de teléfono o referencia del recibo
+  status    String   @default("PENDING") // PENDING, SUCCESS, FAILED
+  
+  invoiceId String?  // Relacionar al ticket de venta donde se cobró (opcional, pero útil)
+  
+  providerResponse Json? // Para guardar folios de autorización u otros metadatos
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

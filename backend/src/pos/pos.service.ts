@@ -22,11 +22,8 @@ export class PosService {
      // 1. Process Stock (Direct and Kits) & Log Movements
      for (const item of items) {
        // --- FASE 4: SERVICIOS Y RECARGAS ---
-       if (item.customFields?.type === 'TOPUP') {
-          // MOCK: Llamada a proveedor de recargas (MTCenter / Taecel)
-          console.log(`📡 [MOCK API] Disparando recarga de $${item.unitPrice} para ${item.customFields.provider} (Tel: ${item.customFields.phone})...`);
-          // En un escenario real: await axios.post('https://api.mtcenter.com.mx/topup', { phone, amount, ... })
-          // Si falla, lanzar error y abortar venta.
+       if (item.customFields?.isTopup) {
+          // La lógica real de la recarga se delega al InvoicesService al finalizar el ticket
           continue; // No procesar inventario para recargas
        }
 

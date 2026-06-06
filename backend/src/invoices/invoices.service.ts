@@ -4,13 +4,15 @@ import { PrismaService } from '../prisma/prisma.service';
 import { v4 as uuidv4 } from 'uuid';
 import { XmlGeneratorService } from '../cfdi/xml-generator/xml-generator.service';
 import { PacService } from '../cfdi/pac/pac.service';
+import { TopupsService } from '../topups/topups.service';
 
 @Injectable()
 export class InvoicesService {
   constructor(
     private prisma: PrismaService,
     private xmlGenerator: XmlGeneratorService,
-    private pacService: PacService
+    private pacService: PacService,
+    private topupsService: TopupsService
   ) {}
 
   async create(createInvoiceDto: any) {
@@ -66,7 +68,14 @@ export class InvoicesService {
     let subtotal = 0;
     let taxTotal = 0;
     
-    const invoiceItemsData = items.map((item: any) => {
+    const invoiceItemsData = [];
+    for (const item of items) {
+      if (item.customFields?.isTopup) {
+         const type = item.customFields.type || 'RECARGA';
+         const res = await this.topupsService.processTopup(tenantId, type, item.customFields.carrier, item.unitPrice, item.customFields.reference);
+         item.description = `${item.description} (Autorización: ${res.folio})`;
+      }
+
       const discount = item.discount || 0;
       const amount = (item.quantity * item.unitPrice) - discount;
       const taxes = amount * item.taxRate;
@@ -74,7 +83,7 @@ export class InvoicesService {
       subtotal += amount;
       taxTotal += taxes;
       
-      return {
+      invoiceItemsData.push({
         productId: item.productId,
         description: item.description,
         imageUrl: item.imageUrl,
@@ -83,8 +92,8 @@ export class InvoicesService {
         discount: discount,
         taxRate: item.taxRate,
         total: amount + taxes
-      };
-    });
+      });
+    }
 
     const tdsTotal = customer.tdsEnabled ? (subtotal * 0.0125) : 0;
     const total = subtotal + taxTotal - tdsTotal;
