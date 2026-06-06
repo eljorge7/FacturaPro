@@ -108,14 +108,8 @@ export default function ProductsPage() {
        if (data.status === 1 && data.product) {
           const p = data.product;
           
-          // Construir un nombre más rico: Nombre + Marca + Cantidad
-          const brand = p.brands ? p.brands.split(',')[0].trim() : '';
-          const quantity = p.quantity ? p.quantity.trim() : '';
-          let fullName = p.product_name || '';
-          if (brand && !fullName.toLowerCase().includes(brand.toLowerCase())) fullName += ` ${brand}`;
-          if (quantity) fullName += ` ${quantity}`;
-          
-          if (fullName) setName(fullName.trim());
+          // Nombre simple
+          if (p.product_name) setName(p.product_name.trim());
           
           // Intentar obtener la mejor imagen
           const img = p.image_front_url || p.image_url;
@@ -822,7 +816,7 @@ export default function ProductsPage() {
               <div className="flex flex-col items-center mb-6">
                  <div className="w-24 h-24 rounded-2xl bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden relative group">
                     {imageUrl ? (
-                       <img src={`${process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api"}${imageUrl}`} className="w-full h-full object-cover" alt="preview" />
+                       <img src={imageUrl.startsWith('http') ? imageUrl : `${process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api"}${imageUrl}`} className="w-full h-full object-cover" alt="preview" />
                     ) : (
                        <span className="text-slate-400 text-xs font-medium text-center px-2">📷 <br/>Agregar<br/>Foto</span>
                     )}
