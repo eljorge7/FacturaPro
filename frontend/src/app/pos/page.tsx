@@ -819,13 +819,6 @@ export default function PosPage() {
                    ⭐ Táctil
                 </button>
              </div>
-
-             <button 
-                 onClick={() => setShowTopupModal(true)} 
-                 className="px-6 h-[60px] bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold flex items-center gap-2 shadow-sm transition-colors"
-              >
-                 📱 Recargas
-              </button>
           </div>
           <div className="flex-1 p-6 overflow-y-auto">
              {loading ? (
