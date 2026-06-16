@@ -195,6 +195,7 @@ export default function PosPage() {
 
   // == QUICK KEYS STATE ==
   const [showQuickKeysOnly, setShowQuickKeysOnly] = useState(false);
+  const [displayMode, setDisplayMode] = useState<'grid' | 'compact'>('grid');
 
   // == TOPUP STATE ==
   const [showTopupModal, setShowTopupModal] = useState(false);
@@ -848,11 +849,18 @@ export default function PosPage() {
                 />
              </div>
              
-             <div className="flex bg-white rounded-2xl border border-slate-200 p-1 shadow-sm h-[60px]">
-                <button onClick={() => setShowQuickKeysOnly(false)} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${!showQuickKeysOnly ? 'bg-slate-100 text-slate-800 shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}>
+             <div className="flex bg-slate-100 rounded-2xl border border-slate-200 p-1 shadow-sm h-[60px] items-center shrink-0">
+                <button onClick={() => setDisplayMode('grid')} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${displayMode === 'grid' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:bg-slate-200'}`}>
+                   Normal
+                </button>
+                <button onClick={() => setDisplayMode('compact')} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${displayMode === 'compact' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:bg-slate-200'}`}>
+                   Miniatura
+                </button>
+                <div className="w-px h-8 bg-slate-300 mx-2"></div>
+                <button onClick={() => setShowQuickKeysOnly(false)} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${!showQuickKeysOnly ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:bg-slate-200'}`}>
                    Lista
                 </button>
-                <button onClick={() => setShowQuickKeysOnly(true)} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${showQuickKeysOnly ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}>
+                <button onClick={() => setShowQuickKeysOnly(true)} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${showQuickKeysOnly ? 'bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100' : 'text-slate-500 hover:bg-slate-200'}`}>
                    ⭐ Táctil
                 </button>
              </div>
@@ -861,21 +869,21 @@ export default function PosPage() {
              {loading ? (
                 <div className="h-full flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
              ) : (
-                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className={`grid gap-4 ${displayMode === 'compact' ? 'grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6' : 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
                    {filteredProducts.map(p => (
                       <button 
                          key={p.id}
                          onClick={() => addToCart(p)}
                          disabled={p.trackInventory && p.stock <= 0 && p.type !== 'KIT' && p.type !== 'SERVICE'}
-                         className="flex flex-col text-left p-4 rounded-2xl border border-slate-200 bg-white hover:border-blue-400 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+                         className={`flex text-left rounded-2xl border border-slate-200 bg-white hover:border-blue-400 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed group ${displayMode === 'compact' ? 'flex-row items-center p-3 gap-3' : 'flex-col p-4'}`}
                       >
-                         <div className="w-full aspect-video bg-slate-50 rounded-xl mb-3 flex items-center justify-center relative overflow-hidden group-hover:bg-blue-50/50 transition-colors">
+                         <div className={`bg-slate-50 relative overflow-hidden group-hover:bg-blue-50/50 transition-colors ${displayMode === 'compact' ? 'w-16 h-16 rounded-xl flex items-center justify-center shrink-0' : 'w-full aspect-video rounded-xl mb-3 flex items-center justify-center'}`}>
                             {p.imageUrl ? (
                                <img src={`${process.env.NEXT_PUBLIC_API_URL || 'https://facturapro.radiotecpro.com/api'}${p.imageUrl}`} alt={p.name} className="w-full h-full object-cover" />
                             ) : (
-                               <Box className="w-8 h-8 text-slate-300 group-hover:text-blue-300" />
+                               <Box className={`text-slate-300 group-hover:text-blue-300 ${displayMode === 'compact' ? 'w-6 h-6' : 'w-8 h-8'}`} />
                             )}
-                             {(p.trackInventory && p.type !== 'KIT' && p.type !== 'SERVICE') ? (
+                             {(p.trackInventory && p.type !== 'KIT' && p.type !== 'SERVICE' && displayMode !== 'compact') ? (
                                 <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
                                    <div className={`px-2 py-1 rounded-md text-[10px] font-bold shadow-sm ${p.stock > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
                                       {p.stock > 0 ? `Global: ${p.stock} pz` : 'Agotado'}
@@ -888,14 +896,19 @@ export default function PosPage() {
                                       )
                                    ))}
                                 </div>
-                             ) : (p.type === 'KIT' || p.type === 'SERVICE') && (
+                             ) : (p.type === 'KIT' || p.type === 'SERVICE') && displayMode !== 'compact' && (
                                 <div className="absolute top-2 right-2 px-2 py-1 rounded-md text-[10px] font-bold bg-indigo-100 text-indigo-700 uppercase">
                                    {p.type}
                                 </div>
                              )}
                          </div>
-                         <h3 className="font-bold text-slate-800 text-sm line-clamp-2 leading-tight flex-1">{p.name}</h3>
-                         <div className="mt-2 text-lg font-black text-slate-900">${p.price.toLocaleString('en-US')}</div>
+                         <div className="flex-1 min-w-0">
+                             <h3 className={`font-bold text-slate-800 line-clamp-2 leading-tight ${displayMode === 'compact' ? 'text-xs' : 'text-sm'}`}>{p.name}</h3>
+                             {displayMode === 'compact' && p.trackInventory && p.stock > 0 && (
+                                 <div className="text-[9px] font-bold text-emerald-600 mt-0.5">{p.stock} pz disp.</div>
+                             )}
+                             <div className={`font-black text-slate-900 ${displayMode === 'compact' ? 'text-sm mt-1' : 'text-lg mt-2'}`}>${p.price.toLocaleString('en-US')}</div>
+                         </div>
                       </button>
                    ))}
                 </div>
@@ -936,9 +949,14 @@ export default function PosPage() {
              </button>
           </div>
 
-          <div className="p-4 bg-slate-900 text-white flex items-center gap-3">
-             <ShoppingCart className="w-5 h-5 text-emerald-400" />
-             <h2 className="text-lg font-black">Ticket de Venta</h2>
+          <div className="p-4 bg-slate-900 text-white flex items-center justify-between">
+             <div className="flex items-center gap-3">
+                 <ShoppingCart className="w-5 h-5 text-emerald-400" />
+                 <h2 className="text-lg font-black">Ticket de Venta</h2>
+             </div>
+             <div className="bg-slate-800 px-3 py-1 rounded-full text-xs font-bold text-slate-300 border border-slate-700">
+                 {cart.reduce((acc, item) => acc + item.quantity, 0)} items
+             </div>
           </div>
           
           <div className="flex-1 p-4 overflow-y-auto bg-slate-50/50">
