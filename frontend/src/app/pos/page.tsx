@@ -965,13 +965,28 @@ export default function PosPage() {
                 <span>Subtotal</span>
                 <span>${cartTotalProducts.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
              </div>
-             {globalDiscount > 0 && (
-                <div className="flex justify-between items-center text-rose-500 text-sm mb-2 font-bold">
-                   <span>Descuento</span>
-                   <span>-${globalDiscount.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
-                </div>
-             )}
+             
              <div className="flex justify-between items-center text-slate-500 text-sm mb-2 font-medium">
+                <span className="flex items-center gap-1 text-rose-500 font-bold"><Tag className="w-3.5 h-3.5" /> Descuento</span>
+                <div className="relative w-24">
+                   <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">$</span>
+                   <input 
+                       type="number"
+                       min="0"
+                       step="0.01"
+                       value={discountInput}
+                       placeholder="0.00"
+                       onChange={e => {
+                          setDiscountInput(e.target.value);
+                          const val = parseFloat(e.target.value) || 0;
+                          setGlobalDiscount(val >= 0 ? val : 0);
+                       }}
+                       className="w-full pl-5 pr-2 py-1 text-right text-rose-600 font-bold border border-slate-200 rounded-lg focus:outline-none focus:border-rose-400 bg-slate-50 text-sm"
+                   />
+                </div>
+             </div>
+
+             <div className="flex justify-between items-center text-slate-500 text-sm mb-2 font-medium border-t border-slate-100 pt-2">
                 <span>Base Gravable</span>
                 <span>${subtotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
              </div>
@@ -979,13 +994,6 @@ export default function PosPage() {
                 <span>IVA/Impuestos</span>
                 <span>${tax.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
              </div>
-             
-             <button 
-                onClick={() => { setDiscountInput(globalDiscount.toString() || ""); setShowDiscountModal(true); }}
-                className="w-full mb-4 py-2 border border-blue-200 text-blue-600 font-bold rounded-xl text-sm flex justify-center items-center gap-2 hover:bg-blue-50 transition-colors"
-             >
-                <Tag className="w-4 h-4" /> Aplicar Descuento Global
-             </button>
              <div className="grid grid-cols-2 gap-3 mb-4">
                 <div>
                    <label className="block text-xs font-bold text-slate-500 mb-1">Técnico Responsable</label>
@@ -1407,45 +1415,6 @@ export default function PosPage() {
                </div>
            </div>
         )}
-
-         {showDiscountModal && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/70 backdrop-blur-md p-4">
-                <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center">
-                    <Tag className="w-16 h-16 text-blue-500 mx-auto mb-4" />
-                    <h2 className="text-2xl font-black text-slate-800 mb-2">Descuento Global</h2>
-                    <p className="text-slate-600 text-sm mb-6">Ingresa el monto a descontar al total del ticket.</p>
-                    
-                    <div className="relative mb-4">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
-                        <input 
-                            type="number" 
-                            step="0.01"
-                            placeholder="0.00" 
-                            value={discountInput}
-                            onChange={e => setDiscountInput(e.target.value)}
-                            onKeyDown={e => {
-                                if (e.key === 'Enter') {
-                                    const val = parseFloat(discountInput) || 0;
-                                    setGlobalDiscount(val >= 0 ? val : 0);
-                                    setShowDiscountModal(false);
-                                }
-                            }}
-                            autoFocus
-                            className="w-full text-center tracking-widest font-black text-2xl py-4 pl-10 pr-4 rounded-xl border-2 border-slate-200 bg-slate-50 focus:border-blue-500 focus:outline-none" 
-                        />
-                    </div>
-
-                    <div className="flex gap-3">
-                        <button onClick={() => setShowDiscountModal(false)} className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold">Cancelar</button>
-                        <button onClick={() => {
-                            const val = parseFloat(discountInput) || 0;
-                            setGlobalDiscount(val >= 0 ? val : 0);
-                            setShowDiscountModal(false);
-                        }} className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold">Aplicar</button>
-                    </div>
-                </div>
-            </div>
-         )}
 
         <TopupModal 
            isOpen={isTopupModalOpen}
