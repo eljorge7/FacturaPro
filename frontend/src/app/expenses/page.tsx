@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Lock, ArrowRight, ShieldCheck, FileText, CheckCircle2, UploadCloud, PieChart, Plus, Eye, Download, Trash } from "lucide-react";
+import { Lock, ArrowRight, ShieldCheck, FileText, CheckCircle2, UploadCloud, PieChart, Plus, Eye, Download, Trash, Edit } from "lucide-react";
 import * as XLSX from "xlsx";
 import { ExpensesAPI } from "../../lib/ExpensesAPI";
 import ExpenseDialog from "../../components/ExpenseDialog";
@@ -19,6 +19,7 @@ export default function ExpensesPage() {
   const [loading, setLoading] = useState(true);
   
   const [isExpenseOpen, setIsExpenseOpen] = useState(false);
+  const [expenseToEdit, setExpenseToEdit] = useState<any>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [viewedDocument, setViewedDocument] = useState<any>(null);
@@ -164,7 +165,7 @@ export default function ExpensesPage() {
             <Download className="w-4 h-4" /> Exportar DIOT
           </button>
           <button 
-            onClick={() => setIsExpenseOpen(true)}
+            onClick={() => { setExpenseToEdit(null); setIsExpenseOpen(true); }}
             className="bg-white border border-slate-200 text-slate-700 font-bold px-5 py-2.5 rounded-xl hover:bg-slate-50 hover:shadow-sm transition-all flex items-center gap-2"
           >
             <Plus className="w-4 h-4" /> Gasto Manual
@@ -297,6 +298,13 @@ export default function ExpensesPage() {
                             <Eye className="w-5 h-5" />
                           </button>
                           <button 
+                            onClick={() => { setExpenseToEdit(e); setIsExpenseOpen(true); }}
+                            className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            title="Editar Gasto"
+                          >
+                            <Edit className="w-5 h-5" />
+                          </button>
+                          <button 
                             onClick={() => handleDeleteExpense(e.id)}
                             className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             title="Eliminar Gasto"
@@ -319,6 +327,7 @@ export default function ExpensesPage() {
         isOpen={isExpenseOpen} 
         onClose={() => setIsExpenseOpen(false)} 
         onSuccess={fetchData} 
+        initialData={expenseToEdit}
       />
 
       <ExpensePreviewDialog 

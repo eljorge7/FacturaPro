@@ -68,6 +68,18 @@ export class ExpensesService {
     });
   }
 
+  async update(id: string, tenantId: string, data: any) {
+    if (tenantId === 'demo-tenant') {
+      const firstTenant = await this.prisma.tenant.findFirst();
+      if (firstTenant) tenantId = firstTenant.id;
+    }
+    const { providerRfc, providerName, tenantId: _tenant, supplierId, category, supplier, id: _id, satUuid, xmlContentRaw, ...expenseData } = data;
+    return this.prisma.expense.update({
+      where: { id },
+      data: expenseData
+    });
+  }
+
   async parseXml(tenantId: string, fileContent: string) {
     if (tenantId === 'demo-tenant') {
       const firstTenant = await this.prisma.tenant.findFirst();

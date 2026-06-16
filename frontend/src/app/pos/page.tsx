@@ -496,8 +496,23 @@ export default function PosPage() {
     setCart(cart.map(i => i.productId === productId ? { ...i, quantity: newQuantity } : i));
   };
 
-  const subtotal = cart.reduce((acc, item) => acc + (item.unitPrice * item.quantity), 0);
-  const tax = cart.reduce((acc, item) => acc + ((item.unitPrice * item.quantity) * item.taxRate), 0);
+  const handleDiscountPrompt = (productId: string) => {
+    const item = cart.find(i => i.productId === productId);
+    if (!item) return;
+    const amountStr = prompt(`Ingrese el monto TOTAL de descuento en pesos para ${item.name} (ej. 2 para descontar $2.00 en total):`, "0");
+    if (amountStr !== null) {
+      const discount = parseFloat(amountStr) || 0;
+      if (discount >= 0) {
+        setCart(cart.map(i => i.productId === productId ? { ...i, discount } : i));
+      }
+    }
+  };
+
+  const subtotal = cart.reduce((acc, item) => acc + (item.unitPrice * item.quantity) - (item.discount || 0), 0);
+  const tax = cart.reduce((acc, item) => {
+      const lineTotal = (item.unitPrice * item.quantity) - (item.discount || 0);
+      return acc + (lineTotal > 0 ? lineTotal : 0) * item.taxRate;
+  }, 0);
   const total = subtotal + tax;
 
   const filteredProducts = products.filter(p => {
@@ -919,6 +934,7 @@ export default function PosPage() {
                          <div className="flex-1 pr-6">
                             <p className="font-bold text-slate-800 text-sm line-clamp-2">{item.name}</p>
                             <p className="text-slate-500 font-medium text-xs mt-1">${displayP.toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
+                            {item.discount > 0 && <p className="text-rose-500 font-bold text-xs mt-1">Descuento: -${item.discount.toLocaleString('en-US', {minimumFractionDigits: 2})}</p>}
                          </div>
                          <div className="flex flex-col items-end justify-between">
                             <div className="flex items-center gap-1 bg-slate-100 rounded-lg border border-slate-200 p-0.5">
@@ -927,10 +943,13 @@ export default function PosPage() {
                                <button onClick={() => changeQuantity(item.productId, 1)} className="w-6 h-6 flex items-center justify-center text-slate-500 hover:bg-slate-200 rounded-md font-bold">+</button>
                             </div>
                             <div className="flex items-center gap-2 mt-2">
+                               <button onClick={() => handleDiscountPrompt(item.productId)} className="text-slate-300 hover:text-blue-500 transition-colors p-1 bg-slate-50 rounded-md" title="Aplicar Descuento">
+                                   <Tag className="w-4 h-4" />
+                               </button>
                                <button onClick={() => removeFromCart(item.productId)} className="text-slate-300 hover:text-red-500 transition-colors p-1 bg-slate-50 rounded-md" title="Eliminar del carrito">
                                    <Trash2 className="w-4 h-4" />
                                </button>
-                               <p className="font-black text-slate-900">${(displayP * item.quantity).toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
+                               <p className="font-black text-slate-900">${((displayP * item.quantity) - (item.discount || 0)).toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
                             </div>
                          </div>
                       </div>

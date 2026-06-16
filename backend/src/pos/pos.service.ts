@@ -135,7 +135,7 @@ export class PosService {
          }
          
          // Calculate total purchase
-         const purchaseTotal = items.reduce((sum: number, i: any) => sum + (i.quantity * i.unitPrice * (1 - (i.discount || 0))), 0);
+         const purchaseTotal = items.reduce((sum: number, i: any) => sum + ((i.quantity * i.unitPrice) - (i.discount || 0)), 0);
          // Add taxes (assuming 16% for simplicity in this POS view)
          const finalTotal = purchaseTotal * 1.16;
          

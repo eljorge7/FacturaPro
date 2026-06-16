@@ -7,9 +7,10 @@ interface ExpenseDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  initialData?: any;
 }
 
-export default function ExpenseDialog({ tenantId, isOpen, onClose, onSuccess }: ExpenseDialogProps) {
+export default function ExpenseDialog({ tenantId, isOpen, onClose, onSuccess, initialData }: ExpenseDialogProps) {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState('');
@@ -21,8 +22,21 @@ export default function ExpenseDialog({ tenantId, isOpen, onClose, onSuccess }: 
   useEffect(() => {
     if (isOpen) {
       ExpensesAPI.getCategories(tenantId).then(setCategories).catch(console.error);
+      if (initialData) {
+        setAmount(initialData.isDeductible ? (initialData.total - initialData.taxTotal).toString() : initialData.total.toString());
+        setDescription(initialData.description || '');
+        setCategoryId(initialData.categoryId || '');
+        setIsDeductible(initialData.isDeductible || false);
+        setDate(new Date(initialData.date).toISOString().split('T')[0]);
+      } else {
+        setAmount('');
+        setDescription('');
+        setCategoryId('');
+        setIsDeductible(false);
+        setDate(new Date().toISOString().split('T')[0]);
+      }
     }
-  }, [isOpen, tenantId]);
+  }, [isOpen, tenantId, initialData]);
 
   if (!isOpen) return null;
 
@@ -53,7 +67,7 @@ export default function ExpenseDialog({ tenantId, isOpen, onClose, onSuccess }: 
       const taxTotal = isDeductible ? parsedAmount * 0.16 : 0;
       const total = parsedAmount + taxTotal;
 
-      await ExpensesAPI.createManual(tenantId, {
+      const payload = {
         amount: parsedAmount,
         total,
         taxTotal,
@@ -61,7 +75,14 @@ export default function ExpenseDialog({ tenantId, isOpen, onClose, onSuccess }: 
         categoryId: categoryId || null,
         isDeductible,
         date: new Date(date).toISOString()
-      });
+      };
+
+      if (initialData?.id) {
+        await ExpensesAPI.updateManual(initialData.id, tenantId, payload);
+      } else {
+        await ExpensesAPI.createManual(tenantId, payload);
+      }
+
       onSuccess();
       onClose();
     } catch (err) {
@@ -81,7 +102,7 @@ export default function ExpenseDialog({ tenantId, isOpen, onClose, onSuccess }: 
               <Receipt className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-800 tracking-tight">Nuevo Gasto Manual</h2>
+              <h2 className="text-xl font-bold text-slate-800 tracking-tight">{initialData ? 'Editar Gasto' : 'Nuevo Gasto Manual'}</h2>
               <p className="text-xs text-slate-500">Caja chica o notas sin factura</p>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Param, Body, Headers, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, Headers, BadRequestException } from '@nestjs/common';
 import { ExpensesService } from './expenses.service';
 
 @Controller('expenses')
@@ -22,6 +22,12 @@ export class ExpensesController {
     if (!tenantId) throw new BadRequestException('Tenant ID is required');
     if (!body.xmlContent) throw new BadRequestException('XML Content is required');
     return this.expensesService.parseXml(tenantId, body.xmlContent);
+  }
+
+  @Put(':id')
+  async update(@Param('id') id: string, @Headers('x-tenant-id') tenantId: string, @Body() data: any) {
+    if (!tenantId) throw new BadRequestException('Tenant ID is required');
+    return this.expensesService.update(id, tenantId, data);
   }
 
   @Delete(':id')

@@ -69,6 +69,22 @@ export const ExpensesAPI = {
     return res.json();
   },
 
+  updateManual: async (id: string, tenantId: string, data: any) => {
+    const res = await fetch(`${BASE_URL}/expenses/${id}`, {
+      method: 'PUT',
+      headers: { 
+        ...getHeaders(tenantId),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(errorData?.message || 'Error updating expense');
+    }
+    return res.json();
+  },
+
   previewXml: async (tenantId: string, xmlContent: string) => {
     const res = await fetch(`${BASE_URL}/expenses/preview-xml`, {
       method: 'POST',
