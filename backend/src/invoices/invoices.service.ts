@@ -575,6 +575,31 @@ export class InvoicesService {
       throw new BadRequestException('La factura ya está cancelada');
     }
 
+    // Return inventory for each item
+    for (const item of invoice.items) {
+       if (item.productId) {
+           const product = await this.prisma.product.findUnique({
+              where: { id: item.productId }
+           });
+           if (product && product.trackInventory) {
+               await this.prisma.product.update({
+                  where: { id: product.id },
+                  data: { stock: { increment: item.quantity } }
+               });
+               // @ts-ignore
+               await this.prisma.inventoryMovement.create({
+                  data: {
+                     tenantId: invoice.tenantId,
+                     productId: product.id,
+                     type: 'IN',
+                     quantity: item.quantity,
+                     reference: `Cancelación Factura/Ticket: ${invoice.invoiceNumber}`,
+                  }
+               });
+           }
+       }
+    }
+
     // Cancelación local pura
     return this.prisma.invoice.update({
       where: { id },

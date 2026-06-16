@@ -162,7 +162,7 @@ export class PosService {
          finalStatus = 'UNPAID';
      } else {
          let publicoGen = await this.prisma.customer.findFirst({
-             where: { tenantId, rfc: 'XAXX010101000' }
+             where: { tenantId, rfc: 'XAXX010101000', legalName: 'PÚBLICO EN GENERAL' }
          });
          if (!publicoGen) {
              publicoGen = await this.prisma.customer.create({

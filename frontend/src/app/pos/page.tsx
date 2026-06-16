@@ -25,6 +25,10 @@ export default function PosPage() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [successMode, setSuccessMode] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("01"); // 01 = Efectivo
+  
+  const [globalDiscount, setGlobalDiscount] = useState<number>(0);
+  const [showDiscountModal, setShowDiscountModal] = useState(false);
+  const [discountInput, setDiscountInput] = useState("");
 
   // == OFFLINE MODE STATE ==
   const [isOffline, setIsOffline] = useState(false);
@@ -496,22 +500,14 @@ export default function PosPage() {
     setCart(cart.map(i => i.productId === productId ? { ...i, quantity: newQuantity } : i));
   };
 
-  const handleDiscountPrompt = (productId: string) => {
-    const item = cart.find(i => i.productId === productId);
-    if (!item) return;
-    const amountStr = prompt(`Ingrese el monto TOTAL de descuento en pesos para ${item.name} (ej. 2 para descontar $2.00 en total):`, "0");
-    if (amountStr !== null) {
-      const discount = parseFloat(amountStr) || 0;
-      if (discount >= 0) {
-        setCart(cart.map(i => i.productId === productId ? { ...i, discount } : i));
-      }
-    }
-  };
-
-  const subtotal = cart.reduce((acc, item) => acc + (item.unitPrice * item.quantity) - (item.discount || 0), 0);
+  const cartTotalProducts = cart.reduce((acc, item) => acc + (item.unitPrice * item.quantity), 0);
+  const subtotal = Math.max(0, cartTotalProducts - globalDiscount);
   const tax = cart.reduce((acc, item) => {
-      const lineTotal = (item.unitPrice * item.quantity) - (item.discount || 0);
-      return acc + (lineTotal > 0 ? lineTotal : 0) * item.taxRate;
+      const lineTotal = item.unitPrice * item.quantity;
+      const proportion = cartTotalProducts > 0 ? (lineTotal / cartTotalProducts) : 0;
+      const lineDiscount = globalDiscount * proportion;
+      const finalLineTotal = lineTotal - lineDiscount;
+      return acc + (finalLineTotal > 0 ? finalLineTotal : 0) * item.taxRate;
   }, 0);
   const total = subtotal + tax;
 
@@ -535,7 +531,14 @@ export default function PosPage() {
          return;
      }
 
-     executeCheckout(cart);
+     const itemsToCheckout = cart.map(i => {
+         const lineTotal = i.quantity * i.unitPrice;
+         const proportion = cartTotalProducts > 0 ? (lineTotal / cartTotalProducts) : 0;
+         const itemDiscount = globalDiscount * proportion;
+         return { ...i, discount: itemDiscount };
+     });
+
+     executeCheckout(itemsToCheckout);
   };
 
   const confirmSerialsAndCheckout = () => {
@@ -587,6 +590,7 @@ export default function PosPage() {
          } else {
             setCart([]);
          }
+         setGlobalDiscount(0);
          return;
      }
 
@@ -613,6 +617,7 @@ export default function PosPage() {
           } else {
              setCart([]);
           }
+          setGlobalDiscount(0);
           fetchProducts(); // Refresh stock
        } else {
           const err = await res.json().catch(()=>({}));
@@ -641,6 +646,7 @@ export default function PosPage() {
        localStorage.setItem('pos_offline_queue', JSON.stringify(newQueue));
        setSuccessMode(true);
        setCart([]);
+       setGlobalDiscount(0);
      } finally {
        setCheckoutLoading(false);
      }
@@ -934,7 +940,6 @@ export default function PosPage() {
                          <div className="flex-1 pr-6">
                             <p className="font-bold text-slate-800 text-sm line-clamp-2">{item.name}</p>
                             <p className="text-slate-500 font-medium text-xs mt-1">${displayP.toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
-                            {item.discount > 0 && <p className="text-rose-500 font-bold text-xs mt-1">Descuento: -${item.discount.toLocaleString('en-US', {minimumFractionDigits: 2})}</p>}
                          </div>
                          <div className="flex flex-col items-end justify-between">
                             <div className="flex items-center gap-1 bg-slate-100 rounded-lg border border-slate-200 p-0.5">
@@ -943,13 +948,10 @@ export default function PosPage() {
                                <button onClick={() => changeQuantity(item.productId, 1)} className="w-6 h-6 flex items-center justify-center text-slate-500 hover:bg-slate-200 rounded-md font-bold">+</button>
                             </div>
                             <div className="flex items-center gap-2 mt-2">
-                               <button onClick={() => handleDiscountPrompt(item.productId)} className="text-slate-300 hover:text-blue-500 transition-colors p-1 bg-slate-50 rounded-md" title="Aplicar Descuento">
-                                   <Tag className="w-4 h-4" />
-                               </button>
                                <button onClick={() => removeFromCart(item.productId)} className="text-slate-300 hover:text-red-500 transition-colors p-1 bg-slate-50 rounded-md" title="Eliminar del carrito">
                                    <Trash2 className="w-4 h-4" />
                                </button>
-                               <p className="font-black text-slate-900">${((displayP * item.quantity) - (item.discount || 0)).toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
+                               <p className="font-black text-slate-900">${(displayP * item.quantity).toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
                             </div>
                          </div>
                       </div>
@@ -961,12 +963,29 @@ export default function PosPage() {
           <div className="p-6 bg-white border-t border-slate-200">
              <div className="flex justify-between items-center text-slate-500 text-sm mb-2 font-medium">
                 <span>Subtotal</span>
+                <span>${cartTotalProducts.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+             </div>
+             {globalDiscount > 0 && (
+                <div className="flex justify-between items-center text-rose-500 text-sm mb-2 font-bold">
+                   <span>Descuento</span>
+                   <span>-${globalDiscount.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                </div>
+             )}
+             <div className="flex justify-between items-center text-slate-500 text-sm mb-2 font-medium">
+                <span>Base Gravable</span>
                 <span>${subtotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
              </div>
              <div className="flex justify-between items-center text-slate-500 text-sm mb-4 font-medium border-b border-slate-100 pb-4">
                 <span>IVA/Impuestos</span>
                 <span>${tax.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
              </div>
+             
+             <button 
+                onClick={() => { setDiscountInput(globalDiscount.toString() || ""); setShowDiscountModal(true); }}
+                className="w-full mb-4 py-2 border border-blue-200 text-blue-600 font-bold rounded-xl text-sm flex justify-center items-center gap-2 hover:bg-blue-50 transition-colors"
+             >
+                <Tag className="w-4 h-4" /> Aplicar Descuento Global
+             </button>
              <div className="grid grid-cols-2 gap-3 mb-4">
                 <div>
                    <label className="block text-xs font-bold text-slate-500 mb-1">Técnico Responsable</label>
@@ -1388,6 +1407,46 @@ export default function PosPage() {
                </div>
            </div>
         )}
+
+         {showDiscountModal && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/70 backdrop-blur-md p-4">
+                <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center">
+                    <Tag className="w-16 h-16 text-blue-500 mx-auto mb-4" />
+                    <h2 className="text-2xl font-black text-slate-800 mb-2">Descuento Global</h2>
+                    <p className="text-slate-600 text-sm mb-6">Ingresa el monto a descontar al total del ticket.</p>
+                    
+                    <div className="relative mb-4">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
+                        <input 
+                            type="number" 
+                            step="0.01"
+                            placeholder="0.00" 
+                            value={discountInput}
+                            onChange={e => setDiscountInput(e.target.value)}
+                            onKeyDown={e => {
+                                if (e.key === 'Enter') {
+                                    const val = parseFloat(discountInput) || 0;
+                                    setGlobalDiscount(val >= 0 ? val : 0);
+                                    setShowDiscountModal(false);
+                                }
+                            }}
+                            autoFocus
+                            className="w-full text-center tracking-widest font-black text-2xl py-4 pl-10 pr-4 rounded-xl border-2 border-slate-200 bg-slate-50 focus:border-blue-500 focus:outline-none" 
+                        />
+                    </div>
+
+                    <div className="flex gap-3">
+                        <button onClick={() => setShowDiscountModal(false)} className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold">Cancelar</button>
+                        <button onClick={() => {
+                            const val = parseFloat(discountInput) || 0;
+                            setGlobalDiscount(val >= 0 ? val : 0);
+                            setShowDiscountModal(false);
+                        }} className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold">Aplicar</button>
+                    </div>
+                </div>
+            </div>
+         )}
+
         <TopupModal 
            isOpen={isTopupModalOpen}
            onClose={() => setIsTopupModalOpen(false)}
