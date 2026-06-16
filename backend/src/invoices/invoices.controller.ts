@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Res, Headers, BadRequestException, UseGuards, Req, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Res, Headers, BadRequestException, UseGuards, Req, UseInterceptors, UploadedFile, Delete } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { HybridAuthGuard } from '../auth/hybrid-auth.guard';
 import { InvoicesService } from './invoices.service';
@@ -59,6 +59,11 @@ export class InvoicesController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.invoicesService.findOne(id);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.invoicesService.delete(id);
   }
 
   @Get(':id/pdf')

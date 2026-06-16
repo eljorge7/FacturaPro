@@ -607,6 +607,44 @@ export class InvoicesService {
     });
   }
 
+  async delete(id: string) {
+    const invoice = await this.findOne(id);
+    if (invoice.status === 'TIMBRADA' || invoice.status === 'VIGENTE') {
+      throw new BadRequestException('No se puede eliminar de la base de datos una factura ya timbrada. Utiliza la opción de Cancelar CFDI.');
+    }
+    
+    // Restore inventory if not already cancelled
+    if (invoice.status !== 'CANCELADA') {
+      for (const item of invoice.items) {
+         if (item.productId) {
+             const product = await this.prisma.product.findUnique({
+                where: { id: item.productId }
+             });
+             if (product && product.trackInventory) {
+                 await this.prisma.product.update({
+                    where: { id: product.id },
+                    data: { stock: { increment: item.quantity } }
+                 });
+                 // @ts-ignore
+                 await this.prisma.inventoryMovement.create({
+                    data: {
+                       tenantId: invoice.tenantId,
+                       productId: product.id,
+                       type: 'IN',
+                       quantity: item.quantity,
+                       reference: `Eliminación Factura/Ticket: ${invoice.invoiceNumber}`,
+                    }
+                 });
+             }
+         }
+      }
+    }
+
+    return this.prisma.invoice.delete({
+       where: { id }
+    });
+  }
+
   async cancelFiscal(id: string, motive: string, substitutionUuid?: string) {
     const invoice = await this.prisma.invoice.findUnique({
        where: { id },

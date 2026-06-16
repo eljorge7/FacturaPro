@@ -284,16 +284,18 @@ export default function InvoicesPage() {
         if (!confirm(`¿Estás seguro de que quieres eliminar ${selectedIds.length} elemento(s)?`)) return;
         try {
            const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
-           await Promise.all(selectedIds.map(id => 
-              fetch(`${baseUrl}/invoices/${id}`, { method: 'DELETE' })
-           ));
+           await Promise.all(selectedIds.map(async id => {
+              const res = await fetch(`${baseUrl}/invoices/${id}`, { method: 'DELETE' });
+              if (!res.ok) {
+                 const err = await res.json().catch(() => null);
+                 throw new Error(err?.message || "Error al eliminar la factura");
+              }
+           }));
            setInvoices(invoices.filter(i => !selectedIds.includes(i.id)));
            setSelectedIds([]);
-        } catch (e) {
+        } catch (e: any) {
            console.error("Error al eliminar", e);
-           alert("Hubo un problema al eliminar. Es posible que el servidor no tenga esta ruta habilitada aún, pero se simuló en frontend.");
-           setInvoices(invoices.filter(i => !selectedIds.includes(i.id))); // Fallback simulation
-           setSelectedIds([]);
+           alert(e.message || "Hubo un problema al eliminar la factura.");
         }
         return;
      }
