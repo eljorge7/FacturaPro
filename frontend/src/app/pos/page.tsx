@@ -501,15 +501,28 @@ export default function PosPage() {
   };
 
   const cartTotalProducts = cart.reduce((acc, item) => acc + (item.unitPrice * item.quantity), 0);
-  const subtotal = Math.max(0, cartTotalProducts - globalDiscount);
+  const cartTotalWithTax = cart.reduce((acc, item) => acc + (item.unitPrice * item.quantity * (1 + item.taxRate)), 0);
+
+  // We distribute the gross discount across items proportionally to their gross total
+  const netDiscountSum = cart.reduce((acc, item) => {
+      const lineTotalWithTax = (item.unitPrice * item.quantity) * (1 + item.taxRate);
+      const proportion = cartTotalWithTax > 0 ? (lineTotalWithTax / cartTotalWithTax) : 0;
+      const lineDiscountGross = globalDiscount * proportion;
+      const lineDiscountNet = lineDiscountGross / (1 + item.taxRate);
+      return acc + lineDiscountNet;
+  }, 0);
+
+  const subtotal = Math.max(0, cartTotalProducts - netDiscountSum);
   const tax = cart.reduce((acc, item) => {
-      const lineTotal = item.unitPrice * item.quantity;
-      const proportion = cartTotalProducts > 0 ? (lineTotal / cartTotalProducts) : 0;
-      const lineDiscount = globalDiscount * proportion;
-      const finalLineTotal = lineTotal - lineDiscount;
+      const lineTotalWithTax = (item.unitPrice * item.quantity) * (1 + item.taxRate);
+      const proportion = cartTotalWithTax > 0 ? (lineTotalWithTax / cartTotalWithTax) : 0;
+      const lineDiscountGross = globalDiscount * proportion;
+      const lineDiscountNet = lineDiscountGross / (1 + item.taxRate);
+      
+      const finalLineTotal = (item.unitPrice * item.quantity) - lineDiscountNet;
       return acc + (finalLineTotal > 0 ? finalLineTotal : 0) * item.taxRate;
   }, 0);
-  const total = subtotal + tax;
+  const total = Math.max(0, subtotal + tax);
 
   const filteredProducts = products.filter(p => {
       if (showQuickKeysOnly) return p.isFavorite || !p.barcode; // Mostrar favoritos o los que no tienen código
@@ -531,11 +544,14 @@ export default function PosPage() {
          return;
      }
 
+     const cartTotalWithTax = cart.reduce((acc, item) => acc + (item.unitPrice * item.quantity * (1 + item.taxRate)), 0);
+
      const itemsToCheckout = cart.map(i => {
-         const lineTotal = i.quantity * i.unitPrice;
-         const proportion = cartTotalProducts > 0 ? (lineTotal / cartTotalProducts) : 0;
-         const itemDiscount = globalDiscount * proportion;
-         return { ...i, discount: itemDiscount };
+         const lineTotalWithTax = (i.quantity * i.unitPrice) * (1 + i.taxRate);
+         const proportion = cartTotalWithTax > 0 ? (lineTotalWithTax / cartTotalWithTax) : 0;
+         const itemDiscountGross = globalDiscount * proportion;
+         const itemDiscountNet = itemDiscountGross / (1 + i.taxRate);
+         return { ...i, discount: itemDiscountNet };
      });
 
      executeCheckout(itemsToCheckout);
@@ -888,7 +904,7 @@ export default function PosPage() {
        </div>
 
        {/* RIGHT COLUMN: The Ticket */}
-       <div className="w-96 flex flex-col bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden shrink-0">
+       <div className="w-[22rem] flex flex-col bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden shrink-0">
           <div className="flex gap-2 overflow-x-auto p-2 bg-slate-100 border-b border-slate-200">
              {carts.map((_, idx) => (
                 <button 
@@ -920,9 +936,9 @@ export default function PosPage() {
              </button>
           </div>
 
-          <div className="p-6 bg-slate-900 text-white flex items-center gap-3">
-             <ShoppingCart className="w-6 h-6 text-emerald-400" />
-             <h2 className="text-xl font-black">Ticket de Venta</h2>
+          <div className="p-4 bg-slate-900 text-white flex items-center gap-3">
+             <ShoppingCart className="w-5 h-5 text-emerald-400" />
+             <h2 className="text-lg font-black">Ticket de Venta</h2>
           </div>
           
           <div className="flex-1 p-4 overflow-y-auto bg-slate-50/50">
@@ -932,42 +948,58 @@ export default function PosPage() {
                    <p className="font-medium">No hay productos en caja</p>
                 </div>
              ) : (
-                <div className="space-y-3">
-                   {cart.map(item => {
+                            {cart.map(item => {
                       const displayP = item.displayPrice || item.unitPrice;
                       return (
-                      <div key={item.productId} className="flex gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm relative group">
-                         <div className="flex-1 pr-6">
+                      <div key={item.productId} className="flex gap-2 bg-white p-2 rounded-xl border border-slate-200 shadow-sm relative group">
+                         <div className="flex-1 pr-2">
                             <p className="font-bold text-slate-800 text-sm line-clamp-2">{item.name}</p>
-                            <p className="text-slate-500 font-medium text-xs mt-1">${displayP.toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
+                            <p className="text-slate-500 font-medium text-[11px] mt-0.5">${displayP.toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
                          </div>
                          <div className="flex flex-col items-end justify-between">
-                            <div className="flex items-center gap-1 bg-slate-100 rounded-lg border border-slate-200 p-0.5">
-                               <button onClick={() => changeQuantity(item.productId, -1)} className="w-6 h-6 flex items-center justify-center text-slate-500 hover:bg-slate-200 rounded-md font-bold">-</button>
-                               <span className="w-6 text-center text-sm font-bold text-slate-800">{item.quantity}</span>
-                               <button onClick={() => changeQuantity(item.productId, 1)} className="w-6 h-6 flex items-center justify-center text-slate-500 hover:bg-slate-200 rounded-md font-bold">+</button>
+                            <div className="flex items-center gap-0.5 bg-slate-100 rounded border border-slate-200 p-0.5">
+                               <button onClick={() => changeQuantity(item.productId, -1)} className="w-6 h-6 flex items-center justify-center text-slate-500 hover:bg-slate-200 rounded font-bold">-</button>
+                               <input 
+                                  type="number"
+                                  min="1"
+                                  value={item.quantity}
+                                  onChange={(e) => {
+                                      const newQ = parseFloat(e.target.value);
+                                      if (!isNaN(newQ) && newQ > 0) {
+                                          changeQuantity(item.productId, newQ - item.quantity);
+                                      }
+                                  }}
+                                  onBlur={(e) => {
+                                      if (!e.target.value || parseFloat(e.target.value) < 0) {
+                                          changeQuantity(item.productId, 1 - item.quantity);
+                                      }
+                                  }}
+                                  className="w-10 text-center text-sm font-bold text-slate-800 bg-transparent focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                               />
+                               <button onClick={() => changeQuantity(item.productId, 1)} className="w-6 h-6 flex items-center justify-center text-slate-500 hover:bg-slate-200 rounded font-bold">+</button>
                             </div>
-                            <div className="flex items-center gap-2 mt-2">
-                               <button onClick={() => removeFromCart(item.productId)} className="text-slate-300 hover:text-red-500 transition-colors p-1 bg-slate-50 rounded-md" title="Eliminar del carrito">
+                            <div className="flex items-center gap-2 mt-1">
+                               <button onClick={() => removeFromCart(item.productId)} className="text-slate-300 hover:text-red-500 transition-colors p-1 bg-slate-50 rounded" title="Eliminar del carrito">
                                    <Trash2 className="w-4 h-4" />
                                </button>
-                               <p className="font-black text-slate-900">${(displayP * item.quantity).toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
+                               <p className="font-black text-slate-900 text-sm">${(displayP * item.quantity).toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
                             </div>
                          </div>
                       </div>
+                   )})}      </div>
                    )})}
                 </div>
              )}
           </div>
 
-          <div className="p-6 bg-white border-t border-slate-200">
-             <div className="flex justify-between items-center text-slate-500 text-sm mb-2 font-medium">
-                <span>Subtotal</span>
+          <div className="p-4 bg-white border-t border-slate-200">
+             <div className="flex justify-between items-center text-slate-500 text-[13px] mb-1.5 font-medium">
+                <span>Subtotal Neto</span>
                 <span>${cartTotalProducts.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
              </div>
              
-             <div className="flex justify-between items-center text-slate-500 text-sm mb-2 font-medium">
-                <span className="flex items-center gap-1 text-rose-500 font-bold"><Tag className="w-3.5 h-3.5" /> Descuento</span>
+             <div className="flex justify-between items-center text-slate-500 text-[13px] mb-1.5 font-medium">
+                <span className="flex items-center gap-1 text-rose-500 font-bold"><Tag className="w-3.5 h-3.5" /> Descuento <span className="font-normal text-xs">(al Total)</span></span>
                 <div className="relative w-24">
                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">$</span>
                    <input 
@@ -981,62 +1013,60 @@ export default function PosPage() {
                           const val = parseFloat(e.target.value) || 0;
                           setGlobalDiscount(val >= 0 ? val : 0);
                        }}
-                       className="w-full pl-5 pr-2 py-1 text-right text-rose-600 font-bold border border-slate-200 rounded-lg focus:outline-none focus:border-rose-400 bg-slate-50 text-sm"
+                       className="w-full pl-5 pr-2 py-0.5 text-right text-rose-600 font-bold border border-slate-200 rounded focus:outline-none focus:border-rose-400 bg-slate-50 text-[13px]"
                    />
                 </div>
              </div>
 
-             <div className="flex justify-between items-center text-slate-500 text-sm mb-2 font-medium border-t border-slate-100 pt-2">
-                <span>Base Gravable</span>
+             <div className="flex justify-between items-center text-slate-500 text-[13px] mb-1.5 font-medium border-t border-slate-100 pt-1.5">
+                <span>Base Gravable <span className="font-normal text-xs">(c/Desc)</span></span>
                 <span>${subtotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
              </div>
-             <div className="flex justify-between items-center text-slate-500 text-sm mb-4 font-medium border-b border-slate-100 pb-4">
+             <div className="flex justify-between items-center text-slate-500 text-[13px] mb-3 font-medium border-b border-slate-100 pb-3">
                 <span>IVA/Impuestos</span>
                 <span>${tax.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
              </div>
-             <div className="grid grid-cols-2 gap-3 mb-4">
+             <div className="grid grid-cols-2 gap-2 mb-3">
                 <div>
-                   <label className="block text-xs font-bold text-slate-500 mb-1">Técnico Responsable</label>
-                   <input type="text" placeholder="Opcional" value={customFields.mechanic} onChange={e => setCustomFields({...customFields, mechanic: e.target.value})} className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:bg-white" />
+                   <input type="text" placeholder="Técnico (Opcional)" value={customFields.mechanic} onChange={e => setCustomFields({...customFields, mechanic: e.target.value})} className="w-full p-1.5 border border-slate-200 rounded text-xs bg-slate-50 focus:bg-white" />
                 </div>
                 <div>
-                   <label className="block text-xs font-bold text-slate-500 mb-1">Placas Vehículo</label>
-                   <input type="text" placeholder="Ej. ABC-123" value={customFields.plates} onChange={e => setCustomFields({...customFields, plates: e.target.value})} className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:bg-white uppercase" />
+                   <input type="text" placeholder="Placas (Opcional)" value={customFields.plates} onChange={e => setCustomFields({...customFields, plates: e.target.value})} className="w-full p-1.5 border border-slate-200 rounded text-xs bg-slate-50 focus:bg-white uppercase" />
                 </div>
              </div>
-             <div className="flex justify-between items-end mb-6">
-                <span className="text-slate-500 font-bold uppercase tracking-widest text-xs mb-1">Total a Cobrar</span>
-                <span className="text-4xl font-black text-slate-900 tracking-tight">${total.toLocaleString('en-US', {minimumFractionDigits: 2})} <span className="text-lg text-slate-400">MXN</span></span>
+             <div className="flex justify-between items-end mb-3">
+                <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mb-1">Total a Cobrar</span>
+                <span className="text-3xl font-black text-slate-900 tracking-tight">${total.toLocaleString('en-US', {minimumFractionDigits: 2})} <span className="text-sm text-slate-400">MXN</span></span>
              </div>
 
-             <div className="grid grid-cols-4 gap-2 mb-6">
+             <div className="grid grid-cols-4 gap-1 mb-4">
                 <button 
                    onClick={() => setPaymentMethod('01')}
-                   className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${paymentMethod === '01' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                   className={`flex flex-col items-center justify-center p-2 rounded-lg border transition-all ${paymentMethod === '01' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
                 >
-                   <Banknote className="w-5 h-5 mb-1" />
-                   <span className="text-[10px] font-bold">Efectivo</span>
+                   <Banknote className="w-4 h-4 mb-0.5" />
+                   <span className="text-[9px] font-bold">Efectivo</span>
                 </button>
                 <button 
                    onClick={() => setPaymentMethod('04')}
-                   className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${paymentMethod === '04' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                   className={`flex flex-col items-center justify-center p-2 rounded-lg border transition-all ${paymentMethod === '04' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
                 >
-                   <CreditCard className="w-5 h-5 mb-1" />
-                   <span className="text-[10px] font-bold">Tarjeta</span>
+                   <CreditCard className="w-4 h-4 mb-0.5" />
+                   <span className="text-[9px] font-bold">Tarjeta</span>
                 </button>
                 <button 
                    onClick={() => setPaymentMethod('MP')}
-                   className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${paymentMethod === 'MP' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                   className={`flex flex-col items-center justify-center p-2 rounded-lg border transition-all ${paymentMethod === 'MP' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
                 >
-                   <CreditCard className="w-5 h-5 mb-1 text-blue-500" />
-                   <span className="text-[10px] font-bold text-center leading-tight">Mercado Pago</span>
+                   <CreditCard className="w-4 h-4 mb-0.5 text-blue-500" />
+                   <span className="text-[9px] font-bold text-center leading-tight">Mercado Pago</span>
                 </button>
                 <button 
                     onClick={() => { setPaymentMethod('99'); if(!selectedCustomer) setShowCustomerModal(true); }}
-                    className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${paymentMethod === '99' ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                    className={`flex flex-col items-center justify-center p-2 rounded-lg border transition-all ${paymentMethod === '99' ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
                  >
-                    <FileText className="w-5 h-5 mb-1" />
-                    <span className="text-[10px] font-bold">Fiado</span>
+                    <FileText className="w-4 h-4 mb-0.5" />
+                    <span className="text-[9px] font-bold">Fiado</span>
                  </button>
              </div>
 
@@ -1061,9 +1091,9 @@ export default function PosPage() {
                 id="btn-checkout"
                 onClick={handleCheckout}
                 disabled={cart.length === 0 || checkoutLoading}
-                className="w-full h-16 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white rounded-2xl font-black text-xl shadow-lg shadow-blue-600/30 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white rounded-xl font-black text-lg shadow-lg shadow-blue-600/30 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
              >
-                {checkoutLoading ? <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div> : "Cobrar Ticket (F8)"}
+                {checkoutLoading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : "Cobrar Ticket (F8)"}
              </button>
           </div>
        </div>
