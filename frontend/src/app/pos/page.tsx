@@ -948,7 +948,8 @@ export default function PosPage() {
                    <p className="font-medium">No hay productos en caja</p>
                 </div>
              ) : (
-                            {cart.map(item => {
+                <div className="space-y-2">
+                   {cart.map(item => {
                       const displayP = item.displayPrice || item.unitPrice;
                       return (
                       <div key={item.productId} className="flex gap-2 bg-white p-2 rounded-xl border border-slate-200 shadow-sm relative group">
@@ -986,7 +987,6 @@ export default function PosPage() {
                             </div>
                          </div>
                       </div>
-                   )})}      </div>
                    )})}
                 </div>
              )}
