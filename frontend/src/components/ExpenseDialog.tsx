@@ -14,6 +14,7 @@ export default function ExpenseDialog({ tenantId, isOpen, onClose, onSuccess }: 
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [isDeductible, setIsDeductible] = useState(false);
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [categories, setCategories] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -24,6 +25,25 @@ export default function ExpenseDialog({ tenantId, isOpen, onClose, onSuccess }: 
   }, [isOpen, tenantId]);
 
   if (!isOpen) return null;
+
+  const handleCategoryChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    if (val === 'NEW_CATEGORY') {
+      const name = prompt('Nombre de la nueva categoría:');
+      if (name) {
+        try {
+          const newCat = await ExpensesAPI.createCategory(tenantId, name);
+          setCategories([...categories, newCat]);
+          setCategoryId(newCat.id);
+        } catch (err) {
+          console.error(err);
+          alert('Error creando categoría');
+        }
+      }
+    } else {
+      setCategoryId(val);
+    }
+  };
 
   const handleSave = async () => {
     if (!amount || !description) return alert('Campos obligatorios');
@@ -39,7 +59,8 @@ export default function ExpenseDialog({ tenantId, isOpen, onClose, onSuccess }: 
         taxTotal,
         description,
         categoryId: categoryId || null,
-        isDeductible
+        isDeductible,
+        date: new Date(date).toISOString()
       });
       onSuccess();
       onClose();
@@ -70,15 +91,26 @@ export default function ExpenseDialog({ tenantId, isOpen, onClose, onSuccess }: 
         </div>
 
         <div className="p-6 space-y-4 text-sm font-medium text-slate-700">
-          <div>
-            <label className="block mb-1.5">Descripción</label>
-            <input 
-              type="text" 
-              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
-              placeholder="Ej. Papelería"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block mb-1.5">Descripción</label>
+              <input 
+                type="text" 
+                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                placeholder="Ej. Papelería"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block mb-1.5">Fecha</label>
+              <input 
+                type="date" 
+                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-slate-600"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -95,12 +127,13 @@ export default function ExpenseDialog({ tenantId, isOpen, onClose, onSuccess }: 
             <div>
               <label className="block mb-1.5">Categoría</label>
               <select 
-                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all bg-white"
                 value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
+                onChange={handleCategoryChange}
               >
                 <option value="">Seleccionar...</option>
                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                <option value="NEW_CATEGORY" className="font-bold text-indigo-600 bg-indigo-50">+ Crear Nueva Categoría</option>
               </select>
             </div>
           </div>

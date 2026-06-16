@@ -43,6 +43,8 @@ export default function ProductsPage() {
   const [taxType, setTaxType] = useState("IVA_16");
   const [taxIncluded, setTaxIncluded] = useState(false);
   const [costPrice, setCostPrice] = useState("");
+  const [wholesalePrice, setWholesalePrice] = useState("");
+  const [wholesaleMinQuantity, setWholesaleMinQuantity] = useState("");
   const [type, setType] = useState("PRODUCT");
   const [kitComponents, setKitComponents] = useState<{componentId: string, quantity: string, name?: string}[]>([]);
   const [stock, setStock] = useState("");
@@ -84,6 +86,8 @@ export default function ProductsPage() {
     setSatProductCode("");
     setSatUnitCode("H87");
     setPrice("");
+    setWholesalePrice("");
+    setWholesaleMinQuantity("");
     setCostPrice("");
     setType("PRODUCT");
     setTaxType("IVA_16");
@@ -144,6 +148,8 @@ export default function ProductsPage() {
     setSatProductCode(product.satProductCode || "");
     setSatUnitCode(product.satUnitCode || "H87");
     setPrice(product.price.toString());
+    setWholesalePrice(product.wholesalePrice ? product.wholesalePrice.toString() : "");
+    setWholesaleMinQuantity(product.wholesaleMinQuantity ? product.wholesaleMinQuantity.toString() : "");
     setCostPrice(product.costPrice ? product.costPrice.toString() : "");
     setStock(product.stock ? product.stock.toString() : "0");
     setMinStock(product.minStock ? product.minStock.toString() : "0");
@@ -168,6 +174,14 @@ export default function ProductsPage() {
     else setTaxType("IVA_16");
 
     setIsModalOpen(true);
+  };
+
+  const openDuplicate = (product: any) => {
+    openEdit(product);
+    setEditingId(null);
+    setName(product.name + " (Copia)");
+    setSku("");
+    setBarcode("");
   };
 
   const handleDelete = async (id: string, name: string) => {
@@ -323,6 +337,8 @@ export default function ProductsPage() {
         satProductCode: satProductCode || '01010101',
         satUnitCode: satUnitCode || 'H87',
         price: parseFloat(price),
+        wholesalePrice: wholesalePrice ? parseFloat(wholesalePrice) : null,
+        wholesaleMinQuantity: wholesaleMinQuantity ? parseInt(wholesaleMinQuantity) : 0,
         costPrice: costPrice ? parseFloat(costPrice) : null,
         type,
         taxType,
@@ -543,6 +559,7 @@ export default function ProductsPage() {
                  </h2>
               </div>
               <div className="flex gap-2 items-center">
+                 <button onClick={() => openDuplicate(selectedProduct)} title="Duplicar Artículo" className="border border-slate-200 bg-white hover:bg-slate-50 px-3 py-1.5 rounded text-slate-600 font-medium text-sm flex items-center gap-1"><Plus className="w-4 h-4"/> Duplicar</button>
                  <button onClick={printLabel} title="Imprimir Etiqueta Térmica" className="border border-slate-200 bg-white hover:bg-slate-50 p-1.5 rounded text-slate-500"><Printer className="w-4 h-4"/></button>
                  <button onClick={() => openEdit(selectedProduct)} className="border border-slate-200 bg-white hover:bg-slate-50 p-1.5 rounded text-slate-500"><FileEdit className="w-4 h-4"/></button>
                  <button onClick={() => handleDelete(selectedProduct.id, selectedProduct.name)} className="border border-slate-200 bg-white hover:bg-red-50 p-1.5 rounded text-slate-400 hover:text-red-500"><Trash2 className="w-4 h-4"/></button>
@@ -658,10 +675,16 @@ export default function ProductsPage() {
                        <div className="space-y-5 pt-4 border-t border-slate-100 pb-10">
                           <h4 className="font-bold text-slate-800 text-base mb-4">Información de ventas</h4>
                           <div className="grid grid-cols-2 gap-4 items-center">
-                             <div className="text-slate-400 font-medium">Precio de venta</div>
-                             <div className="text-slate-700 font-medium">MXN{selectedProduct.price.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-4 items-center">
+                              <div className="text-slate-400 font-medium">Precio de venta (Menudeo)</div>
+                              <div className="text-slate-700 font-medium">MXN{selectedProduct.price.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                           </div>
+                           {(selectedProduct.wholesalePrice && selectedProduct.wholesalePrice > 0) && (
+                              <div className="grid grid-cols-2 gap-4 items-center">
+                                 <div className="text-slate-400 font-medium">Precio de Mayoreo (≥{selectedProduct.wholesaleMinQuantity} pzs)</div>
+                                 <div className="text-slate-700 font-bold text-emerald-600">MXN{selectedProduct.wholesalePrice.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                              </div>
+                           )}
+                           <div className="grid grid-cols-2 gap-4 items-center">
                              <div className="text-slate-400 font-medium">Cuenta de ventas</div>
                              <div className="text-slate-700 font-medium">Ventas</div>
                           </div>
@@ -942,6 +965,17 @@ export default function ProductsPage() {
                  <div className="space-y-2">
                     <label className="text-sm font-bold text-slate-700">Precio Venta Base</label>
                     <input type="number" value={price} onChange={e=>setPrice(e.target.value)} placeholder="0.00" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 font-bold text-blue-600" />
+                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mt-4 p-4 bg-emerald-50 border border-emerald-100 rounded-xl">
+                 <div className="space-y-2">
+                    <label className="text-sm font-bold text-emerald-800">Precio Mayoreo (Opcional)</label>
+                    <input type="number" value={wholesalePrice} onChange={e=>setWholesalePrice(e.target.value)} placeholder="0.00" className="w-full bg-white border border-emerald-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 font-bold text-emerald-600" />
+                 </div>
+                 <div className="space-y-2">
+                    <label className="text-sm font-bold text-emerald-800">A partir de (Piezas)</label>
+                    <input type="number" value={wholesaleMinQuantity} onChange={e=>setWholesaleMinQuantity(e.target.value)} placeholder="Ej. 10" className="w-full bg-white border border-emerald-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 font-bold text-emerald-700" />
                  </div>
               </div>
 

@@ -32,6 +32,19 @@ export const ExpensesAPI = {
     return res.json();
   },
 
+  createCategory: async (tenantId: string, name: string, color?: string) => {
+    const res = await fetch(`${BASE_URL}/expense-categories`, {
+      method: 'POST',
+      headers: { 
+        ...getHeaders(tenantId),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ name, color }),
+    });
+    if (!res.ok) throw new Error('Error creating category');
+    return res.json();
+  },
+
   getSuppliers: async (tenantId: string) => {
     const res = await fetch(`${BASE_URL}/suppliers`, {
       headers: getHeaders(tenantId),

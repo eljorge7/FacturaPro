@@ -289,6 +289,8 @@ model Product {
   name           String
   description    String?
   price          Float
+  wholesalePrice Float? // Precio de mayoreo
+  wholesaleMinQuantity Int? @default(0) // A partir de cuántas piezas aplica el mayoreo
   costPrice      Float? // Precio de compra
   type           String  @default("PRODUCT") // PRODUCT, SERVICE, KIT, CONSUMABLE
   stock          Float   @default(0)

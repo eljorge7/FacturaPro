@@ -27,4 +27,14 @@ export class ExpenseCategoriesService {
 
     return categories;
   }
+
+  async create(tenantId: string, data: { name: string; color?: string }) {
+    return this.prisma.expenseCategory.create({
+      data: {
+        tenantId,
+        name: data.name,
+        color: data.color || '#6366F1'
+      }
+    });
+  }
 }
