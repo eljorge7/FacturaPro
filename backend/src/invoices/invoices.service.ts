@@ -566,6 +566,24 @@ export class InvoicesService {
         return payment;
      });
 
+     if (isPaidFully && invoice.status !== 'PAID') {
+        try {
+           const rentControlUrl = process.env.RENTCONTROL_API_URL || 'http://localhost:3001';
+           const axios = require('axios');
+           axios.post(`${rentControlUrl}/api/automations/webhook`, {
+              triggerApp: 'FACTURAPRO',
+              triggerEvent: 'INVOICE_PAID',
+              companyId: invoice.tenantId,
+              payload: {
+                 invoiceNumber: invoice.invoiceNumber,
+                 amount: invoice.total,
+                 customerName: invoice.customer?.legalName || 'Cliente',
+                 phone: invoice.customer?.phone || ''
+              }
+           }).catch(e => console.error("Error triggering automation webhook:", e.message));
+        } catch(e) {}
+     }
+
      return result;
   }
 
