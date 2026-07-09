@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 import { PaywallModal } from "./PaywallModal";
+import { AppLauncher } from "./AppLauncher";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -202,6 +203,9 @@ export function Sidebar() {
              )}
            </div>
          )}
+         <div className="ml-2">
+            <AppLauncher currentApp="FacturaPro" />
+         </div>
 
         {/* WORKSPACE SWITCHER DROPDOWN */}
         {showSwitcher && !isCollapsed && memberships.length > 0 && (
