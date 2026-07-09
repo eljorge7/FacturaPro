@@ -44,7 +44,7 @@ export class OmniChatProxyController {
       }
     });
 
-    let context = `El cliente ESTÁ REGISTRADO en FacturaPro con nombre '${customer.name}'. `;
+    let context = `El cliente ESTÁ REGISTRADO en FacturaPro con nombre '${customer.legalName}'. `;
     
     if (unbilledOrders.length > 0) {
       context += `Tiene ${unbilledOrders.length} ticket(s) de compra pendientes de facturar. Los IDs de los tickets son: ${unbilledOrders.map(o => o.id).join(', ')}. `;
@@ -60,7 +60,7 @@ export class OmniChatProxyController {
     return {
       found: true,
       customerId: customer.id,
-      name: customer.name,
+      name: customer.legalName,
       facturaproContext: context
     };
   }
@@ -102,7 +102,7 @@ export class OmniChatProxyController {
       customer = await this.prisma.customer.create({
         data: {
           tenantId: order.tenantId,
-          name: order.customerName,
+          legalName: order.customerName,
           phone: order.customerPhone,
           rfc: order.billingRfc || 'XAXX010101000',
           email: 'facturas@cliente.com',
@@ -122,9 +122,8 @@ export class OmniChatProxyController {
         invoiceNumber: tempFolio,
         status: 'DRAFT',
         subtotal: order.totalAmount / 1.16,
-        taxAmount: order.totalAmount - (order.totalAmount / 1.16),
+        taxTotal: order.totalAmount - (order.totalAmount / 1.16),
         total: order.totalAmount,
-        notes: `Factura en borrador generada desde OmniChat IA para el Ticket ${order.id}`,
         items: {
           create: order.items.map(item => ({
             description: item.title,
