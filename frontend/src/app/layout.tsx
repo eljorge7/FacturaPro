@@ -21,6 +21,7 @@ export const metadata: Metadata = {
 import { AuthProvider } from "@/components/AuthProvider";
 import WhatsAppWidget from "@/components/WhatsAppWidget";
 import { CommandPalette } from "@/components/CommandPalette";
+import { AppLauncher } from "@/components/AppLauncher";
 
 export default function RootLayout({
   children,
@@ -39,6 +40,9 @@ export default function RootLayout({
           <div className="flex h-screen overflow-hidden print:h-auto print:overflow-visible">
             <Sidebar />
             <main className="flex-1 overflow-y-auto bg-slate-50 h-full relative print:overflow-visible print:bg-white print:h-auto">
+               <div className="fixed top-4 right-4 z-[9999] print:hidden">
+                 <AppLauncher currentApp="FacturaPro" />
+               </div>
                {children}
                <WhatsAppWidget />
                <CommandPalette />
