@@ -11,6 +11,7 @@ import { QuotesModule } from './quotes/quotes.module';
 import { InvoicesModule } from './invoices/invoices.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { InternalController } from './internal/internal.controller';
+import { OmniChatProxyController } from './omnichat/omnichat.controller';
 import { SuppliersModule } from './suppliers/suppliers.module';
 import { ExpenseCategoriesModule } from './expense-categories/expense-categories.module';
 import { ExpensesModule } from './expenses/expenses.module';
@@ -59,7 +60,7 @@ import { join } from 'path';
     ScheduleModule.forRoot(),
     CryptoModule, AuthModule, SatCatalogsModule, TenantsModule, TaxProfilesModule, ApiKeysModule, ProductsModule, CustomersModule, QuotesModule, InvoicesModule, PrismaModule, SuppliersModule, ExpenseCategoriesModule, ExpensesModule, DiotModule, SubscriptionRequestsModule, CfdiModule, PosModule, UsersModule, PurchasesModule, InventoryModule, BovedaSatModule, EfosModule, SatScraperModule, BankAccountsModule, BankTransactionsModule, WarehousesModule, TransfersModule, StockTakesModule, EmployeesModule, RolesModule, PayrollModule, DepartmentsModule, TimeOffModule, ProposalTemplatesModule, MailModule, PublicStoreModule, StoreManagementModule, TopupsModule
   ],
-  controllers: [AppController, InternalController],
+  controllers: [AppController, InternalController, OmniChatProxyController],
   providers: [AppService],
 })
 export class AppModule {}
