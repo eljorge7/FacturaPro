@@ -580,7 +580,7 @@ export class InvoicesService {
                  customerName: invoice.customer?.legalName || 'Cliente',
                  phone: invoice.customer?.phone || ''
               }
-           }).catch(e => console.error("Error triggering automation webhook:", e.message));
+           }).catch((e: any) => console.error("Error triggering automation webhook:", e.message));
         } catch(e) {}
      }
 
