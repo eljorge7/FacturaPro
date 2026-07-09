@@ -105,8 +105,7 @@ export class OmniChatProxyController {
           legalName: order.customerName,
           phone: order.customerPhone,
           rfc: order.billingRfc || 'XAXX010101000',
-          email: 'facturas@cliente.com',
-          type: 'CLIENTE',
+          email: 'facturas@cliente.com'
         }
       });
     }
