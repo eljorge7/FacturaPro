@@ -163,7 +163,8 @@ export default function NewQuotePage() {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
         const res = await fetch(`${baseUrl}/public-store/radiotec/products?search=${encodeURIComponent(syscomSearch)}`);
         const data = await res.json();
-        setSyscomResults(data.products.slice(0, 8)); // Top 8 results
+        const syscomOnly = (data.products || []).filter((p: any) => p.source === 'syscom');
+        setSyscomResults(syscomOnly.slice(0, 8)); // Top 8 results
       } catch (e) {
         console.error("Syscom API Error:", e);
       } finally {
@@ -200,7 +201,7 @@ export default function NewQuotePage() {
       newItems[index] = {
         ...newItems[index],
         productId: product.id,
-        description: product.description || product.title,
+        description: product.description || product.name || "",
         imageUrl: product.imageUrl || "",
         quantity: 1,
         unitPrice: Number(product.price),
