@@ -120,6 +120,12 @@ export default function NewQuotePage() {
          }
        };
        fetchQuoteForEdit();
+    } else if (shouldClear === 'true') {
+       localStorage.removeItem('facturapro_draft_quote');
+       setItems([{ productId: "", description: "", imageUrl: "", quantity: 1, unitPrice: 0, taxRate: 0.16, discount: 0, type: "ITEM" }]);
+       setCustomerId("");
+       setReference("");
+       setNotes("");
     } else {
        const saved = localStorage.getItem('facturapro_draft_quote');
        if (saved) {
