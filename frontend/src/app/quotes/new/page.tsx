@@ -337,16 +337,23 @@ export default function NewQuotePage() {
         })
       });
 
-      if (!res.ok) throw new Error("Error al guardar");
-
+      if (!res.ok) {
+        let errText = await res.text();
+        try {
+           const json = JSON.parse(errText);
+           errText = JSON.stringify(json, null, 2);
+        } catch(e) {}
+        throw new Error(`Error ${res.status}: ${errText}`);
+      }
       // Clear draft on successful save
       localStorage.removeItem('facturapro_draft_quote');
       
       router.push('/quotes');
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert("Error al guardar cotización.");
-      setSaving(false);
+      alert(`Error al guardar cotización:\n\n${e.message}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
