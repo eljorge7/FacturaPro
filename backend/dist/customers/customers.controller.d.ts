@@ -138,6 +138,8 @@ export declare class CustomersController {
                 discount: number;
                 taxRate: number;
                 total: number;
+                type: string;
+                orderIndex: number;
             }[];
             payments: {
                 id: string;
@@ -175,6 +177,11 @@ export declare class CustomersController {
             pdfUrl: string | null;
             createdAt: Date;
             updatedAt: Date;
+            globalInvoiceId: string | null;
+            isGlobal: boolean;
+            globalPeriod: string | null;
+            globalMonths: string | null;
+            globalYear: string | null;
         })[];
     }>;
     updateCreditConfig(id: string, body: {

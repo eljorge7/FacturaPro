@@ -59,6 +59,8 @@ export declare class PosController {
             discount: number;
             taxRate: number;
             total: number;
+            type: string;
+            orderIndex: number;
         }[];
     } & {
         id: string;
@@ -86,6 +88,11 @@ export declare class PosController {
         pdfUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
+        globalInvoiceId: string | null;
+        isGlobal: boolean;
+        globalPeriod: string | null;
+        globalMonths: string | null;
+        globalYear: string | null;
     }>;
     getCurrentShift(req: any): Promise<({
         openedBy: {

@@ -64,7 +64,9 @@ let QuotesService = class QuotesService {
                 unitPrice: item.unitPrice,
                 discount: discount,
                 taxRate: item.taxRate,
-                total: lineTotal
+                total: lineTotal,
+                type: item.type || 'ITEM',
+                orderIndex: item.orderIndex || 0
             };
         });
         const tdsTotal = customer.tdsEnabled ? (subtotal * 0.0125) : 0;
@@ -202,7 +204,9 @@ let QuotesService = class QuotesService {
                 currency: quote.currency,
             }
         });
-        const invoiceItems = quote.items.map(item => ({
+        const invoiceItems = quote.items
+            .filter(item => item.type !== 'SECTION_HEADER')
+            .map(item => ({
             invoiceId: invoice.id,
             productId: item.productId,
             description: item.description,
@@ -211,7 +215,9 @@ let QuotesService = class QuotesService {
             unitPrice: item.unitPrice,
             discount: item.discount,
             taxRate: item.taxRate,
-            total: item.total
+            total: item.total,
+            type: item.type,
+            orderIndex: item.orderIndex
         }));
         await this.prisma.invoiceItem.createMany({ data: invoiceItems });
         await this.prisma.quote.update({

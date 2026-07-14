@@ -15,12 +15,13 @@ const pdf_service_1 = require("./pdf.service");
 const prisma_module_1 = require("../prisma/prisma.module");
 const auth_module_1 = require("../auth/auth.module");
 const cfdi_module_1 = require("../cfdi/cfdi.module");
+const topups_module_1 = require("../topups/topups.module");
 let InvoicesModule = class InvoicesModule {
 };
 exports.InvoicesModule = InvoicesModule;
 exports.InvoicesModule = InvoicesModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule, auth_module_1.AuthModule, cfdi_module_1.CfdiModule],
+        imports: [prisma_module_1.PrismaModule, auth_module_1.AuthModule, cfdi_module_1.CfdiModule, topups_module_1.TopupsModule],
         controllers: [invoices_controller_1.InvoicesController, portal_controller_1.PortalController],
         providers: [invoices_service_1.InvoicesService, pdf_service_1.PdfService],
         exports: [invoices_service_1.InvoicesService],

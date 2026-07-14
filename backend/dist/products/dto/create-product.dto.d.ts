@@ -4,6 +4,7 @@ export declare class CreateProductDto {
     description?: string;
     sku?: string;
     barcode?: string;
+    isFavorite?: boolean;
     stock?: number;
     minStock?: number;
     maxStock?: number;
@@ -14,6 +15,7 @@ export declare class CreateProductDto {
     satUnitCode?: string;
     price: number;
     taxType: string;
+    taxIncluded?: boolean;
     costPrice?: number;
     type?: string;
     isPublishedToStore?: boolean;

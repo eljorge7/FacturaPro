@@ -192,11 +192,19 @@ let PdfService = class PdfService {
             let rowY = tableTop + 20;
             doc.font(fReg).fontSize(8);
             if (data.items && data.items.length > 0) {
-                data.items.forEach((item) => {
-                    doc.text(item.quantity.toString(), 10, rowY);
-                    doc.text(item.description.substring(0, 30), 35, rowY);
-                    doc.text(`$${((item.quantity * item.unitPrice) - item.discount).toLocaleString()}`, 170, rowY, { align: 'right', width: 45 });
-                    rowY += 15;
+                const sortedItems = [...data.items].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+                sortedItems.forEach((item) => {
+                    if (item.type === 'SECTION_HEADER') {
+                        doc.font(fBold).text(`--- ${item.description.toUpperCase()} ---`, 10, rowY, { align: 'center', width: 206 });
+                        rowY += 15;
+                        doc.font(fReg);
+                    }
+                    else {
+                        doc.text(item.quantity.toString(), 10, rowY);
+                        doc.text(item.description.substring(0, 30), 35, rowY);
+                        doc.text(`$${((item.quantity * item.unitPrice) - item.discount).toLocaleString()}`, 170, rowY, { align: 'right', width: 45 });
+                        rowY += 15;
+                    }
                 });
             }
             doc.moveTo(10, rowY).lineTo(216, rowY).stroke();
@@ -225,15 +233,32 @@ let PdfService = class PdfService {
         let rowY = tableTop + 25;
         doc.fillColor('#334155').font(fReg).fontSize(9);
         if (data.items && data.items.length > 0) {
-            data.items.forEach((item) => {
-                doc.text(item.quantity.toString(), 55, rowY);
-                doc.text(item.description.length > 50 ? item.description.substring(0, 50) + '...' : item.description, 100, rowY);
-                doc.text(`$${item.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 350, rowY);
-                doc.text(`$${((item.quantity * item.unitPrice) - item.discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 470, rowY);
-                if (isSpreadsheet || template === 'Minimalista Notion') {
-                    doc.moveTo(50, rowY + 15).lineTo(545, rowY + 15).lineWidth(0.5).strokeColor('#f1f5f9').stroke();
+            const sortedItems = [...data.items].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+            sortedItems.forEach((item, idx) => {
+                if (item.type === 'SECTION_HEADER') {
+                    doc.rect(50, rowY - 5, 495, 20).fill('#e2e8f0');
+                    doc.fillColor('#0f172a').font(fBold).fontSize(9);
+                    doc.text(item.description, 55, rowY);
+                    let sectionSub = 0;
+                    for (let j = idx + 1; j < sortedItems.length; j++) {
+                        if (sortedItems[j].type === 'SECTION_HEADER')
+                            break;
+                        sectionSub += sortedItems[j].total || 0;
+                    }
+                    doc.text(`$${sectionSub.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 470, rowY);
+                    rowY += 20;
+                    doc.fillColor('#334155').font(fReg).fontSize(9);
                 }
-                rowY += 20;
+                else {
+                    doc.text(item.quantity.toString(), 55, rowY);
+                    doc.text(item.description.length > 50 ? item.description.substring(0, 50) + '...' : item.description, 105, rowY);
+                    doc.text(`$${item.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 350, rowY);
+                    doc.text(`$${((item.quantity * item.unitPrice) - item.discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 470, rowY);
+                    if (isSpreadsheet || template === 'Minimalista Notion') {
+                        doc.moveTo(50, rowY + 15).lineTo(545, rowY + 15).lineWidth(0.5).strokeColor('#f1f5f9').stroke();
+                    }
+                    rowY += 20;
+                }
             });
         }
         if (!isSpreadsheet && template !== 'Avant-Garde Agencia' && template !== 'Minimalista Notion') {

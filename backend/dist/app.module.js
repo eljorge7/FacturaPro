@@ -20,6 +20,7 @@ const quotes_module_1 = require("./quotes/quotes.module");
 const invoices_module_1 = require("./invoices/invoices.module");
 const prisma_module_1 = require("./prisma/prisma.module");
 const internal_controller_1 = require("./internal/internal.controller");
+const omnichat_controller_1 = require("./omnichat/omnichat.controller");
 const suppliers_module_1 = require("./suppliers/suppliers.module");
 const expense_categories_module_1 = require("./expense-categories/expense-categories.module");
 const expenses_module_1 = require("./expenses/expenses.module");
@@ -49,6 +50,7 @@ const proposal_templates_module_1 = require("./proposal-templates/proposal-templ
 const mail_module_1 = require("./mail/mail.module");
 const public_store_module_1 = require("./public-store/public-store.module");
 const store_management_module_1 = require("./store-management/store-management.module");
+const topups_module_1 = require("./topups/topups.module");
 const throttler_1 = require("@nestjs/throttler");
 const crypto_module_1 = require("./crypto/crypto.module");
 const schedule_1 = require("@nestjs/schedule");
@@ -67,9 +69,9 @@ exports.AppModule = AppModule = __decorate([
             }),
             throttler_1.ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
             schedule_1.ScheduleModule.forRoot(),
-            crypto_module_1.CryptoModule, auth_module_1.AuthModule, sat_catalogs_module_1.SatCatalogsModule, tenants_module_1.TenantsModule, tax_profiles_module_1.TaxProfilesModule, api_keys_module_1.ApiKeysModule, products_module_1.ProductsModule, customers_module_1.CustomersModule, quotes_module_1.QuotesModule, invoices_module_1.InvoicesModule, prisma_module_1.PrismaModule, suppliers_module_1.SuppliersModule, expense_categories_module_1.ExpenseCategoriesModule, expenses_module_1.ExpensesModule, diot_module_1.DiotModule, subscription_requests_module_1.SubscriptionRequestsModule, cfdi_module_1.CfdiModule, pos_module_1.PosModule, users_module_1.UsersModule, purchases_module_1.PurchasesModule, inventory_module_1.InventoryModule, boveda_sat_module_1.BovedaSatModule, efos_module_1.EfosModule, sat_scraper_module_1.SatScraperModule, bank_accounts_module_1.BankAccountsModule, bank_transactions_module_1.BankTransactionsModule, warehouses_module_1.WarehousesModule, transfers_module_1.TransfersModule, stock_takes_module_1.StockTakesModule, employees_module_1.EmployeesModule, roles_module_1.RolesModule, payroll_module_1.PayrollModule, departments_module_1.DepartmentsModule, time_off_module_1.TimeOffModule, proposal_templates_module_1.ProposalTemplatesModule, mail_module_1.MailModule, public_store_module_1.PublicStoreModule, store_management_module_1.StoreManagementModule
+            crypto_module_1.CryptoModule, auth_module_1.AuthModule, sat_catalogs_module_1.SatCatalogsModule, tenants_module_1.TenantsModule, tax_profiles_module_1.TaxProfilesModule, api_keys_module_1.ApiKeysModule, products_module_1.ProductsModule, customers_module_1.CustomersModule, quotes_module_1.QuotesModule, invoices_module_1.InvoicesModule, prisma_module_1.PrismaModule, suppliers_module_1.SuppliersModule, expense_categories_module_1.ExpenseCategoriesModule, expenses_module_1.ExpensesModule, diot_module_1.DiotModule, subscription_requests_module_1.SubscriptionRequestsModule, cfdi_module_1.CfdiModule, pos_module_1.PosModule, users_module_1.UsersModule, purchases_module_1.PurchasesModule, inventory_module_1.InventoryModule, boveda_sat_module_1.BovedaSatModule, efos_module_1.EfosModule, sat_scraper_module_1.SatScraperModule, bank_accounts_module_1.BankAccountsModule, bank_transactions_module_1.BankTransactionsModule, warehouses_module_1.WarehousesModule, transfers_module_1.TransfersModule, stock_takes_module_1.StockTakesModule, employees_module_1.EmployeesModule, roles_module_1.RolesModule, payroll_module_1.PayrollModule, departments_module_1.DepartmentsModule, time_off_module_1.TimeOffModule, proposal_templates_module_1.ProposalTemplatesModule, mail_module_1.MailModule, public_store_module_1.PublicStoreModule, store_management_module_1.StoreManagementModule, topups_module_1.TopupsModule
         ],
-        controllers: [app_controller_1.AppController, internal_controller_1.InternalController],
+        controllers: [app_controller_1.AppController, internal_controller_1.InternalController, omnichat_controller_1.OmniChatProxyController],
         providers: [app_service_1.AppService],
     })
 ], AppModule);

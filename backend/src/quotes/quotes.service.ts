@@ -62,7 +62,9 @@ export class QuotesService {
         unitPrice: item.unitPrice,
         discount: discount,
         taxRate: item.taxRate,
-        total: lineTotal
+        total: lineTotal,
+        type: item.type || 'ITEM',
+        orderIndex: item.orderIndex || 0
       };
     });
 
@@ -221,18 +223,22 @@ export class QuotesService {
       }
     });
 
-    // Copiar las partidas (QuoteItem -> InvoiceItem)
-    const invoiceItems = quote.items.map(item => ({
-      invoiceId: invoice.id,
-      productId: item.productId,
-      description: item.description,
-      imageUrl: item.imageUrl,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      discount: item.discount,
-      taxRate: item.taxRate,
-      total: item.total
-    }));
+    // Copiar las partidas (QuoteItem -> InvoiceItem) omitiendo encabezados de sección
+    const invoiceItems = quote.items
+      .filter(item => item.type !== 'SECTION_HEADER')
+      .map(item => ({
+        invoiceId: invoice.id,
+        productId: item.productId,
+        description: item.description,
+        imageUrl: item.imageUrl,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        discount: item.discount,
+        taxRate: item.taxRate,
+        total: item.total,
+        type: item.type,
+        orderIndex: item.orderIndex
+      }));
 
     await this.prisma.invoiceItem.createMany({ data: invoiceItems });
 

@@ -121,6 +121,13 @@ let XmlGeneratorService = class XmlGeneratorService {
             cadenaParts.push('01');
             cadenaParts.push(invoice.paymentMethod || 'PUE');
             cadenaParts.push(taxProfile.zipCode);
+            let infoGlobalXml = '';
+            if (invoice.isGlobal && invoice.globalPeriod && invoice.globalMonths && invoice.globalYear) {
+                cadenaParts.push(invoice.globalPeriod);
+                cadenaParts.push(invoice.globalMonths);
+                cadenaParts.push(invoice.globalYear);
+                infoGlobalXml = `\n  <cfdi:InformacionGlobal Periodicidad="${invoice.globalPeriod}" Meses="${invoice.globalMonths}" Anio="${invoice.globalYear}"/>`;
+            }
             let emisorNombreSt = escapeXml(emisorNombre.toUpperCase().replace(/ S\.?A\.? DE C\.?V\.?$/i, '').trim());
             let receptorName = escapeXml(invoice.customer.legalName.toUpperCase().replace(/ S\.?A\.? DE C\.?V\.?$/i, '').trim());
             if (invoice.customer.rfc === 'XAXX010101000') {
@@ -163,12 +170,12 @@ let XmlGeneratorService = class XmlGeneratorService {
             const sello = sign.sign(privateKey, 'base64');
             const tipoCambioAttr = (currency !== 'MXN' && currency !== 'XXX') ? ` TipoCambio="${exchangeRate.toFixed(4)}"` : '';
             const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<cfdi:Comprobante xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd" xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Version="4.0" Serie="FAC" Folio="${invoice.invoiceNumber}" Fecha="${fechaLocal}" Sello="${sello}" FormaPago="${invoice.paymentForm || '01'}" NoCertificado="${cerNumber}" Certificado="${cerBase64}" SubTotal="${invoice.subtotal.toFixed(2)}" Moneda="${currency}"${tipoCambioAttr} Total="${invoice.total.toFixed(2)}" TipoDeComprobante="I" Exportacion="01" MetodoPago="${invoice.paymentMethod || 'PUE'}" LugarExpedicion="${taxProfile.zipCode}">
+<cfdi:Comprobante xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd" xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Version="4.0" Serie="FAC" Folio="${invoice.invoiceNumber}" Fecha="${fechaLocal}" Sello="${sello}" FormaPago="${invoice.paymentForm || '01'}" NoCertificado="${cerNumber}" Certificado="${cerBase64}" SubTotal="${invoice.subtotal.toFixed(2)}" Moneda="${currency}"${tipoCambioAttr} Total="${invoice.total.toFixed(2)}" TipoDeComprobante="I" Exportacion="01" MetodoPago="${invoice.paymentMethod || 'PUE'}" LugarExpedicion="${taxProfile.zipCode}">${infoGlobalXml}
   <cfdi:Emisor Rfc="${emisorRfc}" Nombre="${emisorNombreSt}" RegimenFiscal="${emisorRegimen}"/>
   <cfdi:Receptor Rfc="${invoice.customer.rfc}" Nombre="${receptorName}" UsoCFDI="${invoice.cfdiUse || 'G03'}" RegimenFiscalReceptor="${invoice.customer.taxRegime || '601'}" DomicilioFiscalReceptor="${invoice.customer.zipCode || '00000'}"/>
   <cfdi:Conceptos>
     ${invoice.items.map((item) => `
-    <cfdi:Concepto ClaveProdServ="${item.product?.satProductCode || '01010101'}" ClaveUnidad="${item.product?.satUnitCode || 'ACT'}" Cantidad="${item.quantity}" Unidad="Servicio" Descripcion="${escapeXml(item.description)}" ValorUnitario="${item.unitPrice.toFixed(2)}" Importe="${(item.unitPrice * item.quantity).toFixed(2)}" ObjetoImp="02">
+    <cfdi:Concepto ClaveProdServ="${item.product?.satProductCode || '01010101'}" ${item.customFields?.ticketId ? `NoIdentificacion="${item.customFields.ticketId}" ` : ''}ClaveUnidad="${item.product?.satUnitCode || 'ACT'}" Cantidad="${item.quantity}" Unidad="Servicio" Descripcion="${escapeXml(item.description)}" ValorUnitario="${item.unitPrice.toFixed(2)}" Importe="${(item.unitPrice * item.quantity).toFixed(2)}" ObjetoImp="02">
        <cfdi:Impuestos>
          <cfdi:Traslados>
            <cfdi:Traslado Base="${(item.unitPrice * item.quantity).toFixed(2)}" Impuesto="002" TipoFactor="Tasa" TasaOCuota="${item.taxRate.toFixed(6)}" Importe="${(item.unitPrice * item.quantity * item.taxRate).toFixed(2)}"/>

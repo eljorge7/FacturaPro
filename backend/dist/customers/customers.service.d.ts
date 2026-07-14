@@ -154,6 +154,8 @@ export declare class CustomersService {
                 discount: number;
                 taxRate: number;
                 total: number;
+                type: string;
+                orderIndex: number;
             }[];
             payments: {
                 id: string;
@@ -191,6 +193,11 @@ export declare class CustomersService {
             pdfUrl: string | null;
             createdAt: Date;
             updatedAt: Date;
+            globalInvoiceId: string | null;
+            isGlobal: boolean;
+            globalPeriod: string | null;
+            globalMonths: string | null;
+            globalYear: string | null;
         })[];
     }>;
     registerCreditPayment(id: string, amount: number, paymentMethod: string, notes?: string): Promise<{

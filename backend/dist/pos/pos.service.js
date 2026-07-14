@@ -29,8 +29,7 @@ let PosService = class PosService {
         if (!items || items.length === 0)
             throw new common_1.BadRequestException('El carrito está vacío');
         for (const item of items) {
-            if (item.customFields?.type === 'TOPUP') {
-                console.log(`📡 [MOCK API] Disparando recarga de $${item.unitPrice} para ${item.customFields.provider} (Tel: ${item.customFields.phone})...`);
+            if (item.customFields?.isTopup) {
                 continue;
             }
             const product = await this.prisma.product.findUnique({
@@ -131,7 +130,7 @@ let PosService = class PosService {
             if (customer.creditStatus !== 'ACTIVE') {
                 throw new common_1.BadRequestException('El crédito del cliente está suspendido.');
             }
-            const purchaseTotal = items.reduce((sum, i) => sum + (i.quantity * i.unitPrice * (1 - (i.discount || 0))), 0);
+            const purchaseTotal = items.reduce((sum, i) => sum + ((i.quantity * i.unitPrice) - (i.discount || 0)), 0);
             const finalTotal = purchaseTotal * 1.16;
             const unpaidInvoices = await this.prisma.invoice.findMany({
                 where: { customerId: customer.id, paymentMethod: '99', status: 'UNPAID' },
@@ -153,7 +152,7 @@ let PosService = class PosService {
         }
         else {
             let publicoGen = await this.prisma.customer.findFirst({
-                where: { tenantId, rfc: 'XAXX010101000' }
+                where: { tenantId, rfc: 'XAXX010101000', legalName: 'PÚBLICO EN GENERAL' }
             });
             if (!publicoGen) {
                 publicoGen = await this.prisma.customer.create({
@@ -182,6 +181,7 @@ let PosService = class PosService {
                 taxRate: i.taxRate !== undefined ? i.taxRate : 0.16
             })),
             status: finalStatus,
+            isPosTicket: true,
             ...(cashShiftId && { cashShiftId }),
             ...(customFields && { customFields })
         });

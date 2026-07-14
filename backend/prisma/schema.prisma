@@ -455,6 +455,9 @@ model QuoteItem {
   discount    Float   @default(0)
   taxRate     Float   @default(0.16)
   total       Float
+
+  type        String  @default("ITEM") // ITEM, SECTION_HEADER
+  orderIndex  Int     @default(0)
 }
 
 model QuoteAttachment {
@@ -649,6 +652,9 @@ model InvoiceItem {
   discount    Float   @default(0)
   taxRate     Float   @default(0.16)
   total       Float
+
+  type        String  @default("ITEM") // ITEM, SECTION_HEADER
+  orderIndex  Int     @default(0)
 }
 
 // ----------------------------------------------------

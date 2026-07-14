@@ -62,6 +62,8 @@ export declare class InvoicesController {
             discount: number;
             taxRate: number;
             total: number;
+            type: string;
+            orderIndex: number;
         }[];
     } & {
         id: string;
@@ -89,6 +91,11 @@ export declare class InvoicesController {
         pdfUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
+        globalInvoiceId: string | null;
+        isGlobal: boolean;
+        globalPeriod: string | null;
+        globalMonths: string | null;
+        globalYear: string | null;
     }>;
     findAll(req: any, hTenantId: string): Promise<({
         taxProfile: {
@@ -147,6 +154,8 @@ export declare class InvoicesController {
             discount: number;
             taxRate: number;
             total: number;
+            type: string;
+            orderIndex: number;
         }[];
         payments: {
             id: string;
@@ -192,6 +201,11 @@ export declare class InvoicesController {
         pdfUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
+        globalInvoiceId: string | null;
+        isGlobal: boolean;
+        globalPeriod: string | null;
+        globalMonths: string | null;
+        globalYear: string | null;
     })[]>;
     getStats(req: any, hTenantId: string): Promise<{
         totalInvoices: number;
@@ -272,6 +286,11 @@ export declare class InvoicesController {
             pdfUrl: string | null;
             createdAt: Date;
             updatedAt: Date;
+            globalInvoiceId: string | null;
+            isGlobal: boolean;
+            globalPeriod: string | null;
+            globalMonths: string | null;
+            globalYear: string | null;
         })[];
         recentExpenses: ({
             supplier: {
@@ -303,6 +322,42 @@ export declare class InvoicesController {
             createdAt: Date;
             updatedAt: Date;
         })[];
+    }>;
+    getPendingGlobalTickets(req: any, hTenantId: string, body: any, request: any): Promise<{
+        totalTickets: number;
+        totalAmount: number;
+    }>;
+    createGlobalInvoice(req: any, hTenantId: string, createGlobalDto: any): Promise<{
+        id: string;
+        tenantId: string;
+        taxProfileId: string;
+        customerId: string;
+        quoteId: string | null;
+        invoiceNumber: string;
+        date: Date;
+        dueDate: Date | null;
+        satUuid: string | null;
+        paymentMethod: string | null;
+        paymentForm: string | null;
+        cfdiUse: string | null;
+        subtotal: number;
+        taxTotal: number;
+        tdsTotal: number;
+        total: number;
+        currency: string;
+        exchangeRate: number;
+        cashShiftId: string | null;
+        customFields: import(".prisma/client").Prisma.JsonValue | null;
+        status: string;
+        xmlContent: string | null;
+        pdfUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        globalInvoiceId: string | null;
+        isGlobal: boolean;
+        globalPeriod: string | null;
+        globalMonths: string | null;
+        globalYear: string | null;
     }>;
     getArReport(req: any, hTenantId: string): Promise<{
         totalAccountsReceivable: number;
@@ -366,6 +421,11 @@ export declare class InvoicesController {
             pdfUrl: string | null;
             createdAt: Date;
             updatedAt: Date;
+            globalInvoiceId: string | null;
+            isGlobal: boolean;
+            globalPeriod: string | null;
+            globalMonths: string | null;
+            globalYear: string | null;
         }[];
         paymentHistory: {
             id: string;
@@ -435,6 +495,8 @@ export declare class InvoicesController {
             discount: number;
             taxRate: number;
             total: number;
+            type: string;
+            orderIndex: number;
         }[];
         payments: {
             id: string;
@@ -480,6 +542,43 @@ export declare class InvoicesController {
         pdfUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
+        globalInvoiceId: string | null;
+        isGlobal: boolean;
+        globalPeriod: string | null;
+        globalMonths: string | null;
+        globalYear: string | null;
+    }>;
+    remove(id: string): Promise<{
+        id: string;
+        tenantId: string;
+        taxProfileId: string;
+        customerId: string;
+        quoteId: string | null;
+        invoiceNumber: string;
+        date: Date;
+        dueDate: Date | null;
+        satUuid: string | null;
+        paymentMethod: string | null;
+        paymentForm: string | null;
+        cfdiUse: string | null;
+        subtotal: number;
+        taxTotal: number;
+        tdsTotal: number;
+        total: number;
+        currency: string;
+        exchangeRate: number;
+        cashShiftId: string | null;
+        customFields: import(".prisma/client").Prisma.JsonValue | null;
+        status: string;
+        xmlContent: string | null;
+        pdfUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        globalInvoiceId: string | null;
+        isGlobal: boolean;
+        globalPeriod: string | null;
+        globalMonths: string | null;
+        globalYear: string | null;
     }>;
     downloadPdf(id: string, res: any): Promise<void>;
     uploadAttachment(id: string, file: Express.Multer.File): Promise<{
@@ -519,6 +618,11 @@ export declare class InvoicesController {
         pdfUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
+        globalInvoiceId: string | null;
+        isGlobal: boolean;
+        globalPeriod: string | null;
+        globalMonths: string | null;
+        globalYear: string | null;
     }>;
     registerPayment(id: string, payload: {
         amount: number;
@@ -562,6 +666,11 @@ export declare class InvoicesController {
         pdfUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
+        globalInvoiceId: string | null;
+        isGlobal: boolean;
+        globalPeriod: string | null;
+        globalMonths: string | null;
+        globalYear: string | null;
     }>;
     stamp(id: string): Promise<{
         id: string;
@@ -589,6 +698,11 @@ export declare class InvoicesController {
         pdfUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
+        globalInvoiceId: string | null;
+        isGlobal: boolean;
+        globalPeriod: string | null;
+        globalMonths: string | null;
+        globalYear: string | null;
     }>;
     sendWhatsapp(id: string, payload: {
         phone: string;

@@ -78,6 +78,25 @@ export declare class ExpensesService {
         createdAt: Date;
         updatedAt: Date;
     }>;
+    update(id: string, tenantId: string, data: any): Promise<{
+        id: string;
+        tenantId: string;
+        supplierId: string | null;
+        categoryId: string | null;
+        amount: number;
+        taxTotal: number;
+        total: number;
+        currency: string;
+        exchangeRate: number;
+        date: Date;
+        isDeductible: boolean;
+        satUuid: string | null;
+        description: string | null;
+        xmlContent: string | null;
+        status: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
     parseXml(tenantId: string, fileContent: string): Promise<{
         providerRfc: string;
         providerName: string;

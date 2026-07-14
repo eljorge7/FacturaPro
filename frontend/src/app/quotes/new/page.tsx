@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, Plus, X, Save, Send, Loader2, Info, Search, FileText, ChevronDown, PlusCircle, PanelRight, MessageCircle, FileEdit, Trash2, Globe, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Plus, X, Save, Send, Loader2, Info, Search, FileText, ChevronDown, PlusCircle, PanelRight, MessageCircle, FileEdit, Trash2, Globe, CheckCircle2, ArrowUp, ArrowDown } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
@@ -28,7 +28,7 @@ export default function NewQuotePage() {
   const [expirationDate, setExpirationDate] = useState("");
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<any[]>([
-    { productId: "", description: "", imageUrl: "", quantity: 1, unitPrice: 0, taxRate: 0.16, discount: 0 }
+    { productId: "", description: "", imageUrl: "", quantity: 1, unitPrice: 0, taxRate: 0.16, discount: 0, type: "ITEM" }
   ]);
 
   const [taxIncluded, setTaxIncluded] = useState(false);
@@ -89,14 +89,15 @@ export default function NewQuotePage() {
              setCurrency(data.currency || "MXN");
              setExchangeRate(data.exchangeRate || 18.0);
              if (data.items && data.items.length > 0) {
-                setItems(data.items.map((i: any) => ({
+                setItems(data.items.sort((a:any,b:any) => (a.orderIndex||0) - (b.orderIndex||0)).map((i: any) => ({
                    productId: i.productId || "",
                    description: i.description,
                    imageUrl: i.imageUrl || "",
                    quantity: i.quantity,
                    unitPrice: i.unitPrice,
                    taxRate: i.taxRate,
-                   discount: i.discount || 0
+                   discount: i.discount || 0,
+                   type: i.type || "ITEM"
                 })));
              }
              if (data.isProposal) {
@@ -212,11 +213,28 @@ export default function NewQuotePage() {
     setItems(newItems);
   };
 
+  
+  const calculateSectionSubtotal = (startIndex: number) => {
+    let sub = 0;
+    for(let i = startIndex + 1; i < items.length; i++) {
+       if(items[i].type === 'SECTION_HEADER') break;
+       const it = items[i];
+       const discount = it.discount || 0;
+       if (taxIncluded) {
+          const lineTotal = (it.quantity * it.unitPrice) - discount;
+          sub += lineTotal / (1 + it.taxRate);
+       } else {
+          sub += (it.quantity * it.unitPrice) - discount;
+       }
+    }
+    return sub;
+  };
+
   const calculateTotals = () => {
     let subtotal = 0;
     let taxes = 0;
     
-    items.forEach(it => {
+    items.filter(it => it.type !== "SECTION_HEADER").forEach(it => {
       const discount = it.discount || 0;
       if (taxIncluded) {
          const lineTotal = (it.quantity * it.unitPrice) - discount;
@@ -303,7 +321,9 @@ export default function NewQuotePage() {
           ...proposalData,
           items: mappedItems.map(i => ({
              ...i,
-             unitPrice: taxIncluded ? (i.unitPrice / (1 + i.taxRate)) : i.unitPrice,
+             unitPrice: (taxIncluded && i.type !== "SECTION_HEADER") ? (i.unitPrice / (1 + i.taxRate)) : i.unitPrice,
+             type: i.type || "ITEM",
+             orderIndex: idx,
              productId: i.productId || undefined
           }))
         })
@@ -582,10 +602,42 @@ export default function NewQuotePage() {
                            <th className="py-3 px-2 w-10"></th>
                         </tr>
                      </thead>
-                     <tbody className="divide-y divide-slate-100 text-sm hover:divide-slate-200">
-                        {items.map((item, index) => (
+                                          <tbody className="divide-y divide-slate-100 text-sm hover:divide-slate-200">
+                        {items.map((item, index) => {
+                           if (item.type === 'SECTION_HEADER') {
+                              return (
+                                 <tr key={index} className="group bg-slate-100/80 border-y border-slate-200">
+                                    <td colSpan={5} className="p-0 border-r border-slate-200">
+                                       <div className="flex h-full items-center px-4 py-2">
+                                          <input 
+                                             value={item.description}
+                                             onChange={(e) => {
+                                                const newItems = [...items];
+                                                newItems[index].description = e.target.value;
+                                                setItems(newItems);
+                                             }}
+                                             className="w-full font-bold text-slate-800 bg-transparent border-none outline-none focus:ring-0 placeholder:text-slate-400"
+                                             placeholder="Título de la Sección (ej. Sistema de Comunicación)"
+                                          />
+                                       </div>
+                                    </td>
+                                    <td className="p-4 align-middle text-right font-bold text-slate-700 tracking-tight bg-slate-200/50">
+                                       {calculateSectionSubtotal(index).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                    </td>
+                                    <td className="p-2 align-middle text-center bg-slate-200/50">
+                                       <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                          <button onClick={() => { if(index > 0) { const newI = [...items]; const tmp = newI[index-1]; newI[index-1] = newI[index]; newI[index] = tmp; setItems(newI); } }} className="text-slate-400 hover:text-slate-600"><ArrowUp className="w-3 h-3" /></button>
+                                          <button onClick={() => { if(index < items.length - 1) { const newI = [...items]; const tmp = newI[index+1]; newI[index+1] = newI[index]; newI[index] = tmp; setItems(newI); } }} className="text-slate-400 hover:text-slate-600"><ArrowDown className="w-3 h-3" /></button>
+                                          <button onClick={() => { if(items.length > 1) setItems(items.filter((_, i) => i !== index)); }} className="text-red-400 hover:text-red-600 ml-1"><X className="w-4 h-4" /></button>
+                                       </div>
+                                    </td>
+                                 </tr>
+                              );
+                           }
+
+                           return (
                            <tr key={index} className="group hover:bg-slate-50 transition-colors">
-                              <td className="p-0 border-r border-slate-50 group-hover:border-slate-200">
+                              <td className="p-0 border-r border-slate-50 group-hover:border-slate-200 pl-6 border-l-2 border-l-transparent hover:border-l-indigo-400">
                                  <div className="flex h-full relative items-start p-1.5 gap-2">
                                     {item.imageUrl && (
                                        <div className="w-12 h-12 bg-white border border-slate-200 rounded shrink-0 p-1 flex items-center justify-center overflow-hidden">
@@ -601,7 +653,7 @@ export default function NewQuotePage() {
                                              newItems[index].productId = ""; // Reset FK if typed manually
                                              setItems(newItems);
                                           }}
-                                          className="w-full border-none bg-transparent hover:bg-white px-4 py-2 outline-none text-slate-800 text-sm resize-none h-12"
+                                          className="w-full border-none bg-transparent hover:bg-white px-2 py-2 outline-none text-slate-800 text-sm resize-none h-12"
                                           placeholder="Escriba o seleccione un artículo..."
                                        />
                                        <div className="absolute right-2 top-2">
@@ -680,15 +732,21 @@ export default function NewQuotePage() {
                               <td className="p-4 align-top text-right font-bold text-slate-800 tracking-tight">
                                  {((item.quantity * item.unitPrice) - item.discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                               </td>
-                              <td className="p-4 align-top text-center">
-                                 <button onClick={() => {
-                                    if(items.length > 1) setItems(items.filter((_, i) => i !== index));
-                                 }} className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <X className="w-4 h-4" />
-                                 </button>
+                              <td className="p-2 align-top text-center">
+                                 <div className="flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
+                                    <div className="flex gap-1">
+                                      <button onClick={() => { if(index > 0) { const newI = [...items]; const tmp = newI[index-1]; newI[index-1] = newI[index]; newI[index] = tmp; setItems(newI); } }} className="text-slate-400 hover:text-slate-600"><ArrowUp className="w-3 h-3" /></button>
+                                      <button onClick={() => { if(index < items.length - 1) { const newI = [...items]; const tmp = newI[index+1]; newI[index+1] = newI[index]; newI[index] = tmp; setItems(newI); } }} className="text-slate-400 hover:text-slate-600"><ArrowDown className="w-3 h-3" /></button>
+                                    </div>
+                                    <button onClick={() => {
+                                       if(items.length > 1) setItems(items.filter((_, i) => i !== index));
+                                    }} className="text-red-400 hover:text-red-600">
+                                       <X className="w-4 h-4" />
+                                    </button>
+                                 </div>
                               </td>
                            </tr>
-                        ))}
+                        )})}
                      </tbody>
                   </table>
                </div>

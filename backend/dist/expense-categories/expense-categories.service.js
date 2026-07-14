@@ -36,6 +36,15 @@ let ExpenseCategoriesService = class ExpenseCategoriesService {
         }
         return categories;
     }
+    async create(tenantId, data) {
+        return this.prisma.expenseCategory.create({
+            data: {
+                tenantId,
+                name: data.name,
+                color: data.color || '#6366F1'
+            }
+        });
+    }
 };
 exports.ExpenseCategoriesService = ExpenseCategoriesService;
 exports.ExpenseCategoriesService = ExpenseCategoriesService = __decorate([

@@ -10,4 +10,15 @@ export declare class ExpenseCategoriesService {
         createdAt: Date;
         updatedAt: Date;
     }[]>;
+    create(tenantId: string, data: {
+        name: string;
+        color?: string;
+    }): Promise<{
+        id: string;
+        tenantId: string;
+        name: string;
+        color: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
 }

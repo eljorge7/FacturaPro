@@ -14,4 +14,5 @@ export declare class CreateInvoiceDto {
     cfdiUse?: string;
     items: InvoiceItemDto[];
     status?: string;
+    isPosTicket?: boolean;
 }

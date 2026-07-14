@@ -63,6 +63,8 @@ export declare class QuotesController {
             discount: number;
             taxRate: number;
             total: number;
+            type: string;
+            orderIndex: number;
         }[];
     } & {
         id: string;
@@ -148,6 +150,8 @@ export declare class QuotesController {
             discount: number;
             taxRate: number;
             total: number;
+            type: string;
+            orderIndex: number;
         }[];
         attachments: {
             id: string;
@@ -248,6 +252,8 @@ export declare class QuotesController {
             discount: number;
             taxRate: number;
             total: number;
+            type: string;
+            orderIndex: number;
         }[];
         attachments: {
             id: string;
@@ -338,6 +344,11 @@ export declare class QuotesController {
         pdfUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
+        globalInvoiceId: string | null;
+        isGlobal: boolean;
+        globalPeriod: string | null;
+        globalMonths: string | null;
+        globalYear: string | null;
     }>;
     uploadAttachment(id: string, file: Express.Multer.File): Promise<{
         id: string;

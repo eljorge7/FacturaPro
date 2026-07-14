@@ -43,12 +43,26 @@ let InvoicesController = class InvoicesController {
         const finalTenantId = req.tenantId || hTenantId;
         return this.invoicesService.getStats(finalTenantId);
     }
+    getPendingGlobalTickets(req, hTenantId, body, request) {
+        const finalTenantId = req.tenantId || hTenantId;
+        const { startDate, endDate } = request.query;
+        if (!startDate || !endDate)
+            throw new common_1.BadRequestException('startDate y endDate son requeridos en la query.');
+        return this.invoicesService.getPendingGlobalTickets(finalTenantId, startDate, endDate);
+    }
+    createGlobalInvoice(req, hTenantId, createGlobalDto) {
+        const finalTenantId = req.tenantId || hTenantId;
+        return this.invoicesService.createGlobalInvoice(finalTenantId, createGlobalDto);
+    }
     getArReport(req, hTenantId) {
         const finalTenantId = req.tenantId || hTenantId;
         return this.invoicesService.getArReport(finalTenantId);
     }
     findOne(id) {
         return this.invoicesService.findOne(id);
+    }
+    remove(id) {
+        return this.invoicesService.delete(id);
     }
     async downloadPdf(id, res) {
         const invoice = await this.invoicesService.findOne(id);
@@ -110,6 +124,25 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], InvoicesController.prototype, "getStats", null);
 __decorate([
+    (0, common_1.Get)('pending-global'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Headers)('x-tenant-id')),
+    __param(2, (0, common_1.Body)()),
+    __param(3, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object, Object]),
+    __metadata("design:returntype", void 0)
+], InvoicesController.prototype, "getPendingGlobalTickets", null);
+__decorate([
+    (0, common_1.Post)('global'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Headers)('x-tenant-id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], InvoicesController.prototype, "createGlobalInvoice", null);
+__decorate([
     (0, common_1.Get)('ar-report'),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Headers)('x-tenant-id')),
@@ -124,6 +157,13 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], InvoicesController.prototype, "findOne", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], InvoicesController.prototype, "remove", null);
 __decorate([
     (0, common_1.Get)(':id/pdf'),
     __param(0, (0, common_1.Param)('id')),

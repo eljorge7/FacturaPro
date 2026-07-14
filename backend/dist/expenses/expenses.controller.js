@@ -37,6 +37,11 @@ let ExpensesController = class ExpensesController {
             throw new common_1.BadRequestException('XML Content is required');
         return this.expensesService.parseXml(tenantId, body.xmlContent);
     }
+    async update(id, tenantId, data) {
+        if (!tenantId)
+            throw new common_1.BadRequestException('Tenant ID is required');
+        return this.expensesService.update(id, tenantId, data);
+    }
     async remove(id) {
         return this.expensesService.delete(id);
     }
@@ -65,6 +70,15 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], ExpensesController.prototype, "previewXml", null);
+__decorate([
+    (0, common_1.Put)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Headers)('x-tenant-id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], ExpensesController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),

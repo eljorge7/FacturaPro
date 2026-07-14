@@ -103,9 +103,12 @@ export declare class StockTakesService {
                 tenantId: string;
                 sku: string | null;
                 barcode: string | null;
+                isFavorite: boolean;
                 name: string;
                 description: string | null;
                 price: number;
+                wholesalePrice: number | null;
+                wholesaleMinQuantity: number | null;
                 costPrice: number | null;
                 type: string;
                 stock: number;
@@ -188,9 +191,12 @@ export declare class StockTakesService {
                 tenantId: string;
                 sku: string | null;
                 barcode: string | null;
+                isFavorite: boolean;
                 name: string;
                 description: string | null;
                 price: number;
+                wholesalePrice: number | null;
+                wholesaleMinQuantity: number | null;
                 costPrice: number | null;
                 type: string;
                 stock: number;
@@ -270,9 +276,12 @@ export declare class StockTakesService {
                 tenantId: string;
                 sku: string | null;
                 barcode: string | null;
+                isFavorite: boolean;
                 name: string;
                 description: string | null;
                 price: number;
+                wholesalePrice: number | null;
+                wholesaleMinQuantity: number | null;
                 costPrice: number | null;
                 type: string;
                 stock: number;

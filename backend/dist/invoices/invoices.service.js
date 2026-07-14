@@ -14,14 +14,17 @@ const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const xml_generator_service_1 = require("../cfdi/xml-generator/xml-generator.service");
 const pac_service_1 = require("../cfdi/pac/pac.service");
+const topups_service_1 = require("../topups/topups.service");
 let InvoicesService = class InvoicesService {
     prisma;
     xmlGenerator;
     pacService;
-    constructor(prisma, xmlGenerator, pacService) {
+    topupsService;
+    constructor(prisma, xmlGenerator, pacService, topupsService) {
         this.prisma = prisma;
         this.xmlGenerator = xmlGenerator;
         this.pacService = pacService;
+        this.topupsService = topupsService;
     }
     async create(createInvoiceDto) {
         let { tenantId, customerId, paymentMethod, paymentForm, cfdiUse, items, currency, exchangeRate } = createInvoiceDto;
@@ -37,7 +40,7 @@ let InvoicesService = class InvoicesService {
             if (!tenantObj)
                 throw new common_1.NotFoundException('Empresa no encontrada.');
         }
-        const isDraft = createInvoiceDto.status === 'DRAFT';
+        const isDraft = createInvoiceDto.status === 'DRAFT' || createInvoiceDto.isPosTicket;
         if (tenantObj.subscriptionEndsAt && new Date() > new Date(tenantObj.subscriptionEndsAt)) {
             throw new common_1.BadRequestException('Tu periodo de prueba o suscripción ha expirado. Por favor, realiza Upgrade de tu plan para seguir facturando.');
         }
@@ -65,13 +68,19 @@ let InvoicesService = class InvoicesService {
             throw new common_1.NotFoundException('Cliente receptor no encontrado');
         let subtotal = 0;
         let taxTotal = 0;
-        const invoiceItemsData = items.map((item) => {
+        const invoiceItemsData = [];
+        for (const item of items) {
+            if (item.customFields?.isTopup) {
+                const type = item.customFields.type || 'RECARGA';
+                const res = await this.topupsService.processTopup(tenantId, type, item.customFields.carrier, item.unitPrice, item.customFields.reference);
+                item.description = `${item.description} (Autorización: ${res.folio})`;
+            }
             const discount = item.discount || 0;
             const amount = (item.quantity * item.unitPrice) - discount;
             const taxes = amount * item.taxRate;
             subtotal += amount;
             taxTotal += taxes;
-            return {
+            invoiceItemsData.push({
                 productId: item.productId,
                 description: item.description,
                 imageUrl: item.imageUrl,
@@ -80,8 +89,8 @@ let InvoicesService = class InvoicesService {
                 discount: discount,
                 taxRate: item.taxRate,
                 total: amount + taxes
-            };
-        });
+            });
+        }
         const tdsTotal = customer.tdsEnabled ? (subtotal * 0.0125) : 0;
         const total = subtotal + taxTotal - tdsTotal;
         let invoiceNumber = createInvoiceDto.invoiceNumber;
@@ -175,6 +184,169 @@ let InvoicesService = class InvoicesService {
             include: { customer: true, items: true, taxProfile: true, payments: true, attachments: true },
             orderBy: { createdAt: 'desc' }
         });
+    }
+    async getPendingGlobalTickets(tenantId, startDate, endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        const pendingTickets = await this.prisma.invoice.findMany({
+            where: {
+                tenantId,
+                status: 'DRAFT',
+                globalInvoiceId: null,
+                createdAt: {
+                    gte: start,
+                    lte: end,
+                }
+            }
+        });
+        const totalTickets = pendingTickets.length;
+        const totalAmount = pendingTickets.reduce((acc, t) => acc + t.total, 0);
+        return { totalTickets, totalAmount };
+    }
+    async createGlobalInvoice(tenantId, dto) {
+        let tenantObj;
+        if (!tenantId) {
+            tenantObj = await this.prisma.tenant.findFirst();
+            if (!tenantObj)
+                throw new common_1.BadRequestException('El sistema no tiene Empresa configurada.');
+            tenantId = tenantObj.id;
+        }
+        else {
+            tenantObj = await this.prisma.tenant.findUnique({ where: { id: tenantId } });
+            if (!tenantObj)
+                throw new common_1.NotFoundException('Empresa no encontrada.');
+        }
+        if (tenantObj.availableStamps !== -1 && tenantObj.availableStamps <= 0) {
+            throw new common_1.BadRequestException('Límite de Timbres Agotado. Por favor adquiera más timbres.');
+        }
+        const taxProfile = await this.prisma.taxProfile.findFirst({ where: { tenantId } });
+        if (!taxProfile)
+            throw new common_1.NotFoundException('Perfil Fiscal no configurado.');
+        const startDate = new Date(dto.startDate);
+        const endDate = new Date(dto.endDate);
+        endDate.setHours(23, 59, 59, 999);
+        const pendingTickets = await this.prisma.invoice.findMany({
+            where: {
+                tenantId,
+                status: 'DRAFT',
+                globalInvoiceId: null,
+                createdAt: {
+                    gte: startDate,
+                    lte: endDate,
+                }
+            },
+            include: { items: true }
+        });
+        if (pendingTickets.length === 0) {
+            throw new common_1.BadRequestException('No hay tickets no facturados en el rango seleccionado.');
+        }
+        let publicCustomer = await this.prisma.customer.findFirst({
+            where: { tenantId, rfc: 'XAXX010101000' }
+        });
+        if (!publicCustomer) {
+            publicCustomer = await this.prisma.customer.create({
+                data: {
+                    tenantId,
+                    legalName: 'PUBLICO EN GENERAL',
+                    rfc: 'XAXX010101000',
+                    taxRegime: '616',
+                    zipCode: taxProfile.zipCode || '00000',
+                }
+            });
+        }
+        let subtotal = 0;
+        let taxTotal = 0;
+        let total = 0;
+        const globalItems = pendingTickets.map(ticket => {
+            subtotal += ticket.subtotal;
+            taxTotal += ticket.taxTotal;
+            total += ticket.total;
+            const ticketTaxRate = ticket.subtotal > 0 ? (ticket.taxTotal / ticket.subtotal) : 0;
+            return {
+                description: 'Venta',
+                quantity: 1,
+                unitPrice: ticket.subtotal,
+                taxRate: ticketTaxRate,
+                total: ticket.total,
+                customFields: { ticketId: ticket.invoiceNumber },
+                product: {
+                    satProductCode: '01010101',
+                    satUnitCode: 'ACT'
+                }
+            };
+        });
+        let invoiceNumber = `GLOBAL-${Date.now().toString().slice(-6)}`;
+        const partialInvoice = {
+            tenantId,
+            customerId: publicCustomer.id,
+            invoiceNumber,
+            date: new Date(),
+            paymentMethod: 'PUE',
+            paymentForm: '01',
+            cfdiUse: 'S01',
+            currency: 'MXN',
+            exchangeRate: 1.0,
+            subtotal,
+            taxTotal,
+            tdsTotal: 0,
+            total,
+            customer: publicCustomer,
+            items: globalItems,
+            isGlobal: true,
+            globalPeriod: dto.globalPeriod,
+            globalMonths: dto.globalMonths,
+            globalYear: dto.globalYear
+        };
+        const { xml } = await this.xmlGenerator.generate(partialInvoice, taxProfile);
+        const pacResult = await this.pacService.stampXml(Buffer.from(xml).toString('base64'), 'SANDBOX');
+        const [invoice] = await this.prisma.$transaction([
+            this.prisma.invoice.create({
+                data: {
+                    tenantId,
+                    taxProfileId: taxProfile.id,
+                    customerId: publicCustomer.id,
+                    invoiceNumber,
+                    status: 'TIMBRADA',
+                    satUuid: pacResult.satUuid,
+                    paymentMethod: 'PUE',
+                    paymentForm: '01',
+                    cfdiUse: 'S01',
+                    currency: 'MXN',
+                    exchangeRate: 1.0,
+                    subtotal,
+                    taxTotal,
+                    tdsTotal: 0,
+                    total,
+                    xmlContent: pacResult.stampedXml,
+                    isGlobal: true,
+                    globalPeriod: dto.globalPeriod,
+                    globalMonths: dto.globalMonths,
+                    globalYear: dto.globalYear,
+                    items: {
+                        create: globalItems.map(gi => ({
+                            description: gi.description,
+                            quantity: gi.quantity,
+                            unitPrice: gi.unitPrice,
+                            taxRate: gi.taxRate,
+                            total: gi.total,
+                            customFields: gi.customFields
+                        }))
+                    }
+                }
+            }),
+            ...(tenantObj.availableStamps !== -1 ? [
+                this.prisma.tenant.update({
+                    where: { id: tenantId },
+                    data: { availableStamps: { decrement: 1 } }
+                })
+            ] : [])
+        ]);
+        await this.prisma.invoice.updateMany({
+            where: { id: { in: pendingTickets.map(t => t.id) } },
+            data: { globalInvoiceId: invoice.id }
+        });
+        return invoice;
     }
     async getStats(tenantId) {
         let whereFilter = {};
@@ -332,6 +504,24 @@ let InvoicesService = class InvoicesService {
             }
             return payment;
         });
+        if (isPaidFully && invoice.status !== 'PAID') {
+            try {
+                const rentControlUrl = process.env.RENTCONTROL_API_URL || 'http://localhost:3001';
+                const axios = require('axios');
+                axios.post(`${rentControlUrl}/api/automations/webhook`, {
+                    triggerApp: 'FACTURAPRO',
+                    triggerEvent: 'INVOICE_PAID',
+                    companyId: invoice.tenantId,
+                    payload: {
+                        invoiceNumber: invoice.invoiceNumber,
+                        amount: invoice.total,
+                        customerName: invoice.customer?.legalName || 'Cliente',
+                        phone: invoice.customer?.phone || ''
+                    }
+                }).catch((e) => console.error("Error triggering automation webhook:", e.message));
+            }
+            catch (e) { }
+        }
         return result;
     }
     async cancel(id) {
@@ -339,9 +529,64 @@ let InvoicesService = class InvoicesService {
         if (invoice.status === 'CANCELADA') {
             throw new common_1.BadRequestException('La factura ya está cancelada');
         }
+        for (const item of invoice.items) {
+            if (item.productId) {
+                const product = await this.prisma.product.findUnique({
+                    where: { id: item.productId }
+                });
+                if (product && product.trackInventory) {
+                    await this.prisma.product.update({
+                        where: { id: product.id },
+                        data: { stock: { increment: item.quantity } }
+                    });
+                    await this.prisma.inventoryMovement.create({
+                        data: {
+                            tenantId: invoice.tenantId,
+                            productId: product.id,
+                            type: 'IN',
+                            quantity: item.quantity,
+                            reference: `Cancelación Factura/Ticket: ${invoice.invoiceNumber}`,
+                        }
+                    });
+                }
+            }
+        }
         return this.prisma.invoice.update({
             where: { id },
             data: { status: 'CANCELADA' }
+        });
+    }
+    async delete(id) {
+        const invoice = await this.findOne(id);
+        if (invoice.status === 'TIMBRADA' || invoice.status === 'VIGENTE') {
+            throw new common_1.BadRequestException('No se puede eliminar de la base de datos una factura ya timbrada. Utiliza la opción de Cancelar CFDI.');
+        }
+        if (invoice.status !== 'CANCELADA') {
+            for (const item of invoice.items) {
+                if (item.productId) {
+                    const product = await this.prisma.product.findUnique({
+                        where: { id: item.productId }
+                    });
+                    if (product && product.trackInventory) {
+                        await this.prisma.product.update({
+                            where: { id: product.id },
+                            data: { stock: { increment: item.quantity } }
+                        });
+                        await this.prisma.inventoryMovement.create({
+                            data: {
+                                tenantId: invoice.tenantId,
+                                productId: product.id,
+                                type: 'IN',
+                                quantity: item.quantity,
+                                reference: `Eliminación Factura/Ticket: ${invoice.invoiceNumber}`,
+                            }
+                        });
+                    }
+                }
+            }
+        }
+        return this.prisma.invoice.delete({
+            where: { id }
         });
     }
     async cancelFiscal(id, motive, substitutionUuid) {
@@ -530,6 +775,7 @@ exports.InvoicesService = InvoicesService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         xml_generator_service_1.XmlGeneratorService,
-        pac_service_1.PacService])
+        pac_service_1.PacService,
+        topups_service_1.TopupsService])
 ], InvoicesService);
 //# sourceMappingURL=invoices.service.js.map

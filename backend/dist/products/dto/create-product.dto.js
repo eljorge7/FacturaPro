@@ -17,6 +17,7 @@ class CreateProductDto {
     description;
     sku;
     barcode;
+    isFavorite;
     stock;
     minStock;
     maxStock;
@@ -27,6 +28,7 @@ class CreateProductDto {
     satUnitCode;
     price;
     taxType;
+    taxIncluded;
     costPrice;
     type;
     isPublishedToStore;
@@ -59,6 +61,11 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateProductDto.prototype, "barcode", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreateProductDto.prototype, "isFavorite", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
@@ -108,6 +115,11 @@ __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], CreateProductDto.prototype, "taxType", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreateProductDto.prototype, "taxIncluded", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),

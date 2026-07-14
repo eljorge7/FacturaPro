@@ -25,6 +25,11 @@ let ExpenseCategoriesController = class ExpenseCategoriesController {
             throw new Error('Tenant ID is required');
         return this.expenseCategoriesService.findAll(tenantId);
     }
+    create(tenantId, data) {
+        if (!tenantId)
+            throw new Error('Tenant ID is required');
+        return this.expenseCategoriesService.create(tenantId, data);
+    }
 };
 exports.ExpenseCategoriesController = ExpenseCategoriesController;
 __decorate([
@@ -34,6 +39,14 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ExpenseCategoriesController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Headers)('x-tenant-id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], ExpenseCategoriesController.prototype, "create", null);
 exports.ExpenseCategoriesController = ExpenseCategoriesController = __decorate([
     (0, common_1.Controller)('expense-categories'),
     __metadata("design:paramtypes", [expense_categories_service_1.ExpenseCategoriesService])

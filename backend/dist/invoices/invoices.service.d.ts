@@ -1,11 +1,13 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { XmlGeneratorService } from '../cfdi/xml-generator/xml-generator.service';
 import { PacService } from '../cfdi/pac/pac.service';
+import { TopupsService } from '../topups/topups.service';
 export declare class InvoicesService {
     private prisma;
     private xmlGenerator;
     private pacService;
-    constructor(prisma: PrismaService, xmlGenerator: XmlGeneratorService, pacService: PacService);
+    private topupsService;
+    constructor(prisma: PrismaService, xmlGenerator: XmlGeneratorService, pacService: PacService, topupsService: TopupsService);
     create(createInvoiceDto: any): Promise<{
         taxProfile: {
             id: string;
@@ -63,6 +65,8 @@ export declare class InvoicesService {
             discount: number;
             taxRate: number;
             total: number;
+            type: string;
+            orderIndex: number;
         }[];
     } & {
         id: string;
@@ -90,6 +94,11 @@ export declare class InvoicesService {
         pdfUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
+        globalInvoiceId: string | null;
+        isGlobal: boolean;
+        globalPeriod: string | null;
+        globalMonths: string | null;
+        globalYear: string | null;
     }>;
     findAll(tenantId: string): Promise<({
         taxProfile: {
@@ -148,6 +157,8 @@ export declare class InvoicesService {
             discount: number;
             taxRate: number;
             total: number;
+            type: string;
+            orderIndex: number;
         }[];
         payments: {
             id: string;
@@ -193,7 +204,48 @@ export declare class InvoicesService {
         pdfUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
+        globalInvoiceId: string | null;
+        isGlobal: boolean;
+        globalPeriod: string | null;
+        globalMonths: string | null;
+        globalYear: string | null;
     })[]>;
+    getPendingGlobalTickets(tenantId: string, startDate: string, endDate: string): Promise<{
+        totalTickets: number;
+        totalAmount: number;
+    }>;
+    createGlobalInvoice(tenantId: string, dto: any): Promise<{
+        id: string;
+        tenantId: string;
+        taxProfileId: string;
+        customerId: string;
+        quoteId: string | null;
+        invoiceNumber: string;
+        date: Date;
+        dueDate: Date | null;
+        satUuid: string | null;
+        paymentMethod: string | null;
+        paymentForm: string | null;
+        cfdiUse: string | null;
+        subtotal: number;
+        taxTotal: number;
+        tdsTotal: number;
+        total: number;
+        currency: string;
+        exchangeRate: number;
+        cashShiftId: string | null;
+        customFields: import(".prisma/client").Prisma.JsonValue | null;
+        status: string;
+        xmlContent: string | null;
+        pdfUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        globalInvoiceId: string | null;
+        isGlobal: boolean;
+        globalPeriod: string | null;
+        globalMonths: string | null;
+        globalYear: string | null;
+    }>;
     getStats(tenantId: string): Promise<{
         totalInvoices: number;
         cancelledInvoices: number;
@@ -273,6 +325,11 @@ export declare class InvoicesService {
             pdfUrl: string | null;
             createdAt: Date;
             updatedAt: Date;
+            globalInvoiceId: string | null;
+            isGlobal: boolean;
+            globalPeriod: string | null;
+            globalMonths: string | null;
+            globalYear: string | null;
         })[];
         recentExpenses: ({
             supplier: {
@@ -362,6 +419,8 @@ export declare class InvoicesService {
             discount: number;
             taxRate: number;
             total: number;
+            type: string;
+            orderIndex: number;
         }[];
         payments: {
             id: string;
@@ -407,6 +466,11 @@ export declare class InvoicesService {
         pdfUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
+        globalInvoiceId: string | null;
+        isGlobal: boolean;
+        globalPeriod: string | null;
+        globalMonths: string | null;
+        globalYear: string | null;
     }>;
     registerPayment(id: string, payload: {
         amount: number;
@@ -450,6 +514,43 @@ export declare class InvoicesService {
         pdfUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
+        globalInvoiceId: string | null;
+        isGlobal: boolean;
+        globalPeriod: string | null;
+        globalMonths: string | null;
+        globalYear: string | null;
+    }>;
+    delete(id: string): Promise<{
+        id: string;
+        tenantId: string;
+        taxProfileId: string;
+        customerId: string;
+        quoteId: string | null;
+        invoiceNumber: string;
+        date: Date;
+        dueDate: Date | null;
+        satUuid: string | null;
+        paymentMethod: string | null;
+        paymentForm: string | null;
+        cfdiUse: string | null;
+        subtotal: number;
+        taxTotal: number;
+        tdsTotal: number;
+        total: number;
+        currency: string;
+        exchangeRate: number;
+        cashShiftId: string | null;
+        customFields: import(".prisma/client").Prisma.JsonValue | null;
+        status: string;
+        xmlContent: string | null;
+        pdfUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        globalInvoiceId: string | null;
+        isGlobal: boolean;
+        globalPeriod: string | null;
+        globalMonths: string | null;
+        globalYear: string | null;
     }>;
     cancelFiscal(id: string, motive: string, substitutionUuid?: string): Promise<{
         id: string;
@@ -477,6 +578,11 @@ export declare class InvoicesService {
         pdfUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
+        globalInvoiceId: string | null;
+        isGlobal: boolean;
+        globalPeriod: string | null;
+        globalMonths: string | null;
+        globalYear: string | null;
     }>;
     stamp(id: string): Promise<{
         id: string;
@@ -504,6 +610,11 @@ export declare class InvoicesService {
         pdfUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
+        globalInvoiceId: string | null;
+        isGlobal: boolean;
+        globalPeriod: string | null;
+        globalMonths: string | null;
+        globalYear: string | null;
     }>;
     sendWhatsapp(id: string, phone: string): Promise<{
         success: boolean;
@@ -579,6 +690,11 @@ export declare class InvoicesService {
             pdfUrl: string | null;
             createdAt: Date;
             updatedAt: Date;
+            globalInvoiceId: string | null;
+            isGlobal: boolean;
+            globalPeriod: string | null;
+            globalMonths: string | null;
+            globalYear: string | null;
         }[];
         paymentHistory: {
             id: string;

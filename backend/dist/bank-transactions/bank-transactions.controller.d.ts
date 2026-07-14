@@ -84,6 +84,11 @@ export declare class BankTransactionsController {
         pdfUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
+        globalInvoiceId: string | null;
+        isGlobal: boolean;
+        globalPeriod: string | null;
+        globalMonths: string | null;
+        globalYear: string | null;
     }[]>;
     reconcileInvoice(req: any, transactionId: string, invoiceId: string): Promise<{
         id: string;
