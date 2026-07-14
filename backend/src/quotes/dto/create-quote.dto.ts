@@ -22,6 +22,21 @@ export class QuoteItemDto {
   @IsNumber()
   @IsOptional()
   discount?: number;
+
+  @IsNumber()
+  total: number;
+
+  @IsString()
+  @IsOptional()
+  type?: string;
+
+  @IsNumber()
+  @IsOptional()
+  orderIndex?: number;
+
+  @IsString()
+  @IsOptional()
+  imageUrl?: string;
 }
 
 export class CreateQuoteDto {

@@ -271,7 +271,7 @@ export default function NewQuotePage() {
     }
     
     // Check for manual items
-    const manualItems = items.filter(i => !i.productId && i.description.trim() !== "");
+    const manualItems = items.filter(i => !i.productId && i.description.trim() !== "" && i.type !== "SECTION_HEADER");
     if (manualItems.length > 0) {
        setUnregisteredItems(manualItems);
        setPendingSaveParams(send);
@@ -630,7 +630,7 @@ export default function NewQuotePage() {
                                        </div>
                                     </td>
                                     <td className="p-4 align-middle text-right font-bold text-slate-700 tracking-tight bg-slate-200/50">
-                                       {calculateSectionSubtotal(index).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                       {calculateSectionSubtotal(index).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                     </td>
                                     <td className="p-2 align-middle text-center bg-slate-200/50">
                                        <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -649,7 +649,7 @@ export default function NewQuotePage() {
                                  <div className="flex h-full relative items-start p-1.5 gap-2">
                                     {item.imageUrl && (
                                        <div className="w-12 h-12 bg-white border border-slate-200 rounded shrink-0 p-1 flex items-center justify-center overflow-hidden">
-                                          <img src={item.imageUrl} className="w-full h-full object-contain" />
+                                          <img src={item.imageUrl} onError={(e) => (e.currentTarget.style.display = 'none')} className="w-full h-full object-contain" />
                                        </div>
                                     )}
                                     <div className="flex-1 relative h-full">
@@ -738,7 +738,7 @@ export default function NewQuotePage() {
                                  </select>
                               </td>
                               <td className="p-4 align-top text-right font-bold text-slate-800 tracking-tight">
-                                 {((item.quantity * item.unitPrice) - item.discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                 {((item.quantity * item.unitPrice) - item.discount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                               </td>
                               <td className="p-2 align-top text-center">
                                  <div className="flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
@@ -803,11 +803,11 @@ export default function NewQuotePage() {
                   <div className="w-full max-w-md bg-[#fafafa] rounded-lg p-6 space-y-4">
                      <div className="flex justify-between items-center bg-white p-3 rounded shadow-sm border border-slate-100">
                         <span className="font-bold text-sm text-slate-700">Subtotal</span>
-                        <span className="font-bold text-slate-900">{totals.subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                        <span className="font-bold text-slate-900">{totals.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                      </div>
                      <div className="flex justify-between items-center px-3 text-sm text-slate-600">
                         <span>Impuesto</span>
-                        <span>{totals.taxes.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                        <span>{totals.taxes.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                      </div>
                      {selectedCustomerObj?.tdsEnabled && (
                         <>
@@ -816,13 +816,13 @@ export default function NewQuotePage() {
                           </div>
                           <div className="flex justify-between items-center px-3 text-sm text-slate-600">
                              <span>Impuestos retenidos ISR [1.25%]</span>
-                             <span>-{totals.tds.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                             <span>-{totals.tds.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                           </div>
                         </>
                      )}
                      <div className="flex justify-between items-center px-3 text-lg font-bold">
                         <span className="text-slate-800">Total ( {currency} )</span>
-                        <span className="text-slate-900 font-mono tracking-tight text-xl">{totals.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                        <span className="text-slate-900 font-mono tracking-tight text-xl">{totals.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                      </div>
                   </div>
                </div>
