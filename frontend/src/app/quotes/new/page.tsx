@@ -205,7 +205,7 @@ export default function NewQuotePage() {
         imageUrl: product.imageUrl || "",
         quantity: 1,
         unitPrice: Number(product.price),
-        taxRate: product.taxRate
+        taxRate: product.taxType === 'IVA_8' ? 0.08 : (product.taxType === 'EXENTO' ? 0 : 0.16)
       };
     } else {
        newItems[index] = {
@@ -327,7 +327,7 @@ export default function NewQuotePage() {
           currency,
           exchangeRate,
           ...proposalData,
-          items: mappedItems.filter(i => i.productId || i.description.trim() !== "").map(i => ({
+          items: mappedItems.filter(i => i.productId || i.description.trim() !== "").map((i, idx) => ({
              ...i,
              unitPrice: (taxIncluded && i.type !== "SECTION_HEADER") ? (i.unitPrice / (1 + i.taxRate)) : i.unitPrice,
              type: i.type || "ITEM",
