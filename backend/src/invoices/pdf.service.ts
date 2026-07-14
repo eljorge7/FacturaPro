@@ -170,6 +170,16 @@ export class PdfService {
          if (data.items && data.items.length > 0) {
              const sortedItems = [...data.items].sort((a:any, b:any) => (a.orderIndex||0)-(b.orderIndex||0));
              sortedItems.forEach((item: any) => {
+                 if (rowY > doc.page.height - 50) {
+                     doc.addPage();
+                     rowY = 20;
+                     doc.font(fBold).fontSize(8).fillColor('#000');
+                     doc.text('CANT', 10, rowY);
+                     doc.text('DESC', 35, rowY);
+                     doc.text('IMP', 170, rowY);
+                     rowY += 15;
+                     doc.font(fReg).fontSize(8);
+                 }
                  if (item.type === 'SECTION_HEADER') {
                     doc.font(fBold).text(`--- ${item.description.toUpperCase()} ---`, 10, rowY, { align: 'center', width: 206 });
                     rowY += 15;
@@ -214,6 +224,20 @@ export class PdfService {
      if (data.items && data.items.length > 0) {
         const sortedItems = [...data.items].sort((a:any, b:any) => (a.orderIndex||0)-(b.orderIndex||0));
         sortedItems.forEach((item: any, idx: number) => {
+           if (rowY > doc.page.height - 150) {
+               doc.addPage();
+               rowY = 50;
+               if (template !== 'Avant-Garde Agencia' && template !== 'Minimalista Notion') {
+                   doc.rect(50, rowY, 495, 20).fill(tableHeaderBg);
+               }
+               doc.fillColor(hColor).font(fBold).fontSize(9);
+               doc.text('CANT', 55, rowY + 5);
+               doc.text('DESCRIPCION', 100, rowY + 5);
+               doc.text('PRECIO U.', 350, rowY + 5);
+               doc.text('IMPORTE', 470, rowY + 5);
+               rowY += 25;
+           }
+
            if (item.type === 'SECTION_HEADER') {
                doc.rect(50, rowY - 5, 495, 20).fill('#e2e8f0');
                doc.fillColor('#0f172a').font(fBold).fontSize(9);
@@ -245,7 +269,11 @@ export class PdfService {
         doc.moveTo(50, rowY).lineTo(545, rowY).lineWidth(1).strokeColor(tableBorderColor).stroke();
      }
 
-     const summaryTop = rowY + 20;
+     let summaryTop = rowY + 20;
+     if (summaryTop > doc.page.height - 200) {
+         doc.addPage();
+         summaryTop = 50;
+     }
      doc.font(fReg).fillColor('#64748b').text('Subtotal:', 350, summaryTop);
      doc.fillColor('#0f172a').text(`$${(data.subtotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 470, summaryTop);
      
