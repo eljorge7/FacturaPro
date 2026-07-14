@@ -280,13 +280,20 @@ export class PdfService {
      doc.fillColor('#64748b').text('Impuestos:', 350, summaryTop + 15);
      doc.fillColor('#0f172a').text(`$${(data.taxTotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 470, summaryTop + 15);
      
+     let currentY = summaryTop + 30;
+     if (data.tdsTotal > 0) {
+         doc.fillColor('#64748b').text('Retención (1.25%):', 350, currentY);
+         doc.fillColor('#ef4444').text(`-$${(data.tdsTotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 470, currentY);
+         currentY += 15;
+     }
+
      if(template === 'Avant-Garde Agencia') {
-         doc.rect(340, summaryTop + 30, 205, 40).fill(bColor);
-         doc.font(fBold).fillColor('#ffffff').fontSize(14).text('TOTAL', 350, summaryTop + 45);
-         doc.text(`$${(data.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 420, summaryTop + 45, { align: 'right', width:115 });
+         doc.rect(340, currentY, 205, 40).fill(bColor);
+         doc.font(fBold).fillColor('#ffffff').fontSize(14).text('TOTAL', 350, currentY + 15);
+         doc.text(`$${(data.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 420, currentY + 15, { align: 'right', width:115 });
      } else {
-         doc.font(fBold).fillColor(bColor).fontSize(11).text('TOTAL:', 350, summaryTop + 35);
-         doc.fillColor('#0f172a').text(`$${(data.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 470, summaryTop + 35);
+         doc.font(fBold).fillColor(bColor).fontSize(11).text('TOTAL:', 350, currentY + 5);
+         doc.fillColor('#0f172a').text(`$${(data.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 470, currentY + 5);
      }
 
      doc.y = summaryTop + 80;
