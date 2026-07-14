@@ -327,7 +327,7 @@ export default function NewQuotePage() {
           currency,
           exchangeRate,
           ...proposalData,
-          items: mappedItems.map(i => ({
+          items: mappedItems.filter(i => i.productId || i.description.trim() !== "").map(i => ({
              ...i,
              unitPrice: (taxIncluded && i.type !== "SECTION_HEADER") ? (i.unitPrice / (1 + i.taxRate)) : i.unitPrice,
              type: i.type || "ITEM",
