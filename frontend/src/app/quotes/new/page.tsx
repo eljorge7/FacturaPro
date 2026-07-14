@@ -656,7 +656,9 @@ export default function NewQuotePage() {
                                  <div className="flex h-full relative items-start p-1.5 gap-2">
                                     {item.imageUrl && (
                                        <div className="w-12 h-12 bg-white border border-slate-200 rounded shrink-0 p-1 flex items-center justify-center overflow-hidden">
-                                          <img src={item.imageUrl} onError={(e) => (e.currentTarget.style.display = 'none')} className="w-full h-full object-contain" />
+                                          <img src={item.imageUrl} onError={(e) => {
+                                             if (e.currentTarget.parentElement) e.currentTarget.parentElement.style.display = 'none';
+                                          }} className="w-full h-full object-contain" />
                                        </div>
                                     )}
                                     <div className="flex-1 relative h-full">
