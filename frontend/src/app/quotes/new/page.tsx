@@ -756,10 +756,16 @@ export default function NewQuotePage() {
                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mt-4 px-1 gap-4">
                   <div className="flex gap-2">
                      <button 
-                        onClick={() => setItems([...items, { productId: "", description: "", imageUrl: "", quantity: 1, unitPrice: 0, taxRate: 0.16, discount: 0 }])}
+                        onClick={() => setItems([...items, { productId: "", description: "", imageUrl: "", quantity: 1, unitPrice: 0, taxRate: 0.16, discount: 0, type: "ITEM" }])}
                         className="flex items-center gap-2 text-purple-600 bg-purple-50 hover:bg-purple-100 px-4 py-2 rounded-lg font-bold text-sm transition-colors"
                      >
                         <Plus className="w-4 h-4" /> Añadir nueva fila
+                     </button>
+                     <button 
+                        onClick={() => setItems([...items, { productId: "", description: "Nueva Sección", imageUrl: "", quantity: 1, unitPrice: 0, taxRate: 0, discount: 0, type: "SECTION_HEADER" }])}
+                        className="flex items-center gap-2 text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-4 py-2 rounded-lg font-bold text-sm transition-colors"
+                     >
+                        <PlusCircle className="w-4 h-4" /> Añadir Título de Sección
                      </button>
                      <button 
                         onClick={() => setIsSyscomModalOpen(true)}
