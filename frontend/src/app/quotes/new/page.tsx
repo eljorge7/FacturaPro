@@ -10,6 +10,7 @@ export default function NewQuotePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get('editId');
+  const shouldClear = searchParams.get('clear');
   const { tenantId: activeTenantId } = useAuth();
   
   const [customers, setCustomers] = useState<any[]>([]);
@@ -134,7 +135,7 @@ export default function NewQuotePage() {
        }
     }
     fetchCatalogs();
-  }, [editId]);
+  }, [editId, shouldClear]);
 
   // Autosave draft
   useEffect(() => {

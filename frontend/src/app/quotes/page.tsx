@@ -321,7 +321,7 @@ export default function QuotesPage() {
               <button className="flex items-center gap-1 text-lg font-medium text-slate-800 hover:bg-slate-50 px-2 py-1 rounded transition-colors">
                  Todas las estimac... <ChevronDown className="w-4 h-4 text-slate-400" />
               </button>
-              <Link href="/quotes/new" className="bg-[#10b981] hover:bg-[#059669] text-white p-1.5 rounded transition-colors shadow-sm ml-2">
+              <Link href="/quotes/new?clear=true" className="bg-[#10b981] hover:bg-[#059669] text-white p-1.5 rounded transition-colors shadow-sm ml-2">
                  <Plus className="w-5 h-5" />
               </Link>
            </div>
@@ -418,7 +418,7 @@ export default function QuotesPage() {
               >
                  Todas las estimac... <ChevronDown className="w-4 h-4 text-slate-400" />
               </button>
-              <Link href="/quotes/new" className="bg-[#10b981] hover:bg-[#059669] text-white p-1 rounded transition-colors flex items-center justify-center">
+              <Link href="/quotes/new?clear=true" className="bg-[#10b981] hover:bg-[#059669] text-white p-1 rounded transition-colors flex items-center justify-center">
                  <Plus className="w-4 h-4" />
               </Link>
            </div>
