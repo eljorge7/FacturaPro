@@ -578,13 +578,7 @@ export default function QuotesPage() {
                           </p>
                           <div className="flex gap-2">
                              <button onClick={() => handleConvertToInvoice(selectedQuote.id)} className="bg-[#10b981] text-white hover:bg-[#059669] font-bold px-3 py-1 text-xs rounded shadow-sm">Convertir en factura</button>
-                             <button onClick={() => setIsProjectModalOpen(true)} className="bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 font-bold px-3 py-1 text-xs rounded shadow-sm">Crear proyecto</button>
                           </div>
-                       </div>
-                       <hr className="border-blue-200 my-1"/>
-                       <div className="flex justify-between items-center text-xs">
-                          <p className="text-blue-700">💡 <strong>Facturar sobre la marcha con la facturación progresiva</strong> Puede facturar a los clientes por etapas a partir de un único presupuesto, lo que permite mejorar el flujo de caja y reducir los riesgos de pago. <a href="#" className="underline text-[#2563eb]">Configurar ahora &gt;</a></p>
-                          <button className="text-blue-400 hover:text-blue-600"><XCircle className="w-4 h-4"/></button>
                        </div>
                     </div>
                  )}
