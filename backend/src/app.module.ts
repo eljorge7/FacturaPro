@@ -48,6 +48,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { ProjectsModule } from './projects/projects.module';
 
 @Module({
   imports: [
@@ -58,7 +59,7 @@ import { join } from 'path';
     }),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     ScheduleModule.forRoot(),
-    CryptoModule, AuthModule, SatCatalogsModule, TenantsModule, TaxProfilesModule, ApiKeysModule, ProductsModule, CustomersModule, QuotesModule, InvoicesModule, PrismaModule, SuppliersModule, ExpenseCategoriesModule, ExpensesModule, DiotModule, SubscriptionRequestsModule, CfdiModule, PosModule, UsersModule, PurchasesModule, InventoryModule, BovedaSatModule, EfosModule, SatScraperModule, BankAccountsModule, BankTransactionsModule, WarehousesModule, TransfersModule, StockTakesModule, EmployeesModule, RolesModule, PayrollModule, DepartmentsModule, TimeOffModule, ProposalTemplatesModule, MailModule, PublicStoreModule, StoreManagementModule, TopupsModule
+    CryptoModule, AuthModule, SatCatalogsModule, TenantsModule, TaxProfilesModule, ApiKeysModule, ProductsModule, CustomersModule, QuotesModule, InvoicesModule, PrismaModule, SuppliersModule, ExpenseCategoriesModule, ExpensesModule, DiotModule, SubscriptionRequestsModule, CfdiModule, PosModule, UsersModule, PurchasesModule, InventoryModule, BovedaSatModule, EfosModule, SatScraperModule, BankAccountsModule, BankTransactionsModule, WarehousesModule, TransfersModule, StockTakesModule, EmployeesModule, RolesModule, PayrollModule, DepartmentsModule, TimeOffModule, ProposalTemplatesModule, MailModule, PublicStoreModule, StoreManagementModule, TopupsModule, ProjectsModule
   ],
   controllers: [AppController, InternalController, OmniChatProxyController],
   providers: [AppService],

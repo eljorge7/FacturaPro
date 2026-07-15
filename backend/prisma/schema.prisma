@@ -80,6 +80,48 @@ model Tenant {
   proposalTemplates    ProposalTemplate[]
   productBatches       ProductBatch[]
   topups               TopupTransaction[]
+  projects             Project[]
+}
+
+// ----------------------------------------------------
+// PROYECTOS Y FACTURACIÓN PROGRESIVA
+// ----------------------------------------------------
+
+model Project {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  name        String
+  description String?
+  status      String   @default("ACTIVE") // ACTIVE, PAUSED, COMPLETED
+  
+  startDate   DateTime?
+  endDate     DateTime?
+  
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id])
+  
+  quoteId     String?  @unique
+  quote       Quote?   @relation(fields: [quoteId], references: [id])
+  
+  tasks       ProjectTask[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ProjectTask {
+  id          String   @id @default(uuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  title       String
+  description String?
+  status      String   @default("TODO") // TODO, IN_PROGRESS, DONE
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 // ----------------------------------------------------
@@ -389,6 +431,7 @@ model Customer {
 
   invoices Invoice[]
   quotes   Quote[]
+  projects Project[]
 }
 
 // ----------------------------------------------------
@@ -438,6 +481,7 @@ model Quote {
   items       QuoteItem[]
   attachments QuoteAttachment[]
   invoices    Invoice[] // Relación: 1 cotización puede generar 1 o varias facturas
+  project     Project?
 }
 
 model QuoteItem {

@@ -290,6 +290,7 @@ export class QuotesService {
         customerId: quote.customerId,
         quoteId: quote.id,
         invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+        paymentMethod: 'PPD',
         subtotal: quote.subtotal,
         taxTotal: quote.taxTotal,
         tdsTotal: quote.tdsTotal,
