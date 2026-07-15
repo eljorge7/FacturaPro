@@ -439,41 +439,6 @@ export default function QuotesPage() {
               </tbody>
            </table>
         </div>
-         {/* Project Modal */}
-         {isProjectModalOpen && (
-           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-center justify-center animate-in fade-in">
-             <div className="bg-white rounded-lg shadow-xl w-full max-w-md border border-slate-200 overflow-hidden">
-               <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-[#f8fafc]">
-                 <h3 className="text-lg font-bold text-slate-800">Crear Proyecto</h3>
-                 <button onClick={() => setIsProjectModalOpen(false)} className="text-slate-400 hover:text-slate-600"><XCircle className="w-5 h-5"/></button>
-               </div>
-               <div className="p-6 space-y-4 text-sm text-slate-700">
-                 <div>
-                   <label className="block font-bold mb-1">Nombre del Proyecto *</label>
-                   <input type="text" value={projectData.name} onChange={e => setProjectData({...projectData, name: e.target.value})} className="w-full border border-slate-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500" placeholder="Ej. Instalación de Redes" />
-                 </div>
-                 <div>
-                   <label className="block font-bold mb-1">Descripción</label>
-                   <textarea value={projectData.description} onChange={e => setProjectData({...projectData, description: e.target.value})} className="w-full border border-slate-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500" rows={3} placeholder="Alcance del proyecto..."></textarea>
-                 </div>
-                 <div className="grid grid-cols-2 gap-4">
-                   <div>
-                     <label className="block font-bold mb-1">Fecha Inicio</label>
-                     <input type="date" value={projectData.startDate} onChange={e => setProjectData({...projectData, startDate: e.target.value})} className="w-full border border-slate-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500" />
-                   </div>
-                   <div>
-                     <label className="block font-bold mb-1">Fecha Fin</label>
-                     <input type="date" value={projectData.endDate} onChange={e => setProjectData({...projectData, endDate: e.target.value})} className="w-full border border-slate-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500" />
-                   </div>
-                 </div>
-               </div>
-               <div className="px-6 py-4 border-t border-slate-200 bg-[#f8fafc] flex justify-end gap-2">
-                 <button onClick={() => setIsProjectModalOpen(false)} className="px-4 py-2 text-slate-600 font-bold hover:bg-slate-200 rounded transition-colors text-sm">Cancelar</button>
-                 <button onClick={handleCreateProject} className="px-4 py-2 bg-[#10b981] hover:bg-[#059669] text-white font-bold rounded transition-colors text-sm shadow-sm">Crear Proyecto</button>
-               </div>
-             </div>
-           </div>
-         )}
       </div>
     );
   }
@@ -534,13 +499,13 @@ export default function QuotesPage() {
                  {/* Action Bar */}
                  <div className="bg-white rounded-md shadow-sm border border-slate-200 px-4 py-2.5 flex items-center justify-between text-sm font-medium text-slate-600 overflow-x-auto gap-2">
                     <div className="flex items-center gap-1">
-                       <button onClick={() => router.push(`/quotes/new?editId=${selectedQuote.id}`)} className="flex items-center gap-1.5 hover:bg-slate-100 px-3 py-1.5 rounded transition-colors whitespace-nowrap"><FileEdit className="w-4 h-4 text-slate-500"/> Editar</button>
-                       <button onClick={() => handleSendEmail(selectedQuote.id)} className="flex items-center gap-1.5 hover:bg-slate-100 px-3 py-1.5 rounded transition-colors whitespace-nowrap"><Mail className="w-4 h-4 text-slate-500"/> Correos <ChevronDown className="w-3 h-3"/></button>
-                       <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/quotes/${selectedQuote.id}/proposal`); alert("¡Enlace de propuesta copiado al portapapeles! Listo para enviarse por WhatsApp."); }} className="flex items-center gap-1.5 hover:bg-slate-100 px-3 py-1.5 rounded transition-colors whitespace-nowrap"><Share2 className="w-4 h-4 text-slate-500"/> Compartir</button>
-                       <button onClick={() => handleDownload(selectedQuote.id, selectedQuote.quoteNumber)} className="flex items-center gap-1.5 hover:bg-slate-100 px-3 py-1.5 rounded transition-colors whitespace-nowrap"><Printer className="w-4 h-4 text-slate-500"/> PDF/Imprimir <ChevronDown className="w-3 h-3"/></button>
+                       <button onClick={() => router.push(`/quotes/new?editId=${selectedQuote.id}`)} className="flex items-center gap-1 hover:bg-slate-100 px-2 py-1 rounded transition-colors whitespace-nowrap text-xs"><FileEdit className="w-3.5 h-3.5 text-slate-500"/> Editar</button>
+                       <button onClick={() => handleSendEmail(selectedQuote.id)} className="flex items-center gap-1 hover:bg-slate-100 px-2 py-1 rounded transition-colors whitespace-nowrap text-xs"><Mail className="w-3.5 h-3.5 text-slate-500"/> Correos <ChevronDown className="w-3 h-3"/></button>
+                       <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/quotes/${selectedQuote.id}/proposal`); alert("¡Enlace de propuesta copiado al portapapeles! Listo para enviarse por WhatsApp."); }} className="flex items-center gap-1 hover:bg-slate-100 px-2 py-1 rounded transition-colors whitespace-nowrap text-xs"><Share2 className="w-3.5 h-3.5 text-slate-500"/> Compartir</button>
+                       <button onClick={() => handleDownload(selectedQuote.id, selectedQuote.quoteNumber)} className="flex items-center gap-1 hover:bg-slate-100 px-2 py-1 rounded transition-colors whitespace-nowrap text-xs"><Printer className="w-3.5 h-3.5 text-slate-500"/> PDF/Imprimir <ChevronDown className="w-3 h-3"/></button>
                        {selectedQuote?.isProposal && (
-                          <Link href={`/quotes/${selectedQuote.id}/proposal`} target="_blank" className="flex items-center gap-1.5 text-amber-600 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded transition-colors whitespace-nowrap font-bold">
-                             <FileText className="w-4 h-4" /> Propuesta Web
+                          <Link href={`/quotes/${selectedQuote.id}/proposal`} target="_blank" className="flex items-center gap-1 text-amber-600 bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded transition-colors whitespace-nowrap font-bold text-xs">
+                             <FileText className="w-3.5 h-3.5" /> Propuesta Web
                           </Link>
                        )}
                        <span className="w-px h-5 bg-slate-200 mx-2"></span>
@@ -561,10 +526,10 @@ export default function QuotesPage() {
                        </div>
                     </div>
 
-                    <div className="flex gap-2 items-center">
-                       <button onClick={() => setIsProjectModalOpen(true)} className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded transition-colors font-medium">Crear proyecto</button>
-                       <button onClick={() => handleConvertToInvoice(selectedQuote.id)} className="bg-[#10b981] hover:bg-[#059669] text-white px-4 py-1.5 rounded transition-colors font-medium flex items-center gap-2">Convertir en factura <ChevronDown className="w-3 h-3"/></button>
-                       <button className="p-1 hover:bg-slate-100 border border-transparent rounded"><MoreHorizontal className="w-5 h-5 text-slate-400"/></button>
+                    <div className="flex gap-1.5 items-center shrink-0">
+                       <button onClick={() => setIsProjectModalOpen(true)} className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-2 py-1 rounded transition-colors font-bold text-xs shadow-sm">Crear proyecto</button>
+                       <button onClick={() => handleConvertToInvoice(selectedQuote.id)} className="bg-[#10b981] hover:bg-[#059669] text-white px-2.5 py-1 rounded transition-colors font-bold text-xs shadow-sm flex items-center gap-1">Convertir en factura <ChevronDown className="w-3 h-3"/></button>
+                       <button className="p-1 hover:bg-slate-100 border border-transparent rounded"><MoreHorizontal className="w-4 h-4 text-slate-400"/></button>
                     </div>
                  </div>
 
@@ -841,6 +806,41 @@ export default function QuotesPage() {
               </div>
            </div>
         )}
+         {/* Project Modal */}
+         {isProjectModalOpen && (
+           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-center justify-center animate-in fade-in">
+             <div className="bg-white rounded-lg shadow-xl w-full max-w-md border border-slate-200 overflow-hidden">
+               <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-[#f8fafc]">
+                 <h3 className="text-lg font-bold text-slate-800">Crear Proyecto</h3>
+                 <button onClick={() => setIsProjectModalOpen(false)} className="text-slate-400 hover:text-slate-600"><XCircle className="w-5 h-5"/></button>
+               </div>
+               <div className="p-6 space-y-4 text-sm text-slate-700">
+                 <div>
+                   <label className="block font-bold mb-1">Nombre del Proyecto *</label>
+                   <input type="text" value={projectData.name} onChange={e => setProjectData({...projectData, name: e.target.value})} className="w-full border border-slate-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500" placeholder="Ej. Instalación de Redes" />
+                 </div>
+                 <div>
+                   <label className="block font-bold mb-1">Descripción</label>
+                   <textarea value={projectData.description} onChange={e => setProjectData({...projectData, description: e.target.value})} className="w-full border border-slate-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500" rows={3} placeholder="Alcance del proyecto..."></textarea>
+                 </div>
+                 <div className="grid grid-cols-2 gap-4">
+                   <div>
+                     <label className="block font-bold mb-1">Fecha Inicio</label>
+                     <input type="date" value={projectData.startDate} onChange={e => setProjectData({...projectData, startDate: e.target.value})} className="w-full border border-slate-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500" />
+                   </div>
+                   <div>
+                     <label className="block font-bold mb-1">Fecha Fin</label>
+                     <input type="date" value={projectData.endDate} onChange={e => setProjectData({...projectData, endDate: e.target.value})} className="w-full border border-slate-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500" />
+                   </div>
+                 </div>
+               </div>
+               <div className="px-6 py-4 border-t border-slate-200 bg-[#f8fafc] flex justify-end gap-2">
+                 <button onClick={() => setIsProjectModalOpen(false)} className="px-4 py-2 text-slate-600 font-bold hover:bg-slate-200 rounded transition-colors text-sm">Cancelar</button>
+                 <button onClick={handleCreateProject} className="px-4 py-2 bg-[#10b981] hover:bg-[#059669] text-white font-bold rounded transition-colors text-sm shadow-sm">Crear Proyecto</button>
+               </div>
+             </div>
+           </div>
+         )}
     </div>
   );
 }
