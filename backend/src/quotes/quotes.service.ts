@@ -51,8 +51,10 @@ export class QuotesService {
          lineTotal = lineSubtotal + lineTaxes;
       }
       
-      subtotal += lineSubtotal;
-      taxTotal += lineTaxes;
+      if (item.type !== 'SECTION_HEADER') {
+         subtotal += lineSubtotal;
+         taxTotal += lineTaxes;
+      }
       
       return {
         productId: item.productId || null,

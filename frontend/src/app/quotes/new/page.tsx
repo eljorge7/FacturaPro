@@ -327,17 +327,31 @@ export default function NewQuotePage() {
           currency,
           exchangeRate,
           ...proposalData,
-          items: mappedItems.filter(i => i.productId || i.description.trim() !== "").map((i, idx) => {
-             const finalUnitPrice = (taxIncluded && i.type !== "SECTION_HEADER") ? (i.unitPrice / (1 + i.taxRate)) : i.unitPrice;
-             return {
-               ...i,
-               unitPrice: finalUnitPrice,
-               total: i.type === "SECTION_HEADER" ? 0 : ((i.quantity * finalUnitPrice) - (i.discount || 0)),
-               type: i.type || "ITEM",
-               orderIndex: idx,
-               productId: i.productId || undefined
-             };
-          })
+          items: (() => {
+             const cleanItems = mappedItems.filter(i => i.productId || i.description.trim() !== "");
+             for (let i = 0; i < cleanItems.length; i++) {
+                 if (cleanItems[i].type === "SECTION_HEADER") {
+                     let sectionSubtotal = 0;
+                     for (let j = i + 1; j < cleanItems.length; j++) {
+                         if (cleanItems[j].type === "SECTION_HEADER") break;
+                         const childUnitPrice = (taxIncluded) ? (cleanItems[j].unitPrice / (1 + cleanItems[j].taxRate)) : cleanItems[j].unitPrice;
+                         sectionSubtotal += (cleanItems[j].quantity * childUnitPrice) - (cleanItems[j].discount || 0);
+                     }
+                     cleanItems[i].unitPrice = sectionSubtotal;
+                 }
+             }
+             return cleanItems.map((i, idx) => {
+                 const finalUnitPrice = (taxIncluded && i.type !== "SECTION_HEADER") ? (i.unitPrice / (1 + i.taxRate)) : i.unitPrice;
+                 return {
+                     ...i,
+                     unitPrice: finalUnitPrice,
+                     total: i.type === "SECTION_HEADER" ? finalUnitPrice : ((i.quantity * finalUnitPrice) - (i.discount || 0)),
+                     type: i.type || "ITEM",
+                     orderIndex: idx,
+                     productId: i.productId || undefined
+                 };
+             });
+          })()
         })
       });
 
