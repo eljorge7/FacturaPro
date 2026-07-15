@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Search, FileText, Download, XCircle, Loader2, Plus, Mail, Share2, Printer, MoreHorizontal, ChevronDown, FileEdit, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import ProjectCreationModal from '@/components/modals/ProjectCreationModal';
 
 export default function QuotesPage() {
   const router = useRouter();
@@ -24,7 +25,6 @@ export default function QuotesPage() {
   
   // Project Modal
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
-  const [projectData, setProjectData] = useState({ name: '', description: '', startDate: '', endDate: '' });
 
   useEffect(() => {
      if (selectedQuote) {
@@ -168,39 +168,6 @@ export default function QuotesPage() {
     } catch (e) {
       console.error(e);
       alert("Error al subir el archivo.");
-    }
-  };
-
-  const handleCreateProject = async () => {
-    try {
-      if(!projectData.name) return alert('Por favor, ingresa el nombre del proyecto.');
-      const tenantId = typeof window !== 'undefined' ? localStorage.getItem('tenantId') || 'demo-tenant' : 'demo-tenant';
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://facturapro.radiotecpro.com/api";
-      
-      const payload = {
-         ...projectData,
-         quoteId: selectedQuote.id,
-         customerId: selectedQuote.customerId
-      };
-
-      const res = await fetch(`${baseUrl}/projects`, {
-         method: "POST",
-         headers: {
-            'Content-Type': 'application/json',
-            'x-tenant-id': tenantId
-         },
-         body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) throw new Error("Error al crear proyecto");
-      
-      alert("¡Proyecto creado exitosamente! 🎉");
-      setIsProjectModalOpen(false);
-      setProjectData({ name: '', description: '', startDate: '', endDate: '' });
-      fetchQuotes(); // refrescar si algo cambia
-    } catch (e) {
-      console.error(e);
-      alert("Error al crear el proyecto.");
     }
   };
 
@@ -807,40 +774,12 @@ export default function QuotesPage() {
            </div>
         )}
          {/* Project Modal */}
-         {isProjectModalOpen && (
-           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-center justify-center animate-in fade-in">
-             <div className="bg-white rounded-lg shadow-xl w-full max-w-md border border-slate-200 overflow-hidden">
-               <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-[#f8fafc]">
-                 <h3 className="text-lg font-bold text-slate-800">Crear Proyecto</h3>
-                 <button onClick={() => setIsProjectModalOpen(false)} className="text-slate-400 hover:text-slate-600"><XCircle className="w-5 h-5"/></button>
-               </div>
-               <div className="p-6 space-y-4 text-sm text-slate-700">
-                 <div>
-                   <label className="block font-bold mb-1">Nombre del Proyecto *</label>
-                   <input type="text" value={projectData.name} onChange={e => setProjectData({...projectData, name: e.target.value})} className="w-full border border-slate-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500" placeholder="Ej. Instalación de Redes" />
-                 </div>
-                 <div>
-                   <label className="block font-bold mb-1">Descripción</label>
-                   <textarea value={projectData.description} onChange={e => setProjectData({...projectData, description: e.target.value})} className="w-full border border-slate-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500" rows={3} placeholder="Alcance del proyecto..."></textarea>
-                 </div>
-                 <div className="grid grid-cols-2 gap-4">
-                   <div>
-                     <label className="block font-bold mb-1">Fecha Inicio</label>
-                     <input type="date" value={projectData.startDate} onChange={e => setProjectData({...projectData, startDate: e.target.value})} className="w-full border border-slate-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500" />
-                   </div>
-                   <div>
-                     <label className="block font-bold mb-1">Fecha Fin</label>
-                     <input type="date" value={projectData.endDate} onChange={e => setProjectData({...projectData, endDate: e.target.value})} className="w-full border border-slate-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500" />
-                   </div>
-                 </div>
-               </div>
-               <div className="px-6 py-4 border-t border-slate-200 bg-[#f8fafc] flex justify-end gap-2">
-                 <button onClick={() => setIsProjectModalOpen(false)} className="px-4 py-2 text-slate-600 font-bold hover:bg-slate-200 rounded transition-colors text-sm">Cancelar</button>
-                 <button onClick={handleCreateProject} className="px-4 py-2 bg-[#10b981] hover:bg-[#059669] text-white font-bold rounded transition-colors text-sm shadow-sm">Crear Proyecto</button>
-               </div>
-             </div>
-           </div>
-         )}
+         <ProjectCreationModal 
+            isOpen={isProjectModalOpen} 
+            onClose={() => setIsProjectModalOpen(false)} 
+            quote={selectedQuote} 
+            onSuccess={() => { setIsProjectModalOpen(false); fetchQuotes(); }} 
+         />
     </div>
   );
 }

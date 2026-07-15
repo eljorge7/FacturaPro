@@ -30,7 +30,8 @@ import {
   Truck,
   MessageSquare,
   ShoppingBag,
-  Lock
+  Lock,
+  Clock
 } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 import { PaywallModal } from "./PaywallModal";
@@ -100,6 +101,7 @@ export function Sidebar() {
     ...(isPro ? [{ name: "Cuentas por Cobrar", href: "/ar", icon: <TrendingUp className="w-5 h-5 shrink-0 text-emerald-400" /> }] : []),
     ...(isEnterprise ? [{ name: "Mostrador (POS)", href: "/pos", icon: <Store className="w-5 h-5 shrink-0 text-amber-400" /> }] : []),
     { name: "Cotizaciones", href: "/quotes", icon: <FileBox className="w-5 h-5 shrink-0" /> },
+    { name: "Registro de Tiempos", href: "/time-entries", icon: <Clock className="w-5 h-5 shrink-0 text-cyan-500" /> },
     { name: "Clientes", href: "/customers", icon: <Users className="w-5 h-5 shrink-0" /> },
     
     // Si el usuario pertenece a una Agencia (y es Admin/Dueño), mostrar portal de Despachos exclusivo

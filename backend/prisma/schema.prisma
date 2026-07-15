@@ -88,27 +88,34 @@ model Tenant {
 // ----------------------------------------------------
 
 model Project {
-  id          String   @id @default(uuid())
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id            String   @id @default(uuid())
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   
-  name        String
-  description String?
-  status      String   @default("ACTIVE") // ACTIVE, PAUSED, COMPLETED
+  projectCode   String?
+  name          String
+  description   String?
+  status        String   @default("ACTIVE") // ACTIVE, PAUSED, COMPLETED
   
-  startDate   DateTime?
-  endDate     DateTime?
+  billingMethod String   @default("FIXED_COST") // FIXED_COST, PROJECT_HOURS, TASK_HOURS, STAFF_HOURS
+  costBudget    Float?
+  revenueBudget Float?
   
-  customerId  String
-  customer    Customer @relation(fields: [customerId], references: [id])
+  startDate     DateTime?
+  endDate       DateTime?
   
-  quoteId     String?  @unique
-  quote       Quote?   @relation(fields: [quoteId], references: [id])
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id])
   
-  tasks       ProjectTask[]
+  quoteId       String?  @unique
+  quote         Quote?   @relation(fields: [quoteId], references: [id])
   
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  tasks         ProjectTask[]
+  projectUsers  ProjectUser[]
+  timeEntries   TimeEntry[]
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model ProjectTask {
@@ -119,6 +126,46 @@ model ProjectTask {
   title       String
   description String?
   status      String   @default("TODO") // TODO, IN_PROGRESS, DONE
+  
+  isBillable  Boolean  @default(true)
+  hourlyRate  Float?   // Applies if billingMethod is TASK_HOURS
+  
+  timeEntries TimeEntry[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ProjectUser {
+  id          String   @id @default(uuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  hourlyRate  Float?   // Applies if billingMethod is STAFF_HOURS
+  
+  createdAt   DateTime @default(now())
+  
+  @@unique([projectId, userId])
+}
+
+model TimeEntry {
+  id          String   @id @default(uuid())
+  tenantId    String
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  taskId      String?
+  task        ProjectTask? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  date        DateTime @default(now())
+  duration    Float    // In hours
+  notes       String?
+  isBilled    Boolean  @default(false)
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -242,6 +289,8 @@ model User {
   stockTakes        StockTake[]       @relation("AssignedStockTakes")
 
   employeeProfile EmployeeProfile?
+  projectUsers    ProjectUser[]
+  timeEntries     TimeEntry[]
 }
 
 model WorkspaceMember {
