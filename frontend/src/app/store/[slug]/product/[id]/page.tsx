@@ -158,7 +158,7 @@ export default function ProductDetailPage() {
                    </div>
                    <div className="flex flex-col sm:flex-row gap-4">
                       {productData.hidePrice ? (
-                         <Button onClick={() => window.open(`https://wa.me/5216421403323?text=Hola,%20me%20interesa%20cotizar%20el%20equipo%20${encodeURIComponent(productData.model || productData.title)}`, '_blank')} className="flex-1 h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-emerald-500/30 transition-all">
+                         <Button onClick={() => window.open(`https://wa.me/526421644126?text=Hola,%20me%20interesa%20cotizar%20el%20equipo%20${encodeURIComponent(productData.model || productData.title)}`, '_blank')} className="flex-1 h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-emerald-500/30 transition-all">
                             Cotizar por WhatsApp
                          </Button>
                       ) : (
@@ -267,7 +267,7 @@ export default function ProductDetailPage() {
                                <button 
                                  onClick={(e) => { 
                                    e.stopPropagation(); 
-                                   window.open(`https://wa.me/5216421403323?text=Hola,%20me%20interesa%20cotizar%20el%20equipo%20${encodeURIComponent(alt.model || alt.title)}`, '_blank');
+                                   window.open(`https://wa.me/526421644126?text=Hola,%20me%20interesa%20cotizar%20el%20equipo%20${encodeURIComponent(alt.model || alt.title)}`, '_blank');
                                  }}
                                  className="absolute bottom-2 right-2 bg-emerald-100 hover:bg-emerald-600 text-emerald-700 hover:text-white p-2 rounded-full shadow-sm transition-colors z-10"
                                >

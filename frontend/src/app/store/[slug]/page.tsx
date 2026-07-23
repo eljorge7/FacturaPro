@@ -211,7 +211,7 @@ export default function StorePage() {
                   <button 
                     onClick={(e) => { 
                       e.stopPropagation(); 
-                      window.open(`https://wa.me/5216421403323?text=Hola,%20me%20interesa%20cotizar%20el%20equipo%20${encodeURIComponent(product.model || product.title)}`, '_blank');
+                      window.open(`https://wa.me/526421644126?text=Hola,%20me%20interesa%20cotizar%20el%20equipo%20${encodeURIComponent(product.model || product.title)}`, '_blank');
                     }}
                     className="absolute bottom-4 right-4 z-10 bg-emerald-600 text-white p-2.5 px-4 rounded-full shadow-lg hover:bg-emerald-700 hover:scale-105 transition-all flex items-center gap-2 text-xs font-bold"
                   >
