@@ -125,17 +125,38 @@ export class PublicStoreService {
         });
         
         if (res.data && res.data.productos) {
-          syscomProducts = res.data.productos.map((p: any) => ({
-            id: p.producto_id,
-            title: p.titulo,
-            model: p.modelo,
-            price: parseFloat(p.precios?.precio_descuento || p.precios?.precio_lista || '0') * 1.30,
-            stock: parseInt(p.existencia?.nuevo || '0', 10),
-            imageUrl: p.img_portada,
-            brand: p.marca,
-            category: p.categorias?.[0]?.nombre || 'General',
-            source: 'syscom'
-          }));
+          syscomProducts = res.data.productos.map((p: any) => {
+            const specialPrice = parseFloat(p.precios?.precio_especial || '0');
+            const discountPrice = parseFloat(p.precios?.precio_descuento || '0');
+            const listPrice = parseFloat(p.precios?.precio_lista || '0');
+            
+            const baseCost = discountPrice > 0 ? discountPrice : listPrice;
+            let calculatedPrice = baseCost * 1.30;
+            
+            if (specialPrice > 0) {
+              const minAllowedPrice = specialPrice * 0.80;
+              if (calculatedPrice < minAllowedPrice) {
+                calculatedPrice = minAllowedPrice;
+              }
+            }
+
+            const isRF = p.categorias?.some((cat: any) => 
+              cat.nombre && /radiocomunicaci|duplexer|repetidor|antena/i.test(cat.nombre)
+            );
+
+            return {
+              id: p.producto_id,
+              title: p.titulo,
+              model: p.modelo,
+              price: isRF ? 0 : calculatedPrice,
+              stock: parseInt(p.existencia?.nuevo || '0', 10),
+              imageUrl: p.img_portada,
+              brand: p.marca,
+              category: p.categorias?.[0]?.nombre || 'General',
+              source: 'syscom',
+              hidePrice: isRF
+            };
+          });
           totalPages = res.data.paginas || 1;
         }
       } catch (e) {
@@ -199,12 +220,31 @@ export class PublicStoreService {
       });
       
       const p = res.data;
+      
+      const specialPrice = parseFloat(p.precios?.precio_especial || '0');
+      const discountPrice = parseFloat(p.precios?.precio_descuento || '0');
+      const listPrice = parseFloat(p.precios?.precio_lista || '0');
+      
+      const baseCost = discountPrice > 0 ? discountPrice : listPrice;
+      let calculatedPrice = baseCost * 1.30;
+      
+      if (specialPrice > 0) {
+        const minAllowedPrice = specialPrice * 0.80;
+        if (calculatedPrice < minAllowedPrice) {
+          calculatedPrice = minAllowedPrice;
+        }
+      }
+
+      const isRF = p.categorias?.some((cat: any) => 
+        cat.nombre && /radiocomunicaci|duplexer|repetidor|antena/i.test(cat.nombre)
+      );
+
       const data = {
         id: p.producto_id,
         title: p.titulo,
         model: p.modelo,
         description: p.descripcion,
-        price: parseFloat(p.precios?.precio_descuento || p.precios?.precio_lista || '0') * 1.30,
+        price: isRF ? 0 : calculatedPrice,
         stock: parseInt(p.existencia?.nuevo || '0', 10),
         brand: p.marca,
         imageUrl: p.img_portada,
@@ -212,7 +252,8 @@ export class PublicStoreService {
         category: p.categorias?.[0]?.nombre || 'General',
         features: p.caracteristicas,
         resources: p.recursos,
-        source: 'syscom'
+        source: 'syscom',
+        hidePrice: isRF
       };
       this.productsCache.set(cacheKey, { data, expiresAt: now + 5 * 60 * 1000 });
       return data;

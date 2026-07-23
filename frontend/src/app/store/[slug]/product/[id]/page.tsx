@@ -136,11 +136,19 @@ export default function ProductDetailPage() {
                 </div>
 
                 <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-8">
-                   <div className="text-sm text-slate-500 line-through mb-1">Precio de Lista: ${(getDisplayPrice(productData) * 1.15).toLocaleString('es-MX', {minimumFractionDigits: 2})} {currency}</div>
-                   <div className="text-4xl md:text-5xl font-black text-slate-900">
-                     ${(getDisplayPrice(productData)).toLocaleString('es-MX', {minimumFractionDigits: 2})}
-                     <span className="text-base text-slate-500 font-medium ml-2 block sm:inline">{currency} {includeIva ? 'IVA inc.' : '+ IVA'}</span>
-                   </div>
+                   {productData.hidePrice ? (
+                       <div className="text-2xl md:text-3xl font-black text-emerald-600 bg-emerald-50 border border-emerald-100 py-3 px-6 rounded-xl inline-block">
+                          Cotización Especial Directa
+                       </div>
+                   ) : (
+                       <>
+                         <div className="text-sm text-slate-500 line-through mb-1">Precio de Lista: ${(getDisplayPrice(productData) * 1.15).toLocaleString('es-MX', {minimumFractionDigits: 2})} {currency}</div>
+                         <div className="text-4xl md:text-5xl font-black text-slate-900">
+                           ${(getDisplayPrice(productData)).toLocaleString('es-MX', {minimumFractionDigits: 2})}
+                           <span className="text-base text-slate-500 font-medium ml-2 block sm:inline">{currency} {includeIva ? 'IVA inc.' : '+ IVA'}</span>
+                         </div>
+                       </>
+                   )}
                 </div>
 
                 {/* Add to Cart Area */}
@@ -149,19 +157,27 @@ export default function ProductDetailPage() {
                       {productData.stock > 0 ? <><Check className="w-5 h-5"/> {productData.stock} unidades listas para envío</> : <><X className="w-5 h-5"/> Agotado temporalmente</>}
                    </div>
                    <div className="flex flex-col sm:flex-row gap-4">
-                      <div className="flex items-center bg-white border border-slate-300 rounded-xl overflow-hidden h-14 w-full sm:w-auto shadow-sm">
-                         <button onClick={() => setDetailQuantity(Math.max(1, detailQuantity - 1))} className="flex-1 sm:px-4 text-slate-500 hover:bg-slate-50 h-full font-bold text-xl">-</button>
-                         <span className="w-16 text-center font-bold text-slate-900 text-lg border-x border-slate-200">{detailQuantity}</span>
-                         <button onClick={() => setDetailQuantity(detailQuantity + 1)} className="flex-1 sm:px-4 text-slate-500 hover:bg-slate-50 h-full font-bold text-xl">+</button>
-                      </div>
-                      {productData.stock > 0 ? (
-                         <Button onClick={() => addToCart(productData, detailQuantity)} className="flex-1 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-blue-500/30 transition-all">
-                            Agregar al Carrito
+                      {productData.hidePrice ? (
+                         <Button onClick={() => window.open(`https://wa.me/5216421403323?text=Hola,%20me%20interesa%20cotizar%20el%20equipo%20${encodeURIComponent(productData.model || productData.title)}`, '_blank')} className="flex-1 h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-emerald-500/30 transition-all">
+                            Cotizar por WhatsApp
                          </Button>
                       ) : (
-                         <Button onClick={() => handleConsultAvailability(productData)} className="flex-1 h-14 bg-slate-700 hover:bg-slate-800 text-white rounded-xl font-bold shadow-lg hover:shadow-slate-500/30 transition-all">
-                            Consultar Disponibilidad
-                         </Button>
+                         <>
+                            <div className="flex items-center bg-white border border-slate-300 rounded-xl overflow-hidden h-14 w-full sm:w-auto shadow-sm">
+                               <button onClick={() => setDetailQuantity(Math.max(1, detailQuantity - 1))} className="flex-1 sm:px-4 text-slate-500 hover:bg-slate-50 h-full font-bold text-xl">-</button>
+                               <span className="w-16 text-center font-bold text-slate-900 text-lg border-x border-slate-200">{detailQuantity}</span>
+                               <button onClick={() => setDetailQuantity(detailQuantity + 1)} className="flex-1 sm:px-4 text-slate-500 hover:bg-slate-50 h-full font-bold text-xl">+</button>
+                            </div>
+                            {productData.stock > 0 ? (
+                               <Button onClick={() => addToCart(productData, detailQuantity)} className="flex-1 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-blue-500/30 transition-all">
+                                  Agregar al Carrito
+                               </Button>
+                            ) : (
+                               <Button onClick={() => handleConsultAvailability(productData)} className="flex-1 h-14 bg-slate-700 hover:bg-slate-800 text-white rounded-xl font-bold shadow-lg hover:shadow-slate-500/30 transition-all">
+                                  Consultar Disponibilidad
+                               </Button>
+                            )}
+                         </>
                       )}
                    </div>
                 </div>
@@ -239,7 +255,7 @@ export default function ProductDetailPage() {
                             ) : (
                               <Package className="w-10 h-10 text-slate-200" />
                             )}
-                            {alt.stock > 0 && (
+                            {alt.stock > 0 && !alt.hidePrice && (
                                <button 
                                  onClick={(e) => { e.stopPropagation(); addToCart(alt, 1); }}
                                  className="absolute bottom-2 right-2 bg-blue-100 hover:bg-blue-600 text-blue-700 hover:text-white p-2 rounded-full shadow-sm transition-colors z-10"
@@ -247,13 +263,30 @@ export default function ProductDetailPage() {
                                  <ShoppingCart className="w-4 h-4" />
                                </button>
                              )}
+                            {alt.hidePrice && (
+                               <button 
+                                 onClick={(e) => { 
+                                   e.stopPropagation(); 
+                                   window.open(`https://wa.me/5216421403323?text=Hola,%20me%20interesa%20cotizar%20el%20equipo%20${encodeURIComponent(alt.model || alt.title)}`, '_blank');
+                                 }}
+                                 className="absolute bottom-2 right-2 bg-emerald-100 hover:bg-emerald-600 text-emerald-700 hover:text-white p-2 rounded-full shadow-sm transition-colors z-10"
+                               >
+                                 <Tag className="w-4 h-4" />
+                               </button>
+                             )}
                          </div>
                          <div className="p-3 flex flex-col flex-1">
                             <div className="text-[10px] font-bold text-blue-600 mb-1">{alt.brand || 'GENÉRICO'}</div>
                             <div className="text-xs font-semibold text-slate-800 line-clamp-2 mb-2 flex-1">{alt.title}</div>
-                            <div className="font-black text-slate-900 text-sm">
-                               ${getDisplayPrice(alt).toLocaleString('es-MX', {minimumFractionDigits:2})} <span className="text-[9px] text-slate-400">{currency}</span>
-                            </div>
+                            {alt.hidePrice ? (
+                               <div className="font-black text-emerald-600 text-xs bg-emerald-50 px-2 py-1 rounded inline-block self-start">
+                                  Cotizar
+                               </div>
+                            ) : (
+                               <div className="font-black text-slate-900 text-sm">
+                                  ${getDisplayPrice(alt).toLocaleString('es-MX', {minimumFractionDigits:2})} <span className="text-[9px] text-slate-400">{currency}</span>
+                               </div>
+                            )}
                             <div className="mt-2 text-[10px] font-bold">
                                {alt.stock > 0 ? (
                                   <span className="text-emerald-600 flex items-center gap-1"><Package className="w-3 h-3"/> {alt.stock} disponibles</span>

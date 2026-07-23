@@ -207,14 +207,26 @@ export default function StorePage() {
                 className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:border-blue-300 hover:shadow-xl transition-all group flex flex-col cursor-pointer relative"
               >
                 {/* Quick Add Button */}
-                <button 
-                  onClick={(e) => { e.stopPropagation(); addToCart(product); }}
-                  disabled={product.stock <= 0}
-                  className="absolute bottom-4 right-4 z-10 bg-blue-600 text-white p-2.5 rounded-full shadow-lg hover:bg-blue-700 hover:scale-110 transition-all disabled:opacity-50 disabled:hover:scale-100"
-                  title="Agregar al carrito rpido"
-                >
-                  <ShoppingCart className="w-5 h-5" />
-                </button>
+                {product.hidePrice ? (
+                  <button 
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      window.open(`https://wa.me/5216421403323?text=Hola,%20me%20interesa%20cotizar%20el%20equipo%20${encodeURIComponent(product.model || product.title)}`, '_blank');
+                    }}
+                    className="absolute bottom-4 right-4 z-10 bg-emerald-600 text-white p-2.5 px-4 rounded-full shadow-lg hover:bg-emerald-700 hover:scale-105 transition-all flex items-center gap-2 text-xs font-bold"
+                  >
+                    Cotizar
+                  </button>
+                ) : (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); addToCart(product); }}
+                    disabled={product.stock <= 0}
+                    className="absolute bottom-4 right-4 z-10 bg-blue-600 text-white p-2.5 rounded-full shadow-lg hover:bg-blue-700 hover:scale-110 transition-all disabled:opacity-50 disabled:hover:scale-100"
+                    title="Agregar al carrito rpido"
+                  >
+                    <ShoppingCart className="w-5 h-5" />
+                  </button>
+                )}
 
                 <div onClick={() => router.push(`/store/${slug}/product/${product.id}`)} className="aspect-square bg-white p-4 relative overflow-hidden flex items-center justify-center border-b border-slate-100">
                   {product.imageUrl ? (
@@ -247,12 +259,20 @@ export default function StorePage() {
                     {product.title}
                   </h3>
                   <div className="mt-auto">
-                    <div className="text-xs md:text-sm text-slate-400 line-through mb-0.5">
-                      ${(getDisplayPrice(product) * 1.15).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                    </div>
-                    <div className="text-lg md:text-xl font-black text-slate-900 leading-tight">
-                      ${getDisplayPrice(product).toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-[10px] md:text-xs text-slate-500 font-medium block sm:inline">{currency} {includeIva ? 'IVA inc.' : '+ IVA'}</span>
-                    </div>
+                    {product.hidePrice ? (
+                       <div className="text-sm md:text-md font-black text-emerald-600 leading-tight bg-emerald-50 border border-emerald-100 py-1.5 px-3 rounded-lg inline-block mt-2">
+                          Cotización Especial
+                       </div>
+                    ) : (
+                       <>
+                         <div className="text-xs md:text-sm text-slate-400 line-through mb-0.5">
+                           ${(getDisplayPrice(product) * 1.15).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                         </div>
+                         <div className="text-lg md:text-xl font-black text-slate-900 leading-tight">
+                           ${getDisplayPrice(product).toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-[10px] md:text-xs text-slate-500 font-medium block sm:inline">{currency} {includeIva ? 'IVA inc.' : '+ IVA'}</span>
+                         </div>
+                       </>
+                    )}
                   </div>
                 </div>
               </div>

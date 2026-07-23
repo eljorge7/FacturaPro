@@ -17,6 +17,7 @@ export interface Product {
   model?: string;
   exchangeRate?: number;
   source: "syscom" | "local";
+  hidePrice?: boolean;
 }
 
 interface CartItem {
