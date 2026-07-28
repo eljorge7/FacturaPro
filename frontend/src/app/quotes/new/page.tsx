@@ -53,6 +53,9 @@ export default function NewQuotePage() {
 
   // Solar Calculator States
   const [isSolarModalOpen, setIsSolarModalOpen] = useState(false);
+  const [syscomSelectMode, setSyscomSelectMode] = useState<'PANEL' | 'INVERSOR' | null>(null);
+  const [selectedPanel, setSelectedPanel] = useState<any>(null);
+  const [selectedInverter, setSelectedInverter] = useState<any>(null);
   const [solarData, setSolarData] = useState<any>(null);
   const [solarForm, setSolarForm] = useState({
       consumoAnual: 3439,
@@ -1073,7 +1076,7 @@ export default function NewQuotePage() {
                   <p className="text-xs text-slate-500">Agrega productos directamente a tu cotización sin darlos de alta. (Sugerencia: Busca por modelo para mayor precisión)</p>
                 </div>
               </div>
-              <button onClick={() => setIsSyscomModalOpen(false)} className="p-2 hover:bg-purple-100 rounded-full text-slate-500">
+              <button onClick={() => { setIsSyscomModalOpen(false); setSyscomSelectMode(null); }} className="p-2 hover:bg-purple-100 rounded-full text-slate-500">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1239,7 +1242,10 @@ export default function NewQuotePage() {
                   const potenciaInstalada = (numPaneles * solarForm.panelWatts) / 1000;
                   const generacionAnual = potenciaInstalada * solarForm.hsp * 365 * (solarForm.eficiencia / 100);
                   
-                  const inversionTotal = potenciaInstalada * solarForm.costoKwp;
+                  const costoPaneles = (selectedPanel?.finalPrice || 0) * numPaneles;
+                  const costoInversor = selectedInverter?.finalPrice || 0;
+                  const costoExtra = solarForm.costoInstalacion || 0;
+                  const inversionTotal = costoPaneles + costoInversor + costoExtra;
                   const ahorroAnual = generacionAnual * solarForm.tarifaCfe;
                   const roiAnios = (inversionTotal / ahorroAnual).toFixed(1);
 
