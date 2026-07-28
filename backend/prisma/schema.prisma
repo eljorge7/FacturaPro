@@ -519,6 +519,7 @@ model Quote {
   materials     String? @db.Text
   coverImageUrl String?
   templateId    String?
+  solarData     Json?
   // ------------------------------------------
 
   notes  String?

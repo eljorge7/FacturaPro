@@ -345,6 +345,120 @@ export class PdfService {
      }
   }
 
+  private drawSolarProposalBody(doc: any, data: any, template: string) {
+     const fReg = this.getFont(data.taxProfile?.brandFont || 'Helvetica');
+     const fBold = this.getFontBold(data.taxProfile?.brandFont || 'Helvetica');
+     const bColor = data.taxProfile?.brandColor || '#10b981';
+     const solar = typeof data.solarData === 'string' ? JSON.parse(data.solarData) : data.solarData;
+
+     // Override Header Text
+     doc.y = 120;
+     doc.fillColor('#0f172a').font(fBold).fontSize(16).text('PROPUESTA TÉCNICA SISTEMA FOTOVOLTAICO', 50, 40, { align: 'center' });
+     
+     doc.y = 100;
+     doc.fillColor('#0f172a').font(fBold).fontSize(14).text('1. Análisis de Consumo Energético', 50, doc.y);
+     doc.moveTo(50, doc.y + 5).lineTo(545, doc.y + 5).lineWidth(2).strokeColor(bColor).stroke();
+     doc.moveDown(1.5);
+     
+     doc.font(fReg).fontSize(10).fillColor('#334155');
+     doc.text(`Con base en el historial de facturación de CFE y el margen de crecimiento solicitado (${solar.colchon || 0}%), se presenta el siguiente análisis base anualizado:`, { width: 495 });
+     doc.moveDown();
+
+     const startTable1 = doc.y;
+     doc.rect(50, startTable1, 495, 20).fill('#f1f5f9');
+     doc.fillColor('#334155').font(fBold).text('Concepto', 60, startTable1 + 5);
+     doc.text('Detalle', 350, startTable1 + 5);
+     
+     doc.font(fReg).text('Consumo actual base (Anual)', 60, startTable1 + 25);
+     doc.text(`${(solar.consumoAnual || 0).toLocaleString()} kWh`, 350, startTable1 + 25);
+     doc.moveTo(50, startTable1 + 40).lineTo(545, startTable1 + 40).lineWidth(0.5).strokeColor('#e2e8f0').stroke();
+
+     doc.text(`Incremento Proyectado (+${solar.colchon || 0}%)`, 60, startTable1 + 45);
+     doc.text(`${((solar.consumoAnual || 0) * (solar.colchon || 0) / 100).toLocaleString()} kWh`, 350, startTable1 + 45);
+     doc.moveTo(50, startTable1 + 60).lineTo(545, startTable1 + 60).stroke();
+
+     doc.font(fBold).text('Consumo Total Estimado', 60, startTable1 + 65);
+     doc.text(`${(solar.consumoProyectado || 0).toLocaleString()} kWh / Año`, 350, startTable1 + 65);
+     
+     doc.rect(50, startTable1, 495, 80).strokeColor('#e2e8f0').lineWidth(1).stroke();
+     doc.moveTo(340, startTable1).lineTo(340, startTable1 + 80).stroke();
+
+     doc.y = startTable1 + 100;
+     doc.fillColor('#0f172a').font(fBold).fontSize(14).text('2. Dimensionamiento del Sistema', 50, doc.y);
+     doc.moveTo(50, doc.y + 5).lineTo(545, doc.y + 5).lineWidth(2).strokeColor(bColor).stroke();
+     doc.moveDown(1.5);
+
+     doc.rect(50, doc.y, 495, 30).fill('#fff7ed');
+     doc.rect(50, doc.y, 3, 30).fill(bColor);
+     doc.fillColor('#334155').fontSize(9).font(fReg).text(`Recomendación Principal: Sistema de ${solar.potenciaInstalada || 0} kWp para asegurar cobertura total del consumo actual más el colchón del ${solar.colchon || 0}%, manteniendo el recibo en el cargo mínimo durante todo el año.`, 60, doc.y + 5, { width: 475 });
+     doc.moveDown(2);
+
+     const startTable2 = doc.y;
+     doc.rect(50, startTable2, 495, 20).fill('#f1f5f9');
+     doc.fillColor('#334155').font(fBold).fontSize(10).text('Componente', 60, startTable2 + 5);
+     doc.text('Especificación / Cantidad', 250, startTable2 + 5);
+
+     doc.font(fReg).text('Módulos Solares', 60, startTable2 + 25);
+     doc.text(`${solar.numPaneles || 0} x Paneles Fotovoltaicos de ${solar.panelWatts || 0}W (${solar.panelModelo || 'Tier 1'})`, 250, startTable2 + 25);
+     doc.moveTo(50, startTable2 + 40).lineTo(545, startTable2 + 40).lineWidth(0.5).strokeColor('#e2e8f0').stroke();
+
+     doc.text('Inversor de Red', 60, startTable2 + 45);
+     doc.text(`1 x ${solar.inversorModelo || 'Inversor de Red'}`, 250, startTable2 + 45);
+     doc.moveTo(50, startTable2 + 60).lineTo(545, startTable2 + 60).stroke();
+
+     doc.text('Potencia Pico Instalada (DC)', 60, startTable2 + 65);
+     doc.text(`${solar.potenciaInstalada || 0} kWp`, 250, startTable2 + 65);
+     doc.moveTo(50, startTable2 + 80).lineTo(545, startTable2 + 80).stroke();
+
+     doc.text('Generación Anual Estimada', 60, startTable2 + 85);
+     doc.text(`~${(solar.generacionAnual || 0).toLocaleString()} kWh`, 250, startTable2 + 85);
+
+     doc.rect(50, startTable2, 495, 100).strokeColor('#e2e8f0').lineWidth(1).stroke();
+     doc.moveTo(240, startTable2).lineTo(240, startTable2 + 100).stroke();
+
+     doc.y = startTable2 + 120;
+     doc.fillColor('#0f172a').font(fBold).fontSize(14).text('3. Detalles de Configuración y Cableado', 50, doc.y);
+     doc.moveTo(50, doc.y + 5).lineTo(545, doc.y + 5).lineWidth(2).strokeColor(bColor).stroke();
+     doc.moveDown(1.5);
+     
+     doc.font(fReg).fontSize(10).fillColor('#334155');
+     doc.text(`El sistema se ha diseñado aprovechando la eficiencia de los módulos de alta potencia, garantizando seguridad y cumplimiento normativo.`, { width: 495 });
+     doc.moveDown(0.5);
+     doc.font(fBold).text('• Arreglo DC: ', { continued: true }).font(fReg).text(`1 cadena (string) de ${solar.numPaneles || 0} paneles conectados en serie al MPPT 1.`);
+     doc.font(fBold).text('• Protecciones: ', { continued: true }).font(fReg).text(`Pastilla termomagnética (breaker) AC dedicada para el circuito del inversor.`);
+     doc.font(fBold).text('• Estructura: ', { continued: true }).font(fReg).text(`Aluminio anodizado para losa de concreto con inclinación de 15° a 20° hacia el Sur.`);
+     
+     doc.moveDown(1.5);
+     doc.fillColor('#0f172a').font(fBold).fontSize(14).text('4. Análisis Financiero (ROI)', 50, doc.y);
+     doc.moveTo(50, doc.y + 5).lineTo(545, doc.y + 5).lineWidth(2).strokeColor(bColor).stroke();
+     doc.moveDown(1.5);
+     
+     const startTable3 = doc.y;
+     doc.rect(50, startTable3, 495, 20).fill('#f1f5f9');
+     doc.fillColor('#334155').font(fBold).fontSize(10).text('Concepto', 60, startTable3 + 5);
+     doc.text('Valor', 350, startTable3 + 5);
+     
+     doc.font(fReg).text('Inversión Total Estimada ($ MXN)', 60, startTable3 + 25);
+     doc.text(`$${(solar.inversionTotal || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}`, 350, startTable3 + 25);
+     doc.moveTo(50, startTable3 + 40).lineTo(545, startTable3 + 40).lineWidth(0.5).strokeColor('#e2e8f0').stroke();
+
+     doc.text('Ahorro Anual Estimado ($ MXN)', 60, startTable3 + 45);
+     doc.text(`$${(solar.ahorroAnual || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}`, 350, startTable3 + 45);
+     doc.moveTo(50, startTable3 + 60).lineTo(545, startTable3 + 60).stroke();
+
+     doc.font(fBold).fillColor(bColor).text('Retorno de Inversión (Años)', 60, startTable3 + 65);
+     doc.text(`${solar.roiAnios || 0} Años`, 350, startTable3 + 65);
+
+     doc.rect(50, startTable3, 495, 80).strokeColor('#e2e8f0').lineWidth(1).stroke();
+     doc.moveTo(340, startTable3).lineTo(340, startTable3 + 80).stroke();
+
+     doc.y = startTable3 + 120;
+     doc.font(fBold).fontSize(12).fillColor('#0f172a').text('Beneficios del Proyecto:', 50, doc.y);
+     doc.font(fReg).fontSize(10).fillColor('#334155').text('• Generación suficiente para cubrir equipos actuales y futuras adiciones de carga.');
+     doc.text('• Monitoreo remoto activo de generación y eficiencia a través de plataforma web/móvil.');
+     doc.text('• Garantía de mantenerse en el rango de subsidio de la Tarifa 1E sin caer en tarifas excedentes (DAC).');
+  }
+
   async generateInvoicePdf(invoice: any): Promise<Buffer> {
     return new Promise((resolve, reject) => {
       try {
@@ -385,8 +499,13 @@ export class PdfService {
         doc.on('error', (err: any) => reject(err));
 
         this.drawTemplateHeader(doc, quote, true, template);
-        this.drawTableAndTotals(doc, quote, true, template);
-        this.drawFooter(doc, quote, true, template);
+        
+        if (quote.solarData) {
+            this.drawSolarProposalBody(doc, quote, template);
+        } else {
+            this.drawTableAndTotals(doc, quote, true, template);
+            this.drawFooter(doc, quote, true, template);
+        }
 
         doc.end();
       } catch (err) {

@@ -10,7 +10,7 @@ export class QuotesService {
 
   async create(createQuoteDto: CreateQuoteDto | any) {
     let { tenantId, customerId, items, notes, expirationDate, taxIncluded, 
-        isProposal, projectName, projectScope, projectNotes, coordinates, personnel, materials, coverImageUrl, templateId 
+        isProposal, projectName, projectScope, projectNotes, coordinates, personnel, materials, coverImageUrl, templateId, solarData 
     } = createQuoteDto;
 
     // 1. Resolver Tenant
@@ -111,6 +111,7 @@ export class QuotesService {
         materials,
         coverImageUrl,
         templateId,
+        solarData,
         items: {
           create: quoteItemsData
         }
@@ -232,6 +233,7 @@ export class QuotesService {
            materials: data.materials !== undefined ? data.materials : undefined,
            coverImageUrl: data.coverImageUrl !== undefined ? data.coverImageUrl : undefined,
            templateId: data.templateId !== undefined ? data.templateId : undefined,
+           solarData: data.solarData !== undefined ? data.solarData : undefined,
            notes: data.notes !== undefined ? data.notes : undefined,
            expirationDate: data.expirationDate !== undefined ? (data.expirationDate ? new Date(data.expirationDate) : null) : undefined,
            items: {
@@ -254,6 +256,7 @@ export class QuotesService {
         materials: data.materials !== undefined ? data.materials : undefined,
         coverImageUrl: data.coverImageUrl !== undefined ? data.coverImageUrl : undefined,
         templateId: data.templateId !== undefined ? data.templateId : undefined,
+        solarData: data.solarData !== undefined ? data.solarData : undefined,
         notes: data.notes !== undefined ? data.notes : undefined,
         expirationDate: data.expirationDate !== undefined ? (data.expirationDate ? new Date(data.expirationDate) : null) : undefined,
       }
