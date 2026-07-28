@@ -1276,6 +1276,31 @@ export default function NewQuotePage() {
                                    ahorroAnual,
                                    roiAnios
                                 });
+                                const newItems = [...items];
+                                if (newItems.length === 1 && newItems[0].description === "" && newItems[0].unitPrice === 0) {
+                                   newItems.pop();
+                                }
+                                newItems.push({
+                                   productId: "",
+                                   description: `Panel Fotovoltaico ${solarForm.panelWatts}W (${solarForm.panelModelo})`,
+                                   imageUrl: "",
+                                   quantity: numPaneles,
+                                   unitPrice: 0,
+                                   taxRate: 0.16,
+                                   discount: 0,
+                                   type: "ITEM"
+                                });
+                                newItems.push({
+                                   productId: "",
+                                   description: `Inversor de Red (${solarForm.inversorModelo})`,
+                                   imageUrl: "",
+                                   quantity: 1,
+                                   unitPrice: 0,
+                                   taxRate: 0.16,
+                                   discount: 0,
+                                   type: "ITEM"
+                                });
+                                setItems(newItems);
                                 setIsSolarModalOpen(false);
                              }}
                              className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-lg shadow-sm transition-colors"

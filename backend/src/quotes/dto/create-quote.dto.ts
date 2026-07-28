@@ -94,6 +94,10 @@ export class CreateQuoteDto {
   @IsOptional()
   templateId?: string;
 
+  @IsString()
+  @IsOptional()
+  solarData?: string;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => QuoteItemDto)
