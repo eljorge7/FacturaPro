@@ -164,7 +164,7 @@ export default function NewQuotePage() {
         const res = await fetch(`${baseUrl}/public-store/radiotec/products?search=${encodeURIComponent(syscomSearch)}`);
         const data = await res.json();
         const syscomOnly = (data.products || []).filter((p: any) => p.source === 'syscom');
-        setSyscomResults(syscomOnly.slice(0, 8)); // Top 8 results
+        setSyscomResults(syscomOnly); // Show all results returned by page 1 (usually 15-20)
       } catch (e) {
         console.error("Syscom API Error:", e);
       } finally {
@@ -1038,7 +1038,7 @@ export default function NewQuotePage() {
                 <Globe className="w-6 h-6 text-purple-600" />
                 <div>
                   <h3 className="font-bold text-slate-900">Búsqueda en Red Global Syscom</h3>
-                  <p className="text-xs text-slate-500">Agrega productos directamente a tu cotización sin darlos de alta.</p>
+                  <p className="text-xs text-slate-500">Agrega productos directamente a tu cotización sin darlos de alta. (Sugerencia: Busca por modelo para mayor precisión)</p>
                 </div>
               </div>
               <button onClick={() => setIsSyscomModalOpen(false)} className="p-2 hover:bg-purple-100 rounded-full text-slate-500">
