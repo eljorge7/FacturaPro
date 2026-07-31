@@ -361,7 +361,7 @@ export class PdfService {
          try {
              const base64Data = solar.locationImageBase64.replace(/^data:image\/\w+;base64,/, "");
              const imgBuffer = Buffer.from(base64Data, 'base64');
-             doc.image(imgBuffer, 0, 0, { width: doc.page.width, height: 180 });
+             doc.image(imgBuffer, 0, 0, { cover: [doc.page.width, 180], align: 'center', valign: 'center' });
              doc.rect(0, 0, doc.page.width, 180).fillOpacity(0.6).fill('#0f172a'); // darken overlay
              doc.fillOpacity(1); // reset
          } catch(e) {
