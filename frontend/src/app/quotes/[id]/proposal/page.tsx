@@ -145,6 +145,26 @@ export default function ProposalViewPage() {
                <Sun className="w-8 h-8 text-amber-500" /> Propuesta Técnica Fotovoltaica
             </h3>
 
+            {solar.address && (
+               <div className="bg-white rounded-3xl shadow-sm p-8 border border-slate-200">
+                 <h4 className="text-xl font-bold text-slate-700 mb-6 flex items-center gap-2">
+                    <MapPin className="w-6 h-6 text-rose-500" /> Ubicación del Proyecto
+                 </h4>
+                 <p className="text-slate-600 font-medium mb-4">{solar.address}</p>
+                 <div className="w-full h-64 rounded-2xl overflow-hidden border border-slate-200">
+                    <iframe 
+                       width="100%" 
+                       height="100%" 
+                       src={`https://maps.google.com/maps?q=${encodeURIComponent(solar.address)}&t=&z=16&ie=UTF8&iwloc=&output=embed`} 
+                       frameBorder="0" 
+                       scrolling="no" 
+                       marginHeight={0} 
+                       marginWidth={0}
+                    ></iframe>
+                 </div>
+               </div>
+            )}
+
             {/* 1. Análisis de Consumo */}
             <div className="bg-white rounded-3xl shadow-sm p-8 border border-slate-200">
                <h4 className="text-xl font-bold text-slate-700 mb-6 flex items-center gap-2">

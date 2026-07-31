@@ -351,112 +351,84 @@ export class PdfService {
      const bColor = data.taxProfile?.brandColor || '#10b981';
      const solar = typeof data.solarData === 'string' ? JSON.parse(data.solarData) : data.solarData;
 
-     // Override Header Text
-     doc.y = 120;
-     doc.fillColor('#0f172a').font(fBold).fontSize(16).text('PROPUESTA TÉCNICA SISTEMA FOTOVOLTAICO', 50, 40, { align: 'center' });
+     // 1. Full Page Dark Background
+     doc.rect(0, 0, doc.page.width, doc.page.height).fill('#0f172a');
+
+     // 2. Cover Banner
+     doc.rect(0, 0, doc.page.width, 180).fill('#1e293b');
+     doc.fillColor('#38bdf8').font(fBold).fontSize(10).text('PROPUESTA COMERCIAL FOTOVOLTAICA', 50, 60, { tracking: 2 });
+     doc.fillColor('#ffffff').font(fBold).fontSize(32).text(`Cotización ${data.quoteNumber || ''}`, 50, 80);
+     doc.fillColor('#94a3b8').font(fReg).fontSize(14).text(`Preparado para: `, 50, 125, { continued: true }).fillColor('#ffffff').font(fBold).text(data.customer?.legalName || 'Cliente');
      
-     doc.y = 100;
-     doc.fillColor('#0f172a').font(fBold).fontSize(14).text('1. Análisis de Consumo Energético', 50, doc.y);
-     doc.moveTo(50, doc.y + 5).lineTo(545, doc.y + 5).lineWidth(2).strokeColor(bColor).stroke();
-     doc.moveDown(1.5);
+     if (solar.address) {
+         doc.fillColor('#f43f5e').font(fBold).fontSize(12).text('Ubicación: ', 50, 150, { continued: true }).fillColor('#cbd5e1').font(fReg).text(solar.address);
+     }
+
+     // 3. Resumen Ejecutivo (Inversión, Ahorro, ROI)
+     let startY = 220;
+     doc.fillColor('#ffffff').font(fBold).fontSize(16).text('Análisis Financiero y Retorno de Inversión (ROI)', 50, startY);
+     doc.moveTo(50, startY + 25).lineTo(545, startY + 25).lineWidth(2).strokeColor(bColor).stroke();
+
+     // Tarjetas de ROI
+     startY += 45;
+     const cardWidth = (495 - 20) / 3;
      
-     doc.font(fReg).fontSize(10).fillColor('#334155');
-     doc.text(`Con base en el historial de facturación de CFE y el margen de crecimiento solicitado (${solar.colchon || 0}%), se presenta el siguiente análisis base anualizado:`, { width: 495 });
-     doc.moveDown();
-
-     const startTable1 = doc.y;
-     doc.rect(50, startTable1, 495, 20).fill('#f1f5f9');
-     doc.fillColor('#334155').font(fBold).text('Concepto', 60, startTable1 + 5);
-     doc.text('Detalle', 350, startTable1 + 5);
+     // Card 1: Inversión
+     doc.rect(50, startY, cardWidth, 90).fill('#1e293b');
+     doc.fillColor('#818cf8').font(fBold).fontSize(10).text('INVERSIÓN TOTAL', 65, startY + 20);
+     doc.fillColor('#ffffff').font(fBold).fontSize(20).text(`$${(solar.inversionTotal || 0).toLocaleString('en-US', {minimumFractionDigits:2})}`, 65, startY + 45);
      
-     doc.font(fReg).text('Consumo actual base (Anual)', 60, startTable1 + 25);
-     doc.text(`${(solar.consumoAnual || 0).toLocaleString()} kWh`, 350, startTable1 + 25);
-     doc.moveTo(50, startTable1 + 40).lineTo(545, startTable1 + 40).lineWidth(0.5).strokeColor('#e2e8f0').stroke();
-
-     doc.text(`Incremento Proyectado (+${solar.colchon || 0}%)`, 60, startTable1 + 45);
-     doc.text(`${((solar.consumoAnual || 0) * (solar.colchon || 0) / 100).toLocaleString()} kWh`, 350, startTable1 + 45);
-     doc.moveTo(50, startTable1 + 60).lineTo(545, startTable1 + 60).stroke();
-
-     doc.font(fBold).text('Consumo Total Estimado', 60, startTable1 + 65);
-     doc.text(`${(solar.consumoProyectado || 0).toLocaleString()} kWh / Año`, 350, startTable1 + 65);
+     // Card 2: Ahorro
+     doc.rect(50 + cardWidth + 10, startY, cardWidth, 90).fill('#064e3b');
+     doc.fillColor('#34d399').font(fBold).fontSize(10).text('AHORRO ANUAL', 65 + cardWidth + 10, startY + 20);
+     doc.fillColor('#ffffff').font(fBold).fontSize(20).text(`$${(solar.ahorroAnual || 0).toLocaleString('en-US', {minimumFractionDigits:2})}`, 65 + cardWidth + 10, startY + 45);
      
-     doc.rect(50, startTable1, 495, 80).strokeColor('#e2e8f0').lineWidth(1).stroke();
-     doc.moveTo(340, startTable1).lineTo(340, startTable1 + 80).stroke();
+     // Card 3: Retorno
+     doc.rect(50 + (cardWidth * 2) + 20, startY, cardWidth, 90).fill('#1e293b');
+     doc.fillColor('#818cf8').font(fBold).fontSize(10).text('RETORNO (AÑOS)', 65 + (cardWidth * 2) + 20, startY + 20);
+     doc.fillColor('#ffffff').font(fBold).fontSize(28).text(`${solar.roiAnios || 0}`, 65 + (cardWidth * 2) + 20, startY + 40);
 
-     doc.y = startTable1 + 100;
-     doc.fillColor('#0f172a').font(fBold).fontSize(14).text('2. Dimensionamiento del Sistema', 50, doc.y);
-     doc.moveTo(50, doc.y + 5).lineTo(545, doc.y + 5).lineWidth(2).strokeColor(bColor).stroke();
-     doc.moveDown(1.5);
+     // 4. Dimensionamiento Técnico
+     startY += 120;
+     doc.fillColor('#ffffff').font(fBold).fontSize(16).text('Dimensionamiento Técnico del Sistema', 50, startY);
+     doc.moveTo(50, startY + 25).lineTo(545, startY + 25).lineWidth(2).strokeColor(bColor).stroke();
 
-     doc.rect(50, doc.y, 495, 30).fill('#fff7ed');
-     doc.rect(50, doc.y, 3, 30).fill(bColor);
-     doc.fillColor('#334155').fontSize(9).font(fReg).text(`Recomendación Principal: Sistema de ${solar.potenciaInstalada || 0} kWp para asegurar cobertura total del consumo actual más el colchón del ${solar.colchon || 0}%, manteniendo el recibo en el cargo mínimo durante todo el año.`, 60, doc.y + 5, { width: 475 });
-     doc.moveDown(2);
-
-     const startTable2 = doc.y;
-     doc.rect(50, startTable2, 495, 20).fill('#f1f5f9');
-     doc.fillColor('#334155').font(fBold).fontSize(10).text('Componente', 60, startTable2 + 5);
-     doc.text('Especificación / Cantidad', 250, startTable2 + 5);
-
-     doc.font(fReg).text('Módulos Solares', 60, startTable2 + 25);
-     doc.text(`${solar.numPaneles || 0} x Paneles Fotovoltaicos de ${solar.panelWatts || 0}W (${solar.panelModelo || 'Tier 1'})`, 250, startTable2 + 25);
-     doc.moveTo(50, startTable2 + 40).lineTo(545, startTable2 + 40).lineWidth(0.5).strokeColor('#e2e8f0').stroke();
-
-     doc.text('Inversor de Red', 60, startTable2 + 45);
-     doc.text(`1 x ${solar.inversorModelo || 'Inversor de Red'}`, 250, startTable2 + 45);
-     doc.moveTo(50, startTable2 + 60).lineTo(545, startTable2 + 60).stroke();
-
-     doc.text('Potencia Pico Instalada (DC)', 60, startTable2 + 65);
-     doc.text(`${solar.potenciaInstalada || 0} kWp`, 250, startTable2 + 65);
-     doc.moveTo(50, startTable2 + 80).lineTo(545, startTable2 + 80).stroke();
-
-     doc.text('Generación Anual Estimada', 60, startTable2 + 85);
-     doc.text(`~${(solar.generacionAnual || 0).toLocaleString()} kWh`, 250, startTable2 + 85);
-
-     doc.rect(50, startTable2, 495, 100).strokeColor('#e2e8f0').lineWidth(1).stroke();
-     doc.moveTo(240, startTable2).lineTo(240, startTable2 + 100).stroke();
-
-     doc.y = startTable2 + 120;
-     doc.fillColor('#0f172a').font(fBold).fontSize(14).text('3. Detalles de Configuración y Cableado', 50, doc.y);
-     doc.moveTo(50, doc.y + 5).lineTo(545, doc.y + 5).lineWidth(2).strokeColor(bColor).stroke();
-     doc.moveDown(1.5);
+     startY += 45;
+     // Fila 1
+     doc.fillColor('#94a3b8').font(fReg).fontSize(11).text('Consumo Actual:', 50, startY);
+     doc.fillColor('#ffffff').font(fBold).text(`${(solar.consumoAnual || 0).toLocaleString()} kWh/año`, 150, startY);
      
-     doc.font(fReg).fontSize(10).fillColor('#334155');
-     doc.text(`El sistema se ha diseñado aprovechando la eficiencia de los módulos de alta potencia, garantizando seguridad y cumplimiento normativo.`, { width: 495 });
-     doc.moveDown(0.5);
-     doc.font(fBold).text('• Arreglo DC: ', { continued: true }).font(fReg).text(`1 cadena (string) de ${solar.numPaneles || 0} paneles conectados en serie al MPPT 1.`);
-     doc.font(fBold).text('• Protecciones: ', { continued: true }).font(fReg).text(`Pastilla termomagnética (breaker) AC dedicada para el circuito del inversor.`);
-     doc.font(fBold).text('• Estructura: ', { continued: true }).font(fReg).text(`Aluminio anodizado para losa de concreto con inclinación de 15° a 20° hacia el Sur.`);
+     doc.fillColor('#94a3b8').font(fReg).text('Margen Seguridad:', 300, startY);
+     doc.fillColor('#ffffff').font(fBold).text(`+${solar.colchon || 0}%`, 410, startY);
+
+     startY += 25;
+     doc.fillColor('#94a3b8').font(fReg).text('Sistema Sugerido:', 50, startY);
+     doc.fillColor('#34d399').font(fBold).text(`${solar.potenciaInstalada || 0} kWp`, 150, startY);
      
-     doc.moveDown(1.5);
-     doc.fillColor('#0f172a').font(fBold).fontSize(14).text('4. Análisis Financiero (ROI)', 50, doc.y);
-     doc.moveTo(50, doc.y + 5).lineTo(545, doc.y + 5).lineWidth(2).strokeColor(bColor).stroke();
-     doc.moveDown(1.5);
+     doc.fillColor('#94a3b8').font(fReg).text('Generación Anual:', 300, startY);
+     doc.fillColor('#34d399').font(fBold).text(`~${(solar.generacionAnual || 0).toLocaleString()} kWh`, 410, startY);
+
+     // Fila Equipos
+     startY += 40;
+     doc.rect(50, startY, 495, 80).fill('#1e293b');
+     doc.fillColor('#818cf8').font(fBold).fontSize(10).text('EQUIPAMIENTO PRINCIPAL', 65, startY + 15);
      
-     const startTable3 = doc.y;
-     doc.rect(50, startTable3, 495, 20).fill('#f1f5f9');
-     doc.fillColor('#334155').font(fBold).fontSize(10).text('Concepto', 60, startTable3 + 5);
-     doc.text('Valor', 350, startTable3 + 5);
+     doc.fillColor('#ffffff').font(fBold).fontSize(11).text(`${solar.numPaneles || 0} x`, 65, startY + 35);
+     doc.fillColor('#cbd5e1').font(fReg).text(` Paneles Fotovoltaicos ${solar.panelModelo || ''}`, 95, startY + 35);
      
-     doc.font(fReg).text('Inversión Total Estimada ($ MXN)', 60, startTable3 + 25);
-     doc.text(`$${(solar.inversionTotal || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}`, 350, startTable3 + 25);
-     doc.moveTo(50, startTable3 + 40).lineTo(545, startTable3 + 40).lineWidth(0.5).strokeColor('#e2e8f0').stroke();
+     doc.fillColor('#ffffff').font(fBold).text(`1 x`, 65, startY + 55);
+     doc.fillColor('#cbd5e1').font(fReg).text(` ${solar.inversorModelo || 'Inversor de Interconexión'}`, 85, startY + 55);
 
-     doc.text('Ahorro Anual Estimado ($ MXN)', 60, startTable3 + 45);
-     doc.text(`$${(solar.ahorroAnual || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}`, 350, startTable3 + 45);
-     doc.moveTo(50, startTable3 + 60).lineTo(545, startTable3 + 60).stroke();
-
-     doc.font(fBold).fillColor(bColor).text('Retorno de Inversión (Años)', 60, startTable3 + 65);
-     doc.text(`${solar.roiAnios || 0} Años`, 350, startTable3 + 65);
-
-     doc.rect(50, startTable3, 495, 80).strokeColor('#e2e8f0').lineWidth(1).stroke();
-     doc.moveTo(340, startTable3).lineTo(340, startTable3 + 80).stroke();
-
-     doc.y = startTable3 + 120;
-     doc.font(fBold).fontSize(12).fillColor('#0f172a').text('Beneficios del Proyecto:', 50, doc.y);
-     doc.font(fReg).fontSize(10).fillColor('#334155').text('• Generación suficiente para cubrir equipos actuales y futuras adiciones de carga.');
-     doc.text('• Monitoreo remoto activo de generación y eficiencia a través de plataforma web/móvil.');
-     doc.text('• Garantía de mantenerse en el rango de subsidio de la Tarifa 1E sin caer en tarifas excedentes (DAC).');
+     // Impacto Ambiental
+     startY += 110;
+     doc.rect(50, startY, 495, 60).fill('#064e3b');
+     doc.fillColor('#34d399').font(fBold).fontSize(12).text('Impacto Ambiental Estimado (25 Años)', 65, startY + 15);
+     const arboles = Math.round((solar.generacionAnual || 0) * 25 * 0.0007 / 0.06);
+     const co2 = Math.round((solar.generacionAnual || 0) * 25 * 0.0007);
+     doc.fillColor('#ffffff').font(fReg).fontSize(10).text(`Equivale a plantar ~${arboles.toLocaleString()} árboles o evitar ${co2.toLocaleString()} toneladas de CO2.`, 65, startY + 35);
+     
+     // Reset color back to normal before next page
+     doc.fillColor('#334155');
   }
 
   async generateInvoicePdf(invoice: any): Promise<Buffer> {
@@ -498,14 +470,12 @@ export class PdfService {
         doc.on('end', () => resolve(Buffer.concat(buffers)));
         doc.on('error', (err: any) => reject(err));
 
-        this.drawTemplateHeader(doc, quote, true, template);
-        
         if (quote.solarData) {
             this.drawSolarProposalBody(doc, quote, template);
             doc.addPage();
-            this.drawTemplateHeader(doc, quote, true, template);
         }
         
+        this.drawTemplateHeader(doc, quote, true, template);
         this.drawTableAndTotals(doc, quote, true, template);
         this.drawFooter(doc, quote, true, template);
 

@@ -60,6 +60,7 @@ export default function NewQuotePage() {
   const [solarForm, setSolarForm] = useState({
       consumoAnual: 3439,
       colchon: 25,
+      address: "",
       hsp: 5.5,
       eficiencia: 80,
       panelWatts: 620,
@@ -1191,6 +1192,10 @@ export default function NewQuotePage() {
                   <h4 className="font-bold text-slate-700 border-b pb-2">1. Datos de Entrada</h4>
                   
                   <div className="grid grid-cols-2 gap-4">
+                     <div className="col-span-2">
+                        <label className="text-xs font-bold text-slate-500">Dirección de Instalación</label>
+                        <input type="text" value={solarForm.address} onChange={e=>setSolarForm({...solarForm, address: e.target.value})} placeholder="Ej. Calle Madero 123, Col. Centro" className="w-full border rounded p-2 text-sm mt-1" />
+                     </div>
                      <div>
                         <label className="text-xs font-bold text-slate-500">Consumo Base Anual (kWh)</label>
                         <input type="number" value={solarForm.consumoAnual} onChange={e=>setSolarForm({...solarForm, consumoAnual: Number(e.target.value)})} className="w-full border rounded p-2 text-sm mt-1" />
