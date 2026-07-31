@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } else {
       // Not authenticated
-      let isStoreOrPublic = pathname.startsWith('/login') || pathname.startsWith('/register') || pathname.startsWith('/sso') || pathname.startsWith('/portal') || pathname.startsWith('/store');
+      let isStoreOrPublic = pathname.startsWith('/login') || pathname.startsWith('/register') || pathname.startsWith('/sso') || pathname.startsWith('/portal') || pathname.startsWith('/store') || pathname.match(/^\/quotes\/[a-zA-Z0-9-]+\/proposal/);
       
       // If we are on a custom domain, the root path '/' is the store home.
       if (typeof window !== 'undefined') {
@@ -146,7 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   // Prevent rendering protected routes until fully checked
-  let isStoreOrPublicRender = pathname.startsWith('/login') || pathname.startsWith('/register') || pathname.startsWith('/sso') || pathname.startsWith('/portal') || pathname.startsWith('/store');
+  let isStoreOrPublicRender = pathname.startsWith('/login') || pathname.startsWith('/register') || pathname.startsWith('/sso') || pathname.startsWith('/portal') || pathname.startsWith('/store') || pathname.match(/^\/quotes\/[a-zA-Z0-9-]+\/proposal/);
   if (typeof window !== 'undefined') {
      const hostname = window.location.hostname;
      const isBaseDomain = hostname.includes('localhost') || hostname.includes('facturapro.radiotecpro.com');
