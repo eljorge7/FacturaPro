@@ -364,6 +364,15 @@ export class PdfService {
      doc.circle(doc.page.width - 50, 40, 150).lineWidth(2).strokeOpacity(0.1).stroke('#ffffff');
      doc.circle(doc.page.width - 50, 40, 100).lineWidth(2).strokeOpacity(0.1).stroke('#ffffff');
      
+     if (data.taxProfile?.logoUrl) {
+         try {
+             const logoPath = path.join(process.cwd(), data.taxProfile.logoUrl);
+             if (fs.existsSync(logoPath)) {
+                 doc.image(logoPath, doc.page.width - 150, 40, { width: 100, align: 'right' });
+             }
+         } catch(e) {}
+     }
+     
      doc.fillColor('#38bdf8').font(fBold).fontSize(10).text('PROPUESTA COMERCIAL FOTOVOLTAICA', 50, 50, { tracking: 2 });
      doc.fillColor('#ffffff').font(fBold).fontSize(28).text(`Sistema de Energía Solar ${solar.potenciaInstalada || 0} kWp`, 50, 70);
      doc.fillColor('#94a3b8').font(fReg).fontSize(14).text(`Preparado para: `, 50, 115, { continued: true }).fillColor('#ffffff').font(fBold).text(data.customer?.legalName || 'Cliente');
@@ -379,13 +388,13 @@ export class PdfService {
      
      // Card 1: Inversión
      doc.rect(50, startY, cardWidth, 80).fill('#1e293b');
-     doc.fillColor('#818cf8').font(fBold).fontSize(10).text('INVERSIÓN TOTAL', 65, startY + 15);
-     doc.fillColor('#ffffff').font(fBold).fontSize(20).text(`$${(solar.inversionTotal || 0).toLocaleString('en-US', {minimumFractionDigits:2})}`, 65, startY + 40);
+     doc.fillColor('#818cf8').font(fBold).fontSize(10).text('INVERSIÓN (SIN IVA) MXN', 65, startY + 15);
+     doc.fillColor('#ffffff').font(fBold).fontSize(20).text(`$${(solar.inversionTotal || 0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`, 65, startY + 40);
      
      // Card 2: Ahorro
      doc.rect(50 + cardWidth + 10, startY, cardWidth, 80).fill('#064e3b');
-     doc.fillColor('#34d399').font(fBold).fontSize(10).text('AHORRO ANUAL', 65 + cardWidth + 10, startY + 15);
-     doc.fillColor('#ffffff').font(fBold).fontSize(20).text(`$${(solar.ahorroAnual || 0).toLocaleString('en-US', {minimumFractionDigits:2})}`, 65 + cardWidth + 10, startY + 40);
+     doc.fillColor('#34d399').font(fBold).fontSize(10).text('AHORRO ANUAL (MXN)', 65 + cardWidth + 10, startY + 15);
+     doc.fillColor('#ffffff').font(fBold).fontSize(20).text(`$${(solar.ahorroAnual || 0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`, 65 + cardWidth + 10, startY + 40);
      
      // Card 3: Retorno
      doc.rect(50 + (cardWidth * 2) + 20, startY, cardWidth, 80).fill('#1e293b');
