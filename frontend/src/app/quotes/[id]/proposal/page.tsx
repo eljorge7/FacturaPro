@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Loader2, MapPin, Users, Package, FileText, CheckCircle2, ChevronRight, Sun, Zap, Battery, TrendingUp, LineChart } from "lucide-react";
+import { Loader2, MapPin, Users, Package, FileText, CheckCircle2, ChevronRight, Sun, Zap, Battery, TrendingUp, LineChart, Leaf } from "lucide-react";
 import Image from "next/image";
 
 export default function ProposalViewPage() {
@@ -145,32 +145,6 @@ export default function ProposalViewPage() {
                <Sun className="w-8 h-8 text-amber-500" /> Propuesta Técnica Fotovoltaica
             </h3>
 
-            {solar.address && (
-               <div className="bg-white rounded-3xl shadow-sm p-8 border border-slate-200">
-                 <h4 className="text-xl font-bold text-slate-700 mb-6 flex items-center gap-2">
-                    <MapPin className="w-6 h-6 text-rose-500" /> Ubicación del Proyecto
-                 </h4>
-                 <p className="text-slate-600 font-medium mb-4">{solar.address}</p>
-                 <div className="w-full h-64 rounded-2xl overflow-hidden border border-slate-200">
-                    {solar.locationImageBase64 ? (
-                        <img src={solar.locationImageBase64} alt="Ubicación" className="w-full h-full object-cover" />
-                    ) : (
-                        <div className="w-full h-full pointer-events-none">
-                            <iframe 
-                               width="100%" 
-                               height="100%" 
-                               src={`https://maps.google.com/maps?q=${encodeURIComponent(solar.address)}&t=&z=16&ie=UTF8&iwloc=&output=embed`} 
-                               frameBorder="0" 
-                               scrolling="no" 
-                               marginHeight={0} 
-                               marginWidth={0}
-                            ></iframe>
-                        </div>
-                    )}
-                 </div>
-               </div>
-            )}
-
             {/* 1. Análisis de Consumo */}
             <div className="bg-white rounded-3xl shadow-sm p-8 border border-slate-200">
                <h4 className="text-xl font-bold text-slate-700 mb-6 flex items-center gap-2">
@@ -234,12 +208,12 @@ export default function ProposalViewPage() {
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
-                        <p className="text-sm font-bold text-indigo-200 uppercase mb-2">Inversión Estimada</p>
-                        <p className="text-3xl font-black text-white">${(solar.inversionTotal || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
+                        <p className="text-sm font-bold text-indigo-200 uppercase mb-2">Inversión Total (SIN IVA)</p>
+                        <p className="text-3xl font-black text-white">${(solar.inversionTotal || 0).toLocaleString('en-US', {minimumFractionDigits: 2})} MXN</p>
                      </div>
                      <div className="bg-emerald-500/20 backdrop-blur-md rounded-2xl p-6 border border-emerald-400/30">
                         <p className="text-sm font-bold text-emerald-300 uppercase mb-2">Ahorro Anual</p>
-                        <p className="text-3xl font-black text-emerald-400">${(solar.ahorroAnual || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
+                        <p className="text-3xl font-black text-emerald-400">${(solar.ahorroAnual || 0).toLocaleString('en-US', {minimumFractionDigits: 2})} MXN</p>
                      </div>
                      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 flex flex-col justify-center">
                         <p className="text-sm font-bold text-indigo-200 uppercase mb-1">Retorno de Inversión</p>
@@ -251,6 +225,55 @@ export default function ProposalViewPage() {
                   </div>
                </div>
             </div>
+
+            {/* 4. Impacto Ambiental */}
+            <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl shadow-xl p-8 md:p-12 text-white relative overflow-hidden">
+               <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+                  <Leaf className="w-48 h-48 text-white" />
+               </div>
+               <div className="relative z-10">
+                  <h4 className="text-2xl font-black mb-8 flex items-center gap-3">
+                     <Leaf className="w-8 h-8 text-emerald-200" /> Impacto Ambiental Estimado
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <div className="bg-white/10 rounded-2xl p-6 backdrop-blur-sm border border-white/20">
+                        <p className="text-emerald-100 font-bold uppercase text-sm mb-1">Árboles Equivalentes</p>
+                        <p className="text-4xl font-black">{Math.round((solar.consumoProyectado || 0) * 0.05).toLocaleString()} <span className="text-lg font-medium text-emerald-200">árboles / año</span></p>
+                     </div>
+                     <div className="bg-white/10 rounded-2xl p-6 backdrop-blur-sm border border-white/20">
+                        <p className="text-emerald-100 font-bold uppercase text-sm mb-1">Reducción de CO2</p>
+                        <p className="text-4xl font-black">{Math.round((solar.consumoProyectado || 0) * 0.4).toLocaleString()} <span className="text-lg font-medium text-emerald-200">kg / año</span></p>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            {/* 5. Ubicación del Proyecto (Movido al final) */}
+            {solar.address && (
+               <div className="bg-slate-900 rounded-3xl shadow-xl p-8 border border-slate-800 text-white mt-8">
+                 <h4 className="text-xl font-bold text-slate-100 mb-6 flex items-center gap-2">
+                    <MapPin className="w-6 h-6 text-rose-500" /> Ubicación del Proyecto
+                 </h4>
+                 <p className="text-slate-300 font-medium mb-4">{solar.address}</p>
+                 <div className="w-full h-72 rounded-2xl overflow-hidden border border-slate-700 bg-slate-800 relative">
+                    {solar.locationImageBase64 ? (
+                        <img src={solar.locationImageBase64} alt="Ubicación" className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="w-full h-full pointer-events-none">
+                            <iframe 
+                               width="100%" 
+                               height="100%" 
+                               src={`https://maps.google.com/maps?q=${encodeURIComponent(solar.address)}&t=&z=16&ie=UTF8&iwloc=&output=embed`} 
+                               frameBorder="0" 
+                               scrolling="no" 
+                               marginHeight={0} 
+                               marginWidth={0}
+                            ></iframe>
+                        </div>
+                    )}
+                 </div>
+               </div>
+            )}
           </div>
         )}
 
