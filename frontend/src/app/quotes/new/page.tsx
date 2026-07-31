@@ -1242,10 +1242,7 @@ export default function NewQuotePage() {
                   const potenciaInstalada = (numPaneles * solarForm.panelWatts) / 1000;
                   const generacionAnual = potenciaInstalada * solarForm.hsp * 365 * (solarForm.eficiencia / 100);
                   
-                  const costoPaneles = (selectedPanel?.finalPrice || 0) * numPaneles;
-                  const costoInversor = selectedInverter?.finalPrice || 0;
-                  const costoExtra = solarForm.costoInstalacion || 0;
-                  const inversionTotal = costoPaneles + costoInversor + costoExtra;
+                  const inversionTotal = potenciaInstalada * solarForm.costoKwp;
                   const ahorroAnual = generacionAnual * solarForm.tarifaCfe;
                   const roiAnios = (inversionTotal / ahorroAnual).toFixed(1);
 
@@ -1291,7 +1288,7 @@ export default function NewQuotePage() {
                                    description: `Panel Fotovoltaico ${solarForm.panelWatts}W (${solarForm.panelModelo})`,
                                    imageUrl: "",
                                    quantity: numPaneles,
-                                   unitPrice: 0,
+                                   unitPrice: (inversionTotal * 0.5) / numPaneles,
                                    taxRate: 0.16,
                                    discount: 0,
                                    type: "ITEM"
@@ -1301,7 +1298,17 @@ export default function NewQuotePage() {
                                    description: `Inversor de Red (${solarForm.inversorModelo})`,
                                    imageUrl: "",
                                    quantity: 1,
-                                   unitPrice: 0,
+                                   unitPrice: (inversionTotal * 0.3),
+                                   taxRate: 0.16,
+                                   discount: 0,
+                                   type: "ITEM"
+                                });
+                                newItems.push({
+                                   productId: "",
+                                   description: `Material Eléctrico y Mano de Obra (Instalación ${potenciaInstalada.toFixed(2)} kWp)`,
+                                   imageUrl: "",
+                                   quantity: 1,
+                                   unitPrice: (inversionTotal * 0.2),
                                    taxRate: 0.16,
                                    discount: 0,
                                    type: "ITEM"
