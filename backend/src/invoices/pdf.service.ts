@@ -368,7 +368,7 @@ export class PdfService {
          try {
              const logoPath = path.join(process.cwd(), data.taxProfile.logoUrl);
              if (fs.existsSync(logoPath)) {
-                 doc.image(logoPath, doc.page.width - 150, 40, { width: 100, align: 'right' });
+                 doc.image(logoPath, doc.page.width - 170, 30, { fit: [120, 60], align: 'right' });
              }
          } catch(e) {}
      }
@@ -443,22 +443,32 @@ export class PdfService {
      // 5. Location Box (moved to bottom)
      startY += 75;
      if (solar.address || solar.locationImageBase64) {
-         doc.rect(50, startY, 495, 140).fill('#1e293b');
-         doc.fillColor('#f43f5e').font(fBold).fontSize(11).text('Ubicación del Proyecto', 65, startY + 15);
+         doc.rect(50, startY, 495, 120).fill('#1e293b');
          
+         // Left Column: Text
+         doc.fillColor('#f43f5e').font(fBold).fontSize(11).text('Ubicación del Proyecto', 65, startY + 20);
          if (solar.address) {
-            doc.fillColor('#cbd5e1').font(fReg).fontSize(10).text(solar.address, 65, startY + 30);
+            doc.fillColor('#cbd5e1').font(fReg).fontSize(10).text(solar.address, 65, startY + 40, { width: 220, lineGap: 4 });
          }
          
+         // Right Column: Image
          if (solar.locationImageBase64) {
              try {
                  const base64Data = solar.locationImageBase64.replace(/^data:image\/\w+;base64,/, "");
                  const imgBuffer = Buffer.from(base64Data, 'base64');
-                 // Crop and fit perfectly in the remaining space by using a clipping rectangle
+                 
+                 const imgX = 320;
+                 const imgY = startY + 15;
+                 const imgW = 210;
+                 const imgH = 90;
+                 
+                 // Crop and fit perfectly in the right column
                  doc.save();
-                 doc.rect(65, startY + 50, 465, 75).clip();
-                 doc.image(imgBuffer, 65, startY + 50, { cover: [465, 75], align: 'center', valign: 'center' });
+                 doc.rect(imgX, imgY, imgW, imgH).clip();
+                 doc.image(imgBuffer, imgX, imgY, { cover: [imgW, imgH], align: 'center', valign: 'center' });
                  doc.restore();
+                 
+                 doc.rect(imgX, imgY, imgW, imgH).lineWidth(1).strokeOpacity(0.3).stroke('#ffffff');
              } catch(e) {}
          }
      }
