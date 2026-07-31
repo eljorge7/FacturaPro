@@ -355,58 +355,49 @@ export class PdfService {
      doc.rect(0, 0, doc.page.width, doc.page.height).fill('#0f172a');
 
      // 2. Cover Banner
-     doc.rect(0, 0, doc.page.width, 180).fill('#1e293b');
+     // Draw a nice gradient for the banner
+     const grad = doc.linearGradient(0, 0, doc.page.width, 160);
+     grad.stop(0, '#1e3a8a').stop(1, '#1e1b4b');
+     doc.rect(0, 0, doc.page.width, 160).fill(grad);
      
-     if (solar.locationImageBase64) {
-         try {
-             const base64Data = solar.locationImageBase64.replace(/^data:image\/\w+;base64,/, "");
-             const imgBuffer = Buffer.from(base64Data, 'base64');
-             doc.image(imgBuffer, 0, 0, { cover: [doc.page.width, 180], align: 'center', valign: 'center' });
-             doc.rect(0, 0, doc.page.width, 180).fillOpacity(0.6).fill('#0f172a'); // darken overlay
-             doc.fillOpacity(1); // reset
-         } catch(e) {
-             // fallback to solid color
-         }
-     }
+     // Remove locationImageBase64 from here and add some elegant abstract circles
+     doc.circle(doc.page.width - 50, 40, 150).lineWidth(2).strokeOpacity(0.1).stroke('#ffffff');
+     doc.circle(doc.page.width - 50, 40, 100).lineWidth(2).strokeOpacity(0.1).stroke('#ffffff');
      
-     doc.fillColor('#38bdf8').font(fBold).fontSize(10).text('PROPUESTA COMERCIAL FOTOVOLTAICA', 50, 60, { tracking: 2 });
-     doc.fillColor('#ffffff').font(fBold).fontSize(28).text(`Sistema de Energía Solar ${solar.potenciaInstalada || 0} kWp`, 50, 80);
-     doc.fillColor('#94a3b8').font(fReg).fontSize(14).text(`Preparado para: `, 50, 125, { continued: true }).fillColor('#ffffff').font(fBold).text(data.customer?.legalName || 'Cliente');
-     
-     if (solar.address) {
-         doc.fillColor('#f43f5e').font(fBold).fontSize(12).text('Ubicación: ', 50, 150, { continued: true }).fillColor('#cbd5e1').font(fReg).text(solar.address);
-     }
+     doc.fillColor('#38bdf8').font(fBold).fontSize(10).text('PROPUESTA COMERCIAL FOTOVOLTAICA', 50, 50, { tracking: 2 });
+     doc.fillColor('#ffffff').font(fBold).fontSize(28).text(`Sistema de Energía Solar ${solar.potenciaInstalada || 0} kWp`, 50, 70);
+     doc.fillColor('#94a3b8').font(fReg).fontSize(14).text(`Preparado para: `, 50, 115, { continued: true }).fillColor('#ffffff').font(fBold).text(data.customer?.legalName || 'Cliente');
 
      // 3. Resumen Ejecutivo (Inversión, Ahorro, ROI)
-     let startY = 220;
+     let startY = 190;
      doc.fillColor('#ffffff').font(fBold).fontSize(16).text('Análisis Financiero y Retorno de Inversión (ROI)', 50, startY);
      doc.moveTo(50, startY + 25).lineTo(545, startY + 25).lineWidth(2).strokeColor(bColor).stroke();
 
      // Tarjetas de ROI
-     startY += 45;
+     startY += 40;
      const cardWidth = (495 - 20) / 3;
      
      // Card 1: Inversión
-     doc.rect(50, startY, cardWidth, 90).fill('#1e293b');
-     doc.fillColor('#818cf8').font(fBold).fontSize(10).text('INVERSIÓN TOTAL', 65, startY + 20);
-     doc.fillColor('#ffffff').font(fBold).fontSize(20).text(`$${(solar.inversionTotal || 0).toLocaleString('en-US', {minimumFractionDigits:2})}`, 65, startY + 45);
+     doc.rect(50, startY, cardWidth, 80).fill('#1e293b');
+     doc.fillColor('#818cf8').font(fBold).fontSize(10).text('INVERSIÓN TOTAL', 65, startY + 15);
+     doc.fillColor('#ffffff').font(fBold).fontSize(20).text(`$${(solar.inversionTotal || 0).toLocaleString('en-US', {minimumFractionDigits:2})}`, 65, startY + 40);
      
      // Card 2: Ahorro
-     doc.rect(50 + cardWidth + 10, startY, cardWidth, 90).fill('#064e3b');
-     doc.fillColor('#34d399').font(fBold).fontSize(10).text('AHORRO ANUAL', 65 + cardWidth + 10, startY + 20);
-     doc.fillColor('#ffffff').font(fBold).fontSize(20).text(`$${(solar.ahorroAnual || 0).toLocaleString('en-US', {minimumFractionDigits:2})}`, 65 + cardWidth + 10, startY + 45);
+     doc.rect(50 + cardWidth + 10, startY, cardWidth, 80).fill('#064e3b');
+     doc.fillColor('#34d399').font(fBold).fontSize(10).text('AHORRO ANUAL', 65 + cardWidth + 10, startY + 15);
+     doc.fillColor('#ffffff').font(fBold).fontSize(20).text(`$${(solar.ahorroAnual || 0).toLocaleString('en-US', {minimumFractionDigits:2})}`, 65 + cardWidth + 10, startY + 40);
      
      // Card 3: Retorno
-     doc.rect(50 + (cardWidth * 2) + 20, startY, cardWidth, 90).fill('#1e293b');
-     doc.fillColor('#818cf8').font(fBold).fontSize(10).text('RETORNO (AÑOS)', 65 + (cardWidth * 2) + 20, startY + 20);
-     doc.fillColor('#ffffff').font(fBold).fontSize(28).text(`${solar.roiAnios || 0}`, 65 + (cardWidth * 2) + 20, startY + 40);
+     doc.rect(50 + (cardWidth * 2) + 20, startY, cardWidth, 80).fill('#1e293b');
+     doc.fillColor('#818cf8').font(fBold).fontSize(10).text('RETORNO (AÑOS)', 65 + (cardWidth * 2) + 20, startY + 15);
+     doc.fillColor('#ffffff').font(fBold).fontSize(28).text(`${solar.roiAnios || 0}`, 65 + (cardWidth * 2) + 20, startY + 35);
 
      // 4. Dimensionamiento Técnico
-     startY += 120;
+     startY += 105;
      doc.fillColor('#ffffff').font(fBold).fontSize(16).text('Dimensionamiento Técnico del Sistema', 50, startY);
      doc.moveTo(50, startY + 25).lineTo(545, startY + 25).lineWidth(2).strokeColor(bColor).stroke();
 
-     startY += 45;
+     startY += 40;
      // Fila 1
      doc.fillColor('#94a3b8').font(fReg).fontSize(11).text('Consumo Actual:', 50, startY);
      doc.fillColor('#ffffff').font(fBold).text(`${(solar.consumoAnual || 0).toLocaleString()} kWh/año`, 150, startY);
@@ -422,8 +413,8 @@ export class PdfService {
      doc.fillColor('#34d399').font(fBold).text(`~${(solar.generacionAnual || 0).toLocaleString()} kWh`, 410, startY);
 
      // Fila Equipos
-     startY += 40;
-     doc.rect(50, startY, 495, 80).fill('#1e293b');
+     startY += 35;
+     doc.rect(50, startY, 495, 75).fill('#1e293b');
      doc.fillColor('#818cf8').font(fBold).fontSize(10).text('EQUIPAMIENTO PRINCIPAL', 65, startY + 15);
      
      doc.fillColor('#ffffff').font(fBold).fontSize(11).text(`${solar.numPaneles || 0} x`, 65, startY + 35);
@@ -433,12 +424,32 @@ export class PdfService {
      doc.fillColor('#cbd5e1').font(fReg).text(` ${solar.inversorModelo || 'Inversor de Interconexión'}`, 85, startY + 55);
 
      // Impacto Ambiental
-     startY += 110;
+     startY += 90;
      doc.rect(50, startY, 495, 60).fill('#064e3b');
      doc.fillColor('#34d399').font(fBold).fontSize(12).text('Impacto Ambiental Estimado (25 Años)', 65, startY + 15);
      const arboles = Math.round((solar.generacionAnual || 0) * 25 * 0.0007 / 0.06);
      const co2 = Math.round((solar.generacionAnual || 0) * 25 * 0.0007);
      doc.fillColor('#ffffff').font(fReg).fontSize(10).text(`Equivale a plantar ~${arboles.toLocaleString()} árboles o evitar ${co2.toLocaleString()} toneladas de CO2.`, 65, startY + 35);
+     
+     // 5. Location Box (moved to bottom)
+     startY += 75;
+     if (solar.address || solar.locationImageBase64) {
+         doc.rect(50, startY, 495, 140).fill('#1e293b');
+         doc.fillColor('#f43f5e').font(fBold).fontSize(11).text('Ubicación del Proyecto', 65, startY + 15);
+         
+         if (solar.address) {
+            doc.fillColor('#cbd5e1').font(fReg).fontSize(10).text(solar.address, 65, startY + 30);
+         }
+         
+         if (solar.locationImageBase64) {
+             try {
+                 const base64Data = solar.locationImageBase64.replace(/^data:image\/\w+;base64,/, "");
+                 const imgBuffer = Buffer.from(base64Data, 'base64');
+                 // Crop and fit perfectly in the remaining space
+                 doc.image(imgBuffer, 65, startY + 50, { cover: [465, 75], align: 'center', valign: 'center' });
+             } catch(e) {}
+         }
+     }
      
      // Reset color back to normal before next page
      doc.fillColor('#334155');
