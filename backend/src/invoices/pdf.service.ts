@@ -305,9 +305,12 @@ export class PdfService {
                }
                rowY += 20;
            }
-          if (!isSpreadsheet && template !== 'Avant-Garde Agencia' && template !== 'Minimalista Notion' && !isDefault) {
+         });
+      }
+
+      if (!isSpreadsheet && template !== 'Avant-Garde Agencia' && template !== 'Minimalista Notion' && !isDefault) {
          doc.moveTo(50, rowY).lineTo(545, rowY).lineWidth(1).strokeColor(tableBorderColor).stroke();
-     }
+      }
 
      let summaryTop = rowY + 20;
      if (summaryTop > doc.page.height - 200) {
@@ -358,7 +361,7 @@ export class PdfService {
 
      doc.y = summaryTop + 80;
   }
-
+  
   private drawFooter(doc: any, data: any, isQuote: boolean, template: string) {
      if (template === 'Ticket POS Termal') {
          doc.font(this.getFont(data.taxProfile?.brandFont)).fontSize(7).fillColor('#64748b').text('GRACIAS POR SU PREFERENCIA', 10, doc.y, { align: 'center', width: doc.page.width - 20});

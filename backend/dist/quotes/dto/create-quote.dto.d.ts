@@ -5,6 +5,10 @@ export declare class QuoteItemDto {
     unitPrice: number;
     taxRate: number;
     discount?: number;
+    total: number;
+    type?: string;
+    orderIndex?: number;
+    imageUrl?: string;
 }
 export declare class CreateQuoteDto {
     tenantId?: string;
@@ -21,5 +25,6 @@ export declare class CreateQuoteDto {
     materials?: string;
     coverImageUrl?: string;
     templateId?: string;
+    solarData?: string;
     items: QuoteItemDto[];
 }

@@ -88,6 +88,7 @@ export declare class QuotesService {
         materials: string | null;
         coverImageUrl: string | null;
         templateId: string | null;
+        solarData: import(".prisma/client").Prisma.JsonValue | null;
         notes: string | null;
         status: string;
         createdAt: Date;
@@ -183,6 +184,7 @@ export declare class QuotesService {
         materials: string | null;
         coverImageUrl: string | null;
         templateId: string | null;
+        solarData: import(".prisma/client").Prisma.JsonValue | null;
         notes: string | null;
         status: string;
         createdAt: Date;
@@ -278,6 +280,7 @@ export declare class QuotesService {
         materials: string | null;
         coverImageUrl: string | null;
         templateId: string | null;
+        solarData: import(".prisma/client").Prisma.JsonValue | null;
         notes: string | null;
         status: string;
         createdAt: Date;
@@ -305,6 +308,7 @@ export declare class QuotesService {
         materials: string | null;
         coverImageUrl: string | null;
         templateId: string | null;
+        solarData: import(".prisma/client").Prisma.JsonValue | null;
         notes: string | null;
         status: string;
         createdAt: Date;
@@ -332,6 +336,7 @@ export declare class QuotesService {
         materials: string | null;
         coverImageUrl: string | null;
         templateId: string | null;
+        solarData: import(".prisma/client").Prisma.JsonValue | null;
         notes: string | null;
         status: string;
         createdAt: Date;
@@ -359,6 +364,7 @@ export declare class QuotesService {
         materials: string | null;
         coverImageUrl: string | null;
         templateId: string | null;
+        solarData: import(".prisma/client").Prisma.JsonValue | null;
         notes: string | null;
         status: string;
         createdAt: Date;
@@ -386,6 +392,7 @@ export declare class QuotesService {
         materials: string | null;
         coverImageUrl: string | null;
         templateId: string | null;
+        solarData: import(".prisma/client").Prisma.JsonValue | null;
         notes: string | null;
         status: string;
         createdAt: Date;

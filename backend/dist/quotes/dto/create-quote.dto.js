@@ -19,6 +19,10 @@ class QuoteItemDto {
     unitPrice;
     taxRate;
     discount;
+    total;
+    type;
+    orderIndex;
+    imageUrl;
 }
 exports.QuoteItemDto = QuoteItemDto;
 __decorate([
@@ -48,6 +52,25 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], QuoteItemDto.prototype, "discount", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], QuoteItemDto.prototype, "total", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], QuoteItemDto.prototype, "type", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], QuoteItemDto.prototype, "orderIndex", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], QuoteItemDto.prototype, "imageUrl", void 0);
 class CreateQuoteDto {
     tenantId;
     customerId;
@@ -63,6 +86,7 @@ class CreateQuoteDto {
     materials;
     coverImageUrl;
     templateId;
+    solarData;
     items;
 }
 exports.CreateQuoteDto = CreateQuoteDto;
@@ -134,6 +158,11 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateQuoteDto.prototype, "templateId", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateQuoteDto.prototype, "solarData", void 0);
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.ValidateNested)({ each: true }),

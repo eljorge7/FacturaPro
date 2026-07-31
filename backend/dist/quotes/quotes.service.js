@@ -21,7 +21,7 @@ let QuotesService = class QuotesService {
         this.mailService = mailService;
     }
     async create(createQuoteDto) {
-        let { tenantId, customerId, items, notes, expirationDate, taxIncluded, isProposal, projectName, projectScope, projectNotes, coordinates, personnel, materials, coverImageUrl, templateId } = createQuoteDto;
+        let { tenantId, customerId, items, notes, expirationDate, taxIncluded, isProposal, projectName, projectScope, projectNotes, coordinates, personnel, materials, coverImageUrl, templateId, solarData } = createQuoteDto;
         if (!tenantId) {
             const tenantFallback = await this.prisma.tenant.findFirst();
             if (!tenantFallback)
@@ -54,8 +54,10 @@ let QuotesService = class QuotesService {
                 lineTaxes = lineSubtotal * item.taxRate;
                 lineTotal = lineSubtotal + lineTaxes;
             }
-            subtotal += lineSubtotal;
-            taxTotal += lineTaxes;
+            if (item.type !== 'SECTION_HEADER') {
+                subtotal += lineSubtotal;
+                taxTotal += lineTaxes;
+            }
             return {
                 productId: item.productId || null,
                 description: item.description,
@@ -109,6 +111,7 @@ let QuotesService = class QuotesService {
                 materials,
                 coverImageUrl,
                 templateId,
+                solarData,
                 items: {
                     create: quoteItemsData
                 }
@@ -155,6 +158,73 @@ let QuotesService = class QuotesService {
         });
     }
     async update(tenantId, id, data) {
+        const quote = await this.prisma.quote.findUnique({ where: { id }, include: { customer: true } });
+        if (!quote)
+            throw new common_1.NotFoundException('Cotización no encontrada');
+        if (data.items && Array.isArray(data.items)) {
+            let subtotal = 0;
+            let taxTotal = 0;
+            const quoteItemsData = data.items.map((item) => {
+                const discount = item.discount || 0;
+                let lineTotal = 0;
+                let lineSubtotal = 0;
+                let lineTaxes = 0;
+                if (data.taxIncluded) {
+                    lineTotal = (item.quantity * item.unitPrice) - discount;
+                    lineSubtotal = lineTotal / (1 + item.taxRate);
+                    lineTaxes = lineTotal - lineSubtotal;
+                }
+                else {
+                    lineSubtotal = (item.quantity * item.unitPrice) - discount;
+                    lineTaxes = lineSubtotal * item.taxRate;
+                    lineTotal = lineSubtotal + lineTaxes;
+                }
+                if (item.type !== 'SECTION_HEADER') {
+                    subtotal += lineSubtotal;
+                    taxTotal += lineTaxes;
+                }
+                return {
+                    productId: item.productId || null,
+                    description: item.description,
+                    imageUrl: item.imageUrl,
+                    quantity: item.quantity,
+                    unitPrice: item.unitPrice,
+                    discount: discount,
+                    taxRate: item.taxRate,
+                    total: lineTotal,
+                    type: item.type || 'ITEM',
+                    orderIndex: item.orderIndex || 0
+                };
+            });
+            const tdsTotal = quote.customer.tdsEnabled ? (subtotal * 0.0125) : 0;
+            const total = subtotal + taxTotal - tdsTotal;
+            await this.prisma.quoteItem.deleteMany({ where: { quoteId: id } });
+            return this.prisma.quote.update({
+                where: { id },
+                data: {
+                    subtotal,
+                    taxTotal,
+                    tdsTotal,
+                    total,
+                    isProposal: data.isProposal !== undefined ? data.isProposal : undefined,
+                    projectName: data.projectName !== undefined ? data.projectName : undefined,
+                    projectScope: data.projectScope !== undefined ? data.projectScope : undefined,
+                    projectNotes: data.projectNotes !== undefined ? data.projectNotes : undefined,
+                    coordinates: data.coordinates !== undefined ? data.coordinates : undefined,
+                    personnel: data.personnel !== undefined ? data.personnel : undefined,
+                    materials: data.materials !== undefined ? data.materials : undefined,
+                    coverImageUrl: data.coverImageUrl !== undefined ? data.coverImageUrl : undefined,
+                    templateId: data.templateId !== undefined ? data.templateId : undefined,
+                    solarData: data.solarData !== undefined ? data.solarData : undefined,
+                    notes: data.notes !== undefined ? data.notes : undefined,
+                    expirationDate: data.expirationDate !== undefined ? (data.expirationDate ? new Date(data.expirationDate) : null) : undefined,
+                    items: {
+                        create: quoteItemsData
+                    }
+                },
+                include: { items: true, customer: true, taxProfile: true }
+            });
+        }
         return this.prisma.quote.update({
             where: { id },
             data: {
@@ -167,6 +237,7 @@ let QuotesService = class QuotesService {
                 materials: data.materials !== undefined ? data.materials : undefined,
                 coverImageUrl: data.coverImageUrl !== undefined ? data.coverImageUrl : undefined,
                 templateId: data.templateId !== undefined ? data.templateId : undefined,
+                solarData: data.solarData !== undefined ? data.solarData : undefined,
                 notes: data.notes !== undefined ? data.notes : undefined,
                 expirationDate: data.expirationDate !== undefined ? (data.expirationDate ? new Date(data.expirationDate) : null) : undefined,
             }
@@ -197,6 +268,7 @@ let QuotesService = class QuotesService {
                 customerId: quote.customerId,
                 quoteId: quote.id,
                 invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+                paymentMethod: 'PPD',
                 subtotal: quote.subtotal,
                 taxTotal: quote.taxTotal,
                 tdsTotal: quote.tdsTotal,
