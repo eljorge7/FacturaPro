@@ -124,23 +124,38 @@ export class PdfService {
          doc.y = 210;
      }
      else {
-         // Minimalista Notion
-         if (logoPath) doc.image(logoPath, 50, 40, { width: logoWidth, align: 'left' });
-         else doc.fillColor('#0f172a').fontSize(20).font(fBold).text(data.taxProfile?.legalName || 'Empresa', 50, 40);
-         
-         doc.fillColor(bColor).fontSize(10).font(fBold).text(docTitle, 350, 40, { align: 'right', width: 195 });
-         doc.fillColor('#64748b').fontSize(9).font(fReg).text(`# ${docNum}`, 350, 53, { align: 'right', width: 195 });
-         doc.text(docDate, 350, 66, { align: 'right', width: 195 });
-         
-         doc.fillColor('#0f172a').fontSize(9).font(fBold).text('De:', 50, 130);
-         doc.font(fReg).text(data.taxProfile?.legalName || '', 50, 145);
-         doc.text(data.taxProfile?.rfc || '', 50, 160);
-         
-         doc.font(fBold).text('Para:', 300, 130);
-         doc.font(fReg).text(data.customer?.legalName || '', 300, 145);
-         doc.text(data.customer?.rfc || '', 300, 160);
-         
-         doc.y = 210;
+          // Zoho Style / Web Preview Match
+          doc.fillColor('#1e293b').fontSize(28).font(fReg).text(docTitle, 50, 40);
+          doc.fillColor('#64748b').fontSize(10).font(fBold).text(`# ${docNum}`, 50, 75);
+          
+          if (logoPath) doc.image(logoPath, doc.page.width - logoWidth - 50, 40, { width: logoWidth, align: 'right' });
+          
+          doc.fillColor('#334155').fontSize(9).font(fReg);
+          let rightY = 90;
+          doc.text(data.taxProfile?.legalName || '', 300, rightY, { align: 'right', width: 245 }); rightY += 15;
+          doc.text(`C.P. ${data.taxProfile?.zipCode || ''}`, 300, rightY, { align: 'right', width: 245 }); rightY += 15;
+          doc.text('México', 300, rightY, { align: 'right', width: 245 }); rightY += 15;
+          doc.text(`RFC: ${data.taxProfile?.rfc || ''}`, 300, rightY, { align: 'right', width: 245 }); rightY += 15;
+          doc.text(`Régimen fiscal: ${data.taxProfile?.taxRegime || ''}`, 300, rightY, { align: 'right', width: 245 }); rightY += 25;
+          
+          doc.font(fBold).fillColor('#64748b').text('Facturar a', 300, rightY, { align: 'right', width: 245 }); rightY += 15;
+          doc.font(fBold).fillColor('#2563eb').text(data.customer?.legalName || '', 300, rightY, { align: 'right', width: 245 }); rightY += 15;
+          doc.font(fReg).fillColor('#334155').text(data.customer?.zipCode || '00000', 300, rightY, { align: 'right', width: 245 }); rightY += 15;
+          doc.text('México', 300, rightY, { align: 'right', width: 245 }); rightY += 15;
+          doc.text(`RFC del receptor ${data.customer?.rfc || ''}`, 300, rightY, { align: 'right', width: 245 }); rightY += 15;
+          doc.text(`Régimen fiscal: ${data.customer?.taxRegime || ''}`, 300, rightY, { align: 'right', width: 245 });
+          
+          const yLeft = rightY - 45;
+          doc.font(fBold).fillColor('#64748b').text('Fecha de la', 50, yLeft);
+          doc.text('Cotización :', 50, yLeft + 15);
+          doc.font(fReg).fillColor('#334155').text(docDate, 150, yLeft + 15);
+          
+          doc.font(fBold).fillColor('#64748b').text('Asunto :', 50, yLeft + 30);
+          doc.font(fReg).fillColor('#334155').text('Enviamos cotización de servicios comerciales.', 150, yLeft + 30);
+          
+          doc.moveTo(50, rightY + 20).lineTo(545, rightY + 20).lineWidth(1).strokeColor('#1e293b').stroke();
+          
+          doc.y = rightY + 40;
      }
   }
 
@@ -152,9 +167,10 @@ export class PdfService {
      const isDark = template === 'Elegante Dark Header';
      const isSpreadsheet = template === 'Corporativo Bancario';
      const isPOS = template === 'Ticket POS Termal';
+     const isDefault = !isDark && !isSpreadsheet && !isPOS && template !== 'Bold Accent' && template !== 'Avant-Garde Agencia' && template !== 'Minimalista Notion';
 
-     const tableHeaderBg = isDark ? '#1e293b' : (isSpreadsheet ? '#f8fafc' : (template==='Bold Accent' ? bColor : '#f1f5f9'));
-     const tableHeaderColor = (isDark || template==='Bold Accent') ? '#ffffff' : '#334155';
+     const tableHeaderBg = isDark ? '#1e293b' : (isSpreadsheet ? '#f8fafc' : (template==='Bold Accent' ? bColor : (isDefault ? '#334155' : '#f1f5f9')));
+     const tableHeaderColor = (isDark || template==='Bold Accent' || isDefault) ? '#ffffff' : '#334155';
      const tableBorderColor = isSpreadsheet ? '#cbd5e1' : '#e2e8f0';
 
      const tableTop = doc.y;
@@ -213,10 +229,19 @@ export class PdfService {
 
      const hColor = (template==='Minimalista Notion' || template==='Avant-Garde Agencia') ? '#334155' : tableHeaderColor;
      doc.fillColor(hColor).font(fBold).fontSize(9);
-     doc.text('CANT', 55, tableTop + 5);
-     doc.text('DESCRIPCION', 100, tableTop + 5);
-     doc.text('PRECIO U.', 350, tableTop + 5);
-     doc.text('IMPORTE', 470, tableTop + 5);
+     
+     if (isDefault) {
+         doc.text('Artículo & Descripción', 55, tableTop + 5);
+         doc.text('Cant.', 320, tableTop + 5, { width: 40, align: 'right' });
+         doc.text('Tarifa', 370, tableTop + 5, { width: 50, align: 'right' });
+         doc.text('Impuesto', 430, tableTop + 5, { width: 50, align: 'center' });
+         doc.text('Importe', 490, tableTop + 5, { width: 55, align: 'right' });
+     } else {
+         doc.text('CANT', 55, tableTop + 5);
+         doc.text('DESCRIPCION', 100, tableTop + 5);
+         doc.text('PRECIO U.', 350, tableTop + 5);
+         doc.text('IMPORTE', 470, tableTop + 5);
+     }
 
      let rowY = tableTop + 25;
      doc.fillColor('#334155').font(fReg).fontSize(9);
@@ -231,10 +256,18 @@ export class PdfService {
                    doc.rect(50, rowY, 495, 20).fill(tableHeaderBg);
                }
                doc.fillColor(hColor).font(fBold).fontSize(9);
-               doc.text('CANT', 55, rowY + 5);
-               doc.text('DESCRIPCION', 100, rowY + 5);
-               doc.text('PRECIO U.', 350, rowY + 5);
-               doc.text('IMPORTE', 470, rowY + 5);
+               if (isDefault) {
+                   doc.text('Artículo & Descripción', 55, rowY + 5);
+                   doc.text('Cant.', 320, rowY + 5, { width: 40, align: 'right' });
+                   doc.text('Tarifa', 370, rowY + 5, { width: 50, align: 'right' });
+                   doc.text('Impuesto', 430, rowY + 5, { width: 50, align: 'center' });
+                   doc.text('Importe', 490, rowY + 5, { width: 55, align: 'right' });
+               } else {
+                   doc.text('CANT', 55, rowY + 5);
+                   doc.text('DESCRIPCION', 100, rowY + 5);
+                   doc.text('PRECIO U.', 350, rowY + 5);
+                   doc.text('IMPORTE', 470, rowY + 5);
+               }
                rowY += 25;
            }
 
@@ -252,21 +285,28 @@ export class PdfService {
                rowY += 20;
                doc.fillColor('#334155').font(fReg).fontSize(9);
            } else {
-               doc.text(item.quantity.toString(), 55, rowY);
-               doc.text(item.description.length > 50 ? item.description.substring(0, 50) + '...' : item.description, 105, rowY);
-               doc.text(`$${item.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 350, rowY);
-               doc.text(`$${((item.quantity * item.unitPrice) - item.discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 470, rowY);
+               if (isDefault) {
+                   doc.text(item.description.length > 60 ? item.description.substring(0, 60) + '...' : item.description, 55, rowY, { width: 260 });
+                   doc.text(item.quantity.toString(), 320, rowY, { width: 40, align: 'right' });
+                   doc.text(`${item.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 370, rowY, { width: 50, align: 'right' });
+                   const impText = item.taxes && item.taxes.length ? `${item.taxes[0].rate}%` : '16%';
+                   doc.text(impText, 430, rowY, { width: 50, align: 'center' });
+                   doc.font(fBold).text(`${((item.quantity * item.unitPrice) - item.discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 490, rowY, { width: 55, align: 'right' });
+                   doc.font(fReg);
+               } else {
+                   doc.text(item.quantity.toString(), 55, rowY);
+                   doc.text(item.description.length > 50 ? item.description.substring(0, 50) + '...' : item.description, 105, rowY);
+                   doc.text(`$${item.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 350, rowY);
+                   doc.text(`$${((item.quantity * item.unitPrice) - item.discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 470, rowY);
+               }
                
-               if (isSpreadsheet || template === 'Minimalista Notion') {
-                  doc.moveTo(50, rowY + 15).lineTo(545, rowY + 15).lineWidth(0.5).strokeColor('#f1f5f9').stroke();
+               if (isSpreadsheet || template === 'Minimalista Notion' || isDefault) {
+                  doc.moveTo(50, rowY + 15).lineTo(545, rowY + 15).lineWidth(0.5).strokeColor('#e2e8f0').stroke();
                }
                rowY += 20;
            }
-        });
-     }
-
-     if (!isSpreadsheet && template !== 'Avant-Garde Agencia' && template !== 'Minimalista Notion') {
-        doc.moveTo(50, rowY).lineTo(545, rowY).lineWidth(1).strokeColor(tableBorderColor).stroke();
+          if (!isSpreadsheet && template !== 'Avant-Garde Agencia' && template !== 'Minimalista Notion' && !isDefault) {
+         doc.moveTo(50, rowY).lineTo(545, rowY).lineWidth(1).strokeColor(tableBorderColor).stroke();
      }
 
      let summaryTop = rowY + 20;
@@ -274,26 +314,46 @@ export class PdfService {
          doc.addPage();
          summaryTop = 50;
      }
-     doc.font(fReg).fillColor('#64748b').text('Subtotal:', 350, summaryTop);
-     doc.fillColor('#0f172a').text(`$${(data.subtotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 470, summaryTop);
      
-     doc.fillColor('#64748b').text('Impuestos:', 350, summaryTop + 15);
-     doc.fillColor('#0f172a').text(`$${(data.taxTotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 470, summaryTop + 15);
-     
-     let currentY = summaryTop + 30;
-     if (data.tdsTotal > 0) {
-         doc.fillColor('#64748b').text('Retención (1.25%):', 350, currentY);
-         doc.fillColor('#ef4444').text(`-$${(data.tdsTotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 470, currentY);
-         currentY += 15;
-     }
-
-     if(template === 'Avant-Garde Agencia') {
-         doc.rect(340, currentY, 205, 40).fill(bColor);
-         doc.font(fBold).fillColor('#ffffff').fontSize(14).text('TOTAL', 350, currentY + 15);
-         doc.text(`$${(data.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 420, currentY + 15, { align: 'right', width:115 });
+     if (isDefault) {
+         doc.font(fReg).fillColor('#64748b').fontSize(9).text('Sub Total', 370, summaryTop);
+         doc.fillColor('#334155').text(`${(data.subtotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 470, summaryTop, { align: 'right', width: 75 });
+         
+         doc.fillColor('#64748b').text('IVA (16%)', 370, summaryTop + 15);
+         doc.fillColor('#334155').text(`${(data.taxTotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 470, summaryTop + 15, { align: 'right', width: 75 });
+         
+         let currentY = summaryTop + 30;
+         if (data.tdsTotal > 0) {
+             doc.fillColor('#64748b').text('Retención (1.25%)', 370, currentY);
+             doc.fillColor('#ef4444').text(`-${(data.tdsTotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 470, currentY, { align: 'right', width: 75 });
+             currentY += 15;
+         }
+         
+         doc.rect(350, currentY + 10, 195, 30).fill('#f8fafc');
+         doc.font(fBold).fillColor('#334155').fontSize(10).text('Total', 370, currentY + 20);
+         doc.fillColor('#334155').text(`$${(data.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 470, currentY + 20, { align: 'right', width: 75 });
      } else {
-         doc.font(fBold).fillColor(bColor).fontSize(11).text('TOTAL:', 350, currentY + 5);
-         doc.fillColor('#0f172a').text(`$${(data.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 470, currentY + 5);
+         doc.font(fReg).fillColor('#64748b').fontSize(9).text('Subtotal:', 350, summaryTop);
+         doc.fillColor('#0f172a').text(`$${(data.subtotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 470, summaryTop);
+         
+         doc.fillColor('#64748b').text('Impuestos:', 350, summaryTop + 15);
+         doc.fillColor('#0f172a').text(`$${(data.taxTotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 470, summaryTop + 15);
+         
+         let currentY = summaryTop + 30;
+         if (data.tdsTotal > 0) {
+             doc.fillColor('#64748b').text('Retención (1.25%):', 350, currentY);
+             doc.fillColor('#ef4444').text(`-$${(data.tdsTotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 470, currentY);
+             currentY += 15;
+         }
+
+         if(template === 'Avant-Garde Agencia') {
+             doc.rect(340, currentY, 205, 40).fill(bColor);
+             doc.font(fBold).fillColor('#ffffff').fontSize(14).text('TOTAL', 350, currentY + 15);
+             doc.text(`$${(data.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 420, currentY + 15, { align: 'right', width:115 });
+         } else {
+             doc.font(fBold).fillColor(bColor).fontSize(11).text('TOTAL:', 350, currentY + 5);
+             doc.fillColor('#0f172a').text(`$${(data.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 470, currentY + 5);
+         }
      }
 
      doc.y = summaryTop + 80;
