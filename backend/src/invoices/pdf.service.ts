@@ -445,8 +445,11 @@ export class PdfService {
              try {
                  const base64Data = solar.locationImageBase64.replace(/^data:image\/\w+;base64,/, "");
                  const imgBuffer = Buffer.from(base64Data, 'base64');
-                 // Crop and fit perfectly in the remaining space
+                 // Crop and fit perfectly in the remaining space by using a clipping rectangle
+                 doc.save();
+                 doc.rect(65, startY + 50, 465, 75).clip();
                  doc.image(imgBuffer, 65, startY + 50, { cover: [465, 75], align: 'center', valign: 'center' });
+                 doc.restore();
              } catch(e) {}
          }
      }
