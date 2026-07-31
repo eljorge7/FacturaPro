@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Loader2, MapPin, Users, Package, FileText, CheckCircle2, ChevronRight } from "lucide-react";
+import { Loader2, MapPin, Users, Package, FileText, CheckCircle2, ChevronRight, Sun, Zap, Battery, TrendingUp, LineChart } from "lucide-react";
 import Image from "next/image";
 
 export default function ProposalViewPage() {
@@ -29,6 +29,8 @@ export default function ProposalViewPage() {
 
   if (isLoading) return <div className="flex h-screen items-center justify-center bg-slate-50"><Loader2 className="w-8 h-8 animate-spin text-indigo-500" /></div>;
   if (!quote) return <div className="flex h-screen items-center justify-center bg-slate-50 text-slate-500 font-bold">Propuesta no encontrada</div>;
+
+  const solar = quote?.solarData ? (typeof quote.solarData === 'string' ? JSON.parse(quote.solarData) : quote.solarData) : null;
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-indigo-200">
@@ -133,6 +135,96 @@ export default function ProposalViewPage() {
                    </div>
                 )}
              </div>
+          </div>
+        )}
+
+        {/* Propuesta Solar (si existe) */}
+        {solar && (
+          <div className="space-y-8 mt-12">
+            <h3 className="text-3xl font-black text-slate-800 flex items-center gap-3">
+               <Sun className="w-8 h-8 text-amber-500" /> Propuesta Técnica Fotovoltaica
+            </h3>
+
+            {/* 1. Análisis de Consumo */}
+            <div className="bg-white rounded-3xl shadow-sm p-8 border border-slate-200">
+               <h4 className="text-xl font-bold text-slate-700 mb-6 flex items-center gap-2">
+                  <LineChart className="w-6 h-6 text-indigo-500" /> 1. Análisis de Consumo Energético
+               </h4>
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
+                     <p className="text-sm font-bold text-slate-400 uppercase mb-2">Consumo Actual Base</p>
+                     <p className="text-2xl font-black text-slate-800">{(solar.consumoAnual || 0).toLocaleString()} <span className="text-lg text-slate-500 font-medium">kWh</span></p>
+                  </div>
+                  <div className="bg-indigo-50 rounded-2xl p-6 border border-indigo-100">
+                     <p className="text-sm font-bold text-indigo-400 uppercase mb-2">Crecimiento (+{solar.colchon || 0}%)</p>
+                     <p className="text-2xl font-black text-indigo-700">{((solar.consumoAnual || 0) * (solar.colchon || 0) / 100).toLocaleString()} <span className="text-lg text-indigo-500 font-medium">kWh</span></p>
+                  </div>
+                  <div className="bg-emerald-50 rounded-2xl p-6 border border-emerald-100">
+                     <p className="text-sm font-bold text-emerald-500 uppercase mb-2">Consumo Total Estimado</p>
+                     <p className="text-2xl font-black text-emerald-700">{(solar.consumoProyectado || 0).toLocaleString()} <span className="text-lg text-emerald-600 font-medium">kWh / Año</span></p>
+                  </div>
+               </div>
+            </div>
+
+            {/* 2. Dimensionamiento del Sistema */}
+            <div className="bg-white rounded-3xl shadow-sm p-8 border border-slate-200">
+               <h4 className="text-xl font-bold text-slate-700 mb-6 flex items-center gap-2">
+                  <Zap className="w-6 h-6 text-amber-500" /> 2. Dimensionamiento del Sistema
+               </h4>
+               <div className="bg-amber-50 border-l-4 border-amber-500 p-6 rounded-r-2xl mb-8">
+                  <p className="text-amber-800 font-medium">Recomendación Principal: Sistema de <strong className="font-black">{solar.potenciaInstalada || 0} kWp</strong> para asegurar cobertura total del consumo actual más el colchón del {solar.colchon || 0}%, manteniendo el recibo en el cargo mínimo durante todo el año.</p>
+               </div>
+               
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex items-center gap-4 p-4 border border-slate-100 rounded-xl bg-slate-50">
+                     <div className="bg-white p-3 rounded-lg shadow-sm">
+                        <Sun className="w-8 h-8 text-amber-500" />
+                     </div>
+                     <div>
+                        <p className="text-sm font-bold text-slate-400 uppercase">Módulos Solares</p>
+                        <p className="font-bold text-slate-800">{solar.numPaneles || 0} x {solar.panelModelo || 'Tier 1'}</p>
+                     </div>
+                  </div>
+                  <div className="flex items-center gap-4 p-4 border border-slate-100 rounded-xl bg-slate-50">
+                     <div className="bg-white p-3 rounded-lg shadow-sm">
+                        <Battery className="w-8 h-8 text-indigo-500" />
+                     </div>
+                     <div>
+                        <p className="text-sm font-bold text-slate-400 uppercase">Inversor de Red</p>
+                        <p className="font-bold text-slate-800">1 x {solar.inversorModelo || 'Inversor Central'}</p>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            {/* 3. ROI */}
+            <div className="bg-gradient-to-br from-slate-900 to-indigo-900 rounded-3xl shadow-2xl p-8 md:p-12 border border-indigo-800 relative overflow-hidden">
+               <div className="absolute top-0 right-0 p-12 opacity-10 pointer-events-none">
+                  <TrendingUp className="w-64 h-64 text-white" />
+               </div>
+               <div className="relative z-10">
+                  <h4 className="text-2xl font-black text-white mb-8 flex items-center gap-3">
+                     <TrendingUp className="w-8 h-8 text-emerald-400" /> Análisis Financiero y ROI
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                     <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+                        <p className="text-sm font-bold text-indigo-200 uppercase mb-2">Inversión Estimada</p>
+                        <p className="text-3xl font-black text-white">${(solar.inversionTotal || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
+                     </div>
+                     <div className="bg-emerald-500/20 backdrop-blur-md rounded-2xl p-6 border border-emerald-400/30">
+                        <p className="text-sm font-bold text-emerald-300 uppercase mb-2">Ahorro Anual</p>
+                        <p className="text-3xl font-black text-emerald-400">${(solar.ahorroAnual || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
+                     </div>
+                     <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 flex flex-col justify-center">
+                        <p className="text-sm font-bold text-indigo-200 uppercase mb-1">Retorno de Inversión</p>
+                        <div className="flex items-end gap-2">
+                           <span className="text-5xl font-black text-white">{solar.roiAnios || 0}</span>
+                           <span className="text-xl text-indigo-200 font-bold mb-1">Años</span>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
           </div>
         )}
 
