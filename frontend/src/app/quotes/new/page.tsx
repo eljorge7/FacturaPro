@@ -353,6 +353,7 @@ export default function NewQuotePage() {
           currency,
           exchangeRate,
           ...proposalData,
+          solarData: solarData ? JSON.stringify(solarData) : undefined,
           items: (() => {
              const cleanItems = mappedItems.filter(i => i.productId || i.description.trim() !== "");
              for (let i = 0; i < cleanItems.length; i++) {
@@ -1305,7 +1306,7 @@ export default function NewQuotePage() {
                                 });
                                 newItems.push({
                                    productId: "",
-                                   description: `Material Eléctrico y Mano de Obra (Instalación ${potenciaInstalada.toFixed(2)} kWp)`,
+                                   description: `Ingeniería, Estructura Coplanar y Puesta en Marcha (Instalación ${potenciaInstalada.toFixed(2)} kWp)`,
                                    imageUrl: "",
                                    quantity: 1,
                                    unitPrice: (inversionTotal * 0.2),

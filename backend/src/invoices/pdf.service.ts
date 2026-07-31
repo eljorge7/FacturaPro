@@ -502,10 +502,12 @@ export class PdfService {
         
         if (quote.solarData) {
             this.drawSolarProposalBody(doc, quote, template);
-        } else {
-            this.drawTableAndTotals(doc, quote, true, template);
-            this.drawFooter(doc, quote, true, template);
+            doc.addPage();
+            this.drawTemplateHeader(doc, quote, true, template);
         }
+        
+        this.drawTableAndTotals(doc, quote, true, template);
+        this.drawFooter(doc, quote, true, template);
 
         doc.end();
       } catch (err) {
