@@ -53,17 +53,17 @@ export default function ProposalViewPage() {
       </div>
 
       {/* Portada del Proyecto */}
-      <div className="relative h-[60vh] w-full bg-slate-900 flex items-center justify-center overflow-hidden">
-        {quote.coverImageUrl && (
+      <div className={`relative h-[60vh] w-full flex items-center justify-center overflow-hidden ${solar ? 'bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900' : 'bg-slate-900'}`}>
+        {quote.coverImageUrl && !solar && (
           <img src={quote.coverImageUrl} className="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-overlay" alt="Project Cover" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
         <div className="relative z-10 text-center max-w-4xl px-6">
           <span className="inline-block px-4 py-1.5 rounded-full bg-indigo-500/20 text-indigo-300 font-bold text-sm tracking-widest uppercase mb-6 backdrop-blur-sm border border-indigo-500/30">
-            Propuesta Comercial
+            {solar ? 'Propuesta Comercial Fotovoltaica' : 'Propuesta Comercial'}
           </span>
           <h1 className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tight drop-shadow-xl leading-tight">
-            {quote.projectName || `Cotización ${quote.quoteNumber}`}
+            {solar ? `Sistema de Energía Solar ${solar.potenciaInstalada || 0} kWp` : (quote.projectName || `Cotización ${quote.quoteNumber}`)}
           </h1>
           <p className="text-xl md:text-2xl text-slate-300 font-light drop-shadow-md">
             Preparado exclusivamente para: <strong className="text-white font-bold">{quote.customer?.legalName}</strong>
@@ -86,8 +86,12 @@ export default function ProposalViewPage() {
              </div>
            )}
            <div className="text-center md:text-right">
-              <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">Inversión Total</p>
-              <p className="text-4xl font-black text-indigo-600">${quote.total.toLocaleString('en-US', { minimumFractionDigits: 2 })} {quote.currency}</p>
+              <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">
+                 {solar ? 'Inversión Total (SIN IVA)' : 'Inversión Total'}
+              </p>
+              <p className="text-4xl font-black text-indigo-600">
+                 ${solar ? (solar.inversionTotal || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) : quote.total.toLocaleString('en-US', { minimumFractionDigits: 2 })} {quote.currency}
+              </p>
            </div>
         </div>
 
