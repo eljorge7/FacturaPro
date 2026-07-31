@@ -61,6 +61,7 @@ export default function NewQuotePage() {
       consumoAnual: 3439,
       colchon: 25,
       address: "",
+      locationImageBase64: "",
       hsp: 5.5,
       eficiencia: 80,
       panelWatts: 620,
@@ -1195,6 +1196,22 @@ export default function NewQuotePage() {
                      <div className="col-span-2">
                         <label className="text-xs font-bold text-slate-500">Dirección de Instalación</label>
                         <input type="text" value={solarForm.address} onChange={e=>setSolarForm({...solarForm, address: e.target.value})} placeholder="Ej. Calle Madero 123, Col. Centro" className="w-full border rounded p-2 text-sm mt-1" />
+                     </div>
+                     <div className="col-span-2">
+                        <label className="text-xs font-bold text-slate-500">Imagen de Ubicación (Captura manual)</label>
+                        <input type="file" accept="image/*" onChange={(e) => {
+                           const file = e.target.files?.[0];
+                           if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                 setSolarForm({...solarForm, locationImageBase64: reader.result as string});
+                              };
+                              reader.readAsDataURL(file);
+                           }
+                        }} className="w-full border rounded p-2 text-sm mt-1 bg-white" />
+                        {solarForm.locationImageBase64 && (
+                           <img src={solarForm.locationImageBase64} className="mt-2 h-32 rounded object-cover border" alt="Ubicación" />
+                        )}
                      </div>
                      <div>
                         <label className="text-xs font-bold text-slate-500">Consumo Base Anual (kWh)</label>

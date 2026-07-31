@@ -152,15 +152,21 @@ export default function ProposalViewPage() {
                  </h4>
                  <p className="text-slate-600 font-medium mb-4">{solar.address}</p>
                  <div className="w-full h-64 rounded-2xl overflow-hidden border border-slate-200">
-                    <iframe 
-                       width="100%" 
-                       height="100%" 
-                       src={`https://maps.google.com/maps?q=${encodeURIComponent(solar.address)}&t=&z=16&ie=UTF8&iwloc=&output=embed`} 
-                       frameBorder="0" 
-                       scrolling="no" 
-                       marginHeight={0} 
-                       marginWidth={0}
-                    ></iframe>
+                    {solar.locationImageBase64 ? (
+                        <img src={solar.locationImageBase64} alt="Ubicación" className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="w-full h-full pointer-events-none">
+                            <iframe 
+                               width="100%" 
+                               height="100%" 
+                               src={`https://maps.google.com/maps?q=${encodeURIComponent(solar.address)}&t=&z=16&ie=UTF8&iwloc=&output=embed`} 
+                               frameBorder="0" 
+                               scrolling="no" 
+                               marginHeight={0} 
+                               marginWidth={0}
+                            ></iframe>
+                        </div>
+                    )}
                  </div>
                </div>
             )}

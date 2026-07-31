@@ -356,8 +356,21 @@ export class PdfService {
 
      // 2. Cover Banner
      doc.rect(0, 0, doc.page.width, 180).fill('#1e293b');
+     
+     if (solar.locationImageBase64) {
+         try {
+             const base64Data = solar.locationImageBase64.replace(/^data:image\/\w+;base64,/, "");
+             const imgBuffer = Buffer.from(base64Data, 'base64');
+             doc.image(imgBuffer, 0, 0, { width: doc.page.width, height: 180 });
+             doc.rect(0, 0, doc.page.width, 180).fillOpacity(0.6).fill('#0f172a'); // darken overlay
+             doc.fillOpacity(1); // reset
+         } catch(e) {
+             // fallback to solid color
+         }
+     }
+     
      doc.fillColor('#38bdf8').font(fBold).fontSize(10).text('PROPUESTA COMERCIAL FOTOVOLTAICA', 50, 60, { tracking: 2 });
-     doc.fillColor('#ffffff').font(fBold).fontSize(32).text(`Cotización ${data.quoteNumber || ''}`, 50, 80);
+     doc.fillColor('#ffffff').font(fBold).fontSize(28).text(`Sistema de Energía Solar ${solar.potenciaInstalada || 0} kWp`, 50, 80);
      doc.fillColor('#94a3b8').font(fReg).fontSize(14).text(`Preparado para: `, 50, 125, { continued: true }).fillColor('#ffffff').font(fBold).text(data.customer?.legalName || 'Cliente');
      
      if (solar.address) {
