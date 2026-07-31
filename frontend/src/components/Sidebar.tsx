@@ -78,7 +78,7 @@ export function Sidebar() {
   }, [user, token, tier]);
 
   // Prevent rendering on public routes or store routes
-  if (pathname === '/login' || pathname === '/register' || pathname.startsWith('/portal') || pathname.startsWith('/store/')) return null;
+  if (pathname === '/login' || pathname === '/register' || pathname.startsWith('/portal') || pathname.startsWith('/store/') || pathname.match(/^\/quotes\/[a-zA-Z0-9-]+\/proposal/)) return null;
 
   // Prevent rendering on custom store domains entirely
   if (typeof window !== 'undefined') {

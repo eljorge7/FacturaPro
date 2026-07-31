@@ -21,7 +21,7 @@ export default function WhatsAppWidget() {
     }
   }, [user, phone]);
 
-  if (pathname === '/login' || pathname === '/register' || pathname === '/' || pathname.startsWith('/quote') || pathname.startsWith('/ticket') || pathname.startsWith('/portal')) {
+  if (pathname === '/login' || pathname === '/register' || pathname === '/' || pathname.startsWith('/quote') || pathname.startsWith('/ticket') || pathname.startsWith('/portal') || pathname.match(/^\/quotes\/[a-zA-Z0-9-]+\/proposal/)) {
     return null;
   }
 

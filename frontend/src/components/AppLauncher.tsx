@@ -3,10 +3,15 @@
 import { useState, useRef, useEffect } from "react";
 import { LayoutGrid, MessageSquareText, Building2, Receipt } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function AppLauncher({ currentApp }: { currentApp: "OmniChat" | "RentControl" | "FacturaPro" }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+
+  if (pathname === '/login' || pathname === '/register' || pathname.startsWith('/portal') || pathname.startsWith('/store/') || pathname.match(/^\/quotes\/[a-zA-Z0-9-]+\/proposal/)) return null;
+
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

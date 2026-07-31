@@ -32,7 +32,7 @@ export function CommandPalette() {
   };
 
   if (!open) return null;
-  if (pathname.startsWith('/portal')) return null;
+  if (pathname.startsWith('/portal') || pathname.match(/^\/quotes\/[a-zA-Z0-9-]+\/proposal/)) return null;
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 z-[9999] backdrop-blur-sm flex items-start justify-center pt-[15vh]">
